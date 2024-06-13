@@ -26,7 +26,8 @@ else # we assume nf
 fi    
 rankmss="inner #${rank}:"
 
-
+echo "rank = ${rank}"
+echo "rank = ${rankmss}"
 
 # source environment file
 myenvfile=$1
@@ -69,7 +70,7 @@ oldrequest=${requestfile}"_old"
 # echo "$(date +%c): ${rankmss} Use requestfile $requestfile"
 
 # change compilor
-prgenvswitchto gnu >> $logfile 2>> $logfile
+#prgenvswitchto gnu >> $logfile 2>> $logfile
 
 ## hopefully this helps to prevent pmi errors
 #export PMI_MMAP_SYNC_WAIT_TIME=360

@@ -1,16 +1,7 @@
-FC = ftn
+FC = mpifort #gfortran
 CC = cc
 
 .SUFFIXES: .f90 .o
-
-# intel
-#OFLAGS  = -g
-#FFLAGS  = -g -c -ffixed-line-length-132 -w -s -O -fbounds-check
-# cray
-OFLAGS = 
-FFLAGS = -c -N 132 -O2 -h bounds
-
-#OBJECTS = \
 
 all: readpointlist.x distribute_points.x
 

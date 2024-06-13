@@ -25,35 +25,30 @@ printf -v mintasks "%.0f" "$mintasks_real"
 if [[ $mintasks -le $ntodo ]]; then
   echo "submit_job: Enough tasks to use all ${nnodes_max} node(s)."
   nnodes=$nnodes_max
-  jobtype="np"
+  jobtype="np"   #Change Veldhuijsen
 else
 # derive needed number of nodes (as a real) and take int value while rounding down
   nnodes_real=`echo "${ntodo}.0/(${FDMs_per_node}.0*${taskfactor})" | bc`
 # somehow bc provides already a rounded down integer, nevertheless...  
   nnodes=${nnodes_real%.*} 
+  echo "nnodes" $nnodes
   if [[ $nnodes -gt 0 ]]; then
     echo "submit_job: Only ${nnodes} node(s) needed now."
-    jobtype="np"
+    jobtype="np"  #Change Veldhuijsen
   else
     ntasks_real=`echo "${ntodo}/${taskfactor}" | bc`
     ntasks=${ntasks_real%.*}
-# if the number of tasks is less than ~50, go for ns
-    if [[ $ntasks -gt 20 || ${ntodo} -gt 120 ]]; then
-# limit the number of tasks to half of a node.
       let "halfnode=${tasks_per_node}/2"
       if [[ $ntasks -gt $halfnode ]]; then
         ntasks=$halfnode
       fi
       jobtype="nf"
       echo "submit_job: Only ${ntasks} tasks in a nf job needed now."
-      maxFDMs=${ntasks}
-    else
-      jobtype="nf"
-      echo "submit_job: submit remaining tasks as ns jobs."
-      maxFDMs=1
-    fi  
+      maxFDMs=${ntasks}  
   fi    	 
 fi
+
+echo "ntasks = ${ntasks}" 
 
 # get maximum number of parallel FDM runs in a job
 if [[ "$jobtype" == "np" ]]; then
@@ -170,7 +165,7 @@ cat << EOFf > $workdir/${jobname}.sc
 #SBATCH --time=$walltime
 #SBATCH -o $nplogdir/${myname}.log
 #SBATCH --cpus-per-task=1
-#SBATCH --ntasks-per-node=$tasks_per_node
+#SBATCH --ntasks-per-node=$tasks_per_node      
 #SBATCH --mem-per-cpu=$memory_per_task
 #SBATCH --threads-per-core=$EC_hyperthreads
 
@@ -185,40 +180,6 @@ EOFf
   chmod u+x $workdir/${jobname}.sc
   
   sbatch $workdir/${jobname}.sc
-
-else
-  echo "submit_job: Create and launch $ntodo ns scripts."
-  
-  while [[ `head -1 ${workpointlist}.txt` != "Ready" ]]; do
-    gridpoint_c=`$readpointexe ${workpointlist}.txt`
-# this let ... is needed to remove the leading space (if it is there)
-    let "gridpoint=$gridpoint_c*1"
-    jobname="${jobname_base}${submission_iteration}_p${gridpoint}_ns"
-    echo "submit_job: Jobname: ${jobname}"
-cat << EOFs > $workdir/${jobname}.sc
-#!/bin/bash
-#PBS -S   /bin/bash
-#PBS -A   $account_no
-#PBS -q   ns
-#PBS -N   $jobname
-#PBS -o   $nplogdir/${myname}_p${gridpoint}.log
-#PBS -j   oe
-#PBS -m   a
-#PBS -l   EC_memory_per_task=$memory_per_task
-#PBS -l   EC_ecfs=$EC_ecfs
-#PBS -l   walltime=$walltime
-
-# launch script
-$homedir/ns_script.sc $workdir/$envfile $gridpoint >& $nplogdir/${runlog}_p${gridpoint}.log
-
-exit 0
-EOFs
-     
-    # make it executalble
-    chmod u+x $workdir/${jobname}.sc
-     
-    sbatch $workdir/${jobname}.sc
-  done 
 fi
 
 # create a nicer abort script (so that distribute point creates an updated to-do list
