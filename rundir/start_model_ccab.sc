@@ -119,7 +119,7 @@ if [[ "$domain" == "FGRN055" ]]; then
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-64	! nyears; simulation time [yr]
+67	! nyears; simulation time [yr]
 20	! nyears; simulation time during the spin-up [yr]
 180	! dtmodelExp; timestep in model with explicit T-scheme [s]
 900	! dtmodelImp; timestep in model with implicit T-scheme [s]
@@ -134,10 +134,10 @@ $ImpExp ! ImpExp; implicit or explicit scheme, based on melt or not. (1=Implicit
 3	! begintT; indicates the inital T-profile (1=winter, 2=summer, 3=linear)
 $nor	! numberrepeat; number of times the data series is repeated for the initial rho profile is constructed
 
-86400	! writeinspeed; frequency of writing speed components to file (in seconds)
-2592000 ! writeinprof; frequency of writing of firn profiles to file (in seconds)
-3000	! proflayers; number of output layer in prof file
-86400  ! writeindetail; frequency of writing of detailed firn profiles to file
+864000	! writeinspeed; frequency of writing speed components to file (in seconds) (10 day resolution)
+2592000 ! writeinprof; frequency of writing of firn profiles to file (in seconds) (30 day resolution)
+3000	! proflayers; number of output layer in prof file (needs to be 4000 for MO tuning)
+864000  ! writeindetail; frequency of writing of detailed firn profiles to file
 500	! detlayers; number of output layers in detail file
 0.04	! detthick; thickness of the output layer in detail file
 

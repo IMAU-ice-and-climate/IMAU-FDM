@@ -4,15 +4,15 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 myname="highres"
-export outputname="FGRN055_${myname}" #"FGRN055_noCB_nor"
-export runname="FGRN055_${myname}" #"FGRN055_noCB_nor_run8"
-export p2input="$PERM/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
-export p2exe="$PERM/imau-fdm-develop/"
+export outputname="FGRN055_${myname}" 
+export runname="FGRN055_${myname}" 
+export p2input="$PERM/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt" 
+export p2exe="$PERM/IMAU-FDM/"
 #export FDM_executable="IMAU-FDM_np_${myname}.x"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
 gridpointlist="$homedir/pointlists/pointlist_highres_todo.txt" #pointlist_highres.txt"
-export ini_filename=""
+export ini_filename="" #TK: maybe remove (?)
 export filename_part1="ECMWF_${outputname}"
 
 # hardcoded FDM input
@@ -36,8 +36,8 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${myname}_i"
 export nnodes_max=1 #8
-export tasks_per_node=9 #128 # this is not to be changed
-export FDMs_per_node=9 #128 # play around for the optimal performance 
+export tasks_per_node=128 # this is not to be changed
+export FDMs_per_node=128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export taskfactor="1."                  # prior launch at least 5. task per core must be available    
