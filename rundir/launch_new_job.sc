@@ -3,7 +3,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
-myname="highres"
+project_name="ehc-test"
 export outputname="FGRN055_${myname}" 
 export runname="FGRN055_${myname}" 
 export p2input="$PERM/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt" 
@@ -36,12 +36,12 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${myname}_i"
 export nnodes_max=1 #8
-export tasks_per_node=128 # this is not to be changed
+export tasks_per_node=128 # decrease for runs with fewer points
 export FDMs_per_node=128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
-export taskfactor="1."                  # prior launch at least 5. task per core must be available    
-export EC_ecfs=0 			# number of parallel ECFS calls 
+export taskfactor="1." # prior launch at least 5. task per core must be available    
+export EC_ecfs=0 # number of parallel ECFS calls 
 
 # script misc
 export workpointlist="$workdir/pointlist"
@@ -56,7 +56,7 @@ export submission_iteration=1
 
 echo "We remove all current files in the workdir!"
 echo "I'll sleep 5 seconds to allow you to abort this script if starting it was not what you want."
-#sleep 5 
+sleep 5 
 
 # -------- start of the launching procedure -------
 echo "Start cleaning working directory"
