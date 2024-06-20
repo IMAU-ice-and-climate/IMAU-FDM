@@ -33,3 +33,6 @@
 
 # IMAU specific files
 *.x
+
+# mac specific
+*.DS_STORE
