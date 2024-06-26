@@ -3,7 +3,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
-myname="highres"
+myname="ehc_test_1p2"
 export outputname="FGRN055_${myname}" #"FGRN055_noCB_nor"
 export runname="FGRN055_${myname}" #"FGRN055_noCB_nor_run8"
 export p2input="$PERM/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
