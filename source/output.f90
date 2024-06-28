@@ -66,7 +66,7 @@ subroutine Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Y
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad, point_numb, fname_p1, username
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/highres/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_ini_"//trim(point_numb)//".nc",0,ncid)
@@ -132,7 +132,7 @@ subroutine Save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Dep
     integer :: status, ncid, dimID(2), varID(11)
     character*255 :: pad
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/restart/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/restart/"
     
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_restart_"//trim(point_numb)//".nc",0,ncid)
@@ -428,7 +428,7 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D)
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/highres/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -602,7 +602,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/highres/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -701,7 +701,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/highres/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
 
     ncid(:) = 0
     IDs(:,:) = 0

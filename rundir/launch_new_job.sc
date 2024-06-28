@@ -3,29 +3,31 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
-myname="ehc_test_1p2"
-export outputname="FGRN055_${myname}" #"FGRN055_noCB_nor"
-export runname="FGRN055_${myname}" #"FGRN055_noCB_nor_run8"
-export p2input="$PERM/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
-export p2exe="$PERM/imau-fdm-develop/"
+forcing="era055"
+myname="ehc-test-1p2"
+export outputname="${domain}_${forcing}_${myname}"
+export runname="${domain}_${myname}" 
+export p2input="$HPCPERM/${domain}_${forcing}/reference/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
+export p2exe="$PERM/IMAU-FDM/"
 #export FDM_executable="IMAU-FDM_np_${myname}.x"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$homedir/pointlists/pointlist_highres_todo.txt" #pointlist_highres.txt"
+gridpointlist="$homedir/pointlists/pointlist_${myname}.txt" 
 export ini_filename=""
 export filename_part1="ECMWF_${outputname}"
 
 # hardcoded FDM input
-expname="era055/${myname}"
-outputdir="$SCRATCH/data/output/$expname/" 
-restartdir="$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export p2ms="$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
+# change in output.f90, 
+expname="${myname}" #"era055/${myname}"
+outputdir="${SCRATCH}/${expname}/output/" #"$SCRATCH/data/output/$expname/" 
+restartdir="${SCRATCH}/${expname}/restart/" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export p2ms="${SCRATCH}/${expname}/ms_files/" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 # not hardcoded, FDM output
-export p2logs="$SCRATCH/data/logfile/$expname/$runname"
+export p2logs="${SCRATCH}/${expname}" #"$SCRATCH/data/logfile/$expname/$runname"
 # 
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
-export workdir="$SCRATCH/FDMtests/${domain}/${runname}"
+export workdir="${SCRATCH}/${expname}/"
 export hostname="cca"
 export relaunch="no"        # with "no", no new iteration will be launched
 
@@ -36,8 +38,8 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${myname}_i"
 export nnodes_max=1 #8
-export tasks_per_node=9 #128 # this is not to be changed
-export FDMs_per_node=9 #128 # play around for the optimal performance 
+export tasks_per_node=4 #128 # this is not to be changed
+export FDMs_per_node=4 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export taskfactor="1."                  # prior launch at least 5. task per core must be available    
