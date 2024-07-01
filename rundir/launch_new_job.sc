@@ -16,12 +16,6 @@ gridpointlist="$homedir/pointlists/pointlist_${myname}.txt"
 export ini_filename=""
 export filename_part1="ECMWF_${outputname}"
 
-echo "outputname: ${outputname}"
-echo "p2input: ${p2input}"
-echo "p2exe: ${p2exe}"
-echo "homedir: ${homedir}"
-echo "gridpointlist: ${gridpointlist}"
-
 # hardcoded FDM input
 # change in output.f90, 
 expname="${myname}" #"era055/${myname}"
@@ -30,11 +24,6 @@ restartdir="${SCRATCH}/${expname}/restart" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART
 export p2ms="${SCRATCH}/${expname}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 # not hardcoded, FDM output
 export p2logs="${SCRATCH}/${expname}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
-
-echo "outputdir: ${outputdir}"
-echo "restartdir: ${restartdir}"
-echo "p2ms: ${p2ms}"
-echo "p2logs: ${p2logs}"
 
 # 
 export walltime="48:00:00"   # (hms) walltime of the job 
@@ -55,7 +44,7 @@ export FDMs_per_node=4 #128 # play around for the optimal performance
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export taskfactor="1."                  # prior launch at least 5. task per core must be available    
-export EC_ecfs=0 			# number of parallel ECFS calls 
+export EC_ecfs=0      # number of parallel ECFS calls 
 
 # script misc
 export workpointlist="$workdir/pointlist"
@@ -67,6 +56,16 @@ export nplogdir="$workdir/nplogs"
 export workexe="$workdir/LocalCode"
 export submission_iteration=1
 
+# echo all filepaths to double check
+echo "outputdir: ${outputdir}"
+echo "restartdir: ${restartdir}"
+echo "p2ms: ${p2ms}"
+echo "p2logs: ${p2logs}"
+echo "outputname: ${outputname}"
+echo "p2input: ${p2input}"
+echo "p2exe: ${p2exe}"
+echo "homedir: ${homedir}"
+echo "gridpointlist: ${gridpointlist}"
 echo "workdir: ${workdir}"
 echo "workpointlist: ${workpointlist}"
 echo "readydir_base: ${readydir_base}"
@@ -76,41 +75,41 @@ echo "requestdir: ${requestdir}"
 echo "nplogdir: ${nplogdir}"
 echo "workexe: ${workexe}"
 
-echo "We remove all current files in the workdir!"
-echo "I'll sleep 5 seconds to allow you to abort this script if starting it was not what you want."
-sleep 5 
+echo "Continuing will remove all current files in the workdir!"
+echo
+read -p "Check paths. Want to continue? (y/n)" -n 1 -r
+echo
 
-# -------- start of the launching procedure -------
-echo "Start cleaning working directory"
-# prepare launch
-mkdir -p $workdir
-rm -rf $workdir/*
-mkdir -p $nplogdir
-mkdir -p $workexe
-mkdir -p $requestdir
-if [[ ! -r $gridpointlist ]]; then
-  echo "The grid point list is missing!"
-  exit 1
-fi  
-cp $gridpointlist ${workpointlist}.txt
+if [[ $REPLY =~ ^[Yy]$ ]]; then
 
-# create output & restart directory
-mkdir -p $p2ms
-mkdir -p $outputdir
-mkdir -p $restartdir
-mkdir -p $p2logs
-  
-let "ncpu_tot=$nnodes_max*$tasks_per_node"
-echo "Run at max on $tasks_per_node cores on $nnodes_max node(s)."  
-echo "So max parallel jobs is ${ncpu_tot}."
+  # -------- start of the launching procedure -------
+  echo "Start cleaning working directory"
+  # prepare launch
+  mkdir -p $workdir
+  rm -rf $workdir/*
+  mkdir -p $nplogdir
+  mkdir -p $workexe
+  mkdir -p $requestdir
+  if [[ ! -r $gridpointlist ]]; then
+    echo "The grid point list is missing!"
+    exit 1
+  fi  
+  cp $gridpointlist ${workpointlist}.txt
 
-echo "Create environment file and submittable script."
-./submit_job.sc
+  # create output & restart directory
+  mkdir -p $p2ms
+  mkdir -p $outputdir
+  mkdir -p $restartdir
+  mkdir -p $p2logs
+    
+  let "ncpu_tot=$nnodes_max*$tasks_per_node"
+  echo "Run at max on $tasks_per_node cores on $nnodes_max node(s)."  
+  echo "So max parallel jobs is ${ncpu_tot}."
+
+  echo "Create environment file and submittable script."
+  ./submit_job.sc
+
+fi
 
 
 exit 0  
-# ready
-
-# worklist
-# test
-# improve performance distributor

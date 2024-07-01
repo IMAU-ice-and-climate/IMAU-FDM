@@ -64,10 +64,10 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
 
     print *, "Path to model dimensions file:"
     !print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
-    print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055-era055/reference/input_settings_"//trim(domain)//".txt"
+    print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt"
 
     !open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
-    open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055-era055/reference/input_settings_"//trim(domain)//".txt")
+    open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
     
     read(12,*)
     read(12,*)

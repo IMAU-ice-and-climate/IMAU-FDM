@@ -24,35 +24,37 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     
     character*255 :: add,pad,username,domain,path_dir
 
-    path_dir = "/ec/res4/scratch/"
+    path_dir = "/ec/res4/hpcperm/"
         
     if (domain == "ANT27") then    
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
         add = "_ANT27_79-16_ave.nc"
     elseif (domain == "XPEN055") then
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
         add = "_XPEN055_79-16_ave.nc"
     elseif (domain == "FGRN11") then
-        pad = path_dir//trim(username)//"/data/input/era_files/averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/data/input/era_files/averages/"    
         add = "_FGRN11_60-79_ave.nc"
     elseif (domain == "FGRN055") then
-        pad = path_dir//trim(username)//"/FGRN055-era055/input/averages"    
-        add = "_FGRN055-era055_1960-1981.nc"
+        pad = ''//trim(path_dir)//''//trim(username)//"/FGRN055_era055/input/averages/"    
+        add = "_FGRN055-era055_1960-1981_ave.nc"
     elseif (domain == "PAT055") then
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
         add = "_PAT055_79-12_ave.nc"
     elseif (domain == "XDML055") then
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/XDML055_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/XDML055_averages/"    
         add = "_XDML055_79-15_ave.nc"
     elseif (domain == "ASE055") then
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/ASE055_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/ASE055_averages/"    
         add = "_ASE055_79-15_ave.nc"
     elseif (domain == "DMIS055") then
-        pad = path_dir//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
         add = "_DMIS055_79-17_ave.nc"
     else
         call Handle_Error(41,'no valid domain') 
      endif
+
+    print *, "looking for averages at: ", pad
     
     if (domain == "ANT27") then
 
@@ -143,7 +145,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     elseif (domain == "FGRN055") then
 
-        status = nf90_open(trim(pad)//"../mask/FGRN055_Masks.nc",0,ncid(1))
+        status = nf90_open(trim(pad)//"../../mask/FGRN055_Masks.nc",0,ncid(1))
+        print *,"looking for mask at: (character)../../mask/FGRN055_Masks.nc", pad
         if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid_lsm')    
@@ -400,7 +403,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
 
         latfile = ind_lat
 
-        pad = "/ec/res4/scratch/"//trim(username)//"/FGRN055-era055/input/timeseries/"    
+        pad = "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/input/timeseries/"    
         add = "_FGRN055-era055_1957-2020_p"//trim(fnumb)//".nc"
 
     elseif (domain == "PAT055") then
