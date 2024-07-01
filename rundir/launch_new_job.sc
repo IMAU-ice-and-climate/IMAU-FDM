@@ -105,7 +105,7 @@ echo "Run at max on $tasks_per_node cores on $nnodes_max node(s)."
 echo "So max parallel jobs is ${ncpu_tot}."
 
 echo "Create environment file and submittable script."
-#./submit_job.sc
+./submit_job.sc
 
 
 exit 0  
