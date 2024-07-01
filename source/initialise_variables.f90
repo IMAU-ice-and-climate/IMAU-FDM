@@ -63,9 +63,11 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
     character*255, intent(in) :: domain, username
 
     print *, "Path to model dimensions file:"
-    print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
+    !print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
+    print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055-era055/reference/input_settings_"//trim(domain)//".txt"
 
-    open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
+    !open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
+    open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055-era055/reference/input_settings_"//trim(domain)//".txt")
     
     read(12,*)
     read(12,*)
@@ -98,7 +100,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255 :: pad
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"

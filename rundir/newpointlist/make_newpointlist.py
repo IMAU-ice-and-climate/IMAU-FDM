@@ -5,7 +5,10 @@ import pandas as pd
 
 #%% MAKE LIST OF COMPLETED POINTS
 
-loc_list = pd.read_csv('/perm/rumb/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt', header=None, names=['lon', 'lat', 'nor', 'impexp', 'cost', 'rlat', 'rlon'])
+reference_path = '/perm/rumb/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt'
+points_path = ''
+
+loc_list = pd.read_csv(reference_path, header=None, names=['lon', 'lat', 'nor', 'impexp', 'cost', 'rlat', 'rlon'])
 loc_ini_done = pd.read_csv('points_ini_done.txt', header=None, names=['string'])
 loc_1d_done = pd.read_csv('points_1D_done.txt', header=None, names=['string'])
 loc_2d_done = pd.read_csv('points_2D_done.txt', header=None, names=['string'])
