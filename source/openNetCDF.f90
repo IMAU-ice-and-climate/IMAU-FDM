@@ -22,31 +22,33 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude
     
-    character*255 :: add,pad,username,domain
+    character*255 :: add,pad,username,domain,path_dir
+
+    path_dir = "/ec/res4/scratch/"
         
     if (domain == "ANT27") then    
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
         add = "_ANT27_79-16_ave.nc"
     elseif (domain == "XPEN055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
         add = "_XPEN055_79-16_ave.nc"
     elseif (domain == "FGRN11") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/data/input/era_files/averages/"    
+        pad = path_dir//trim(username)//"/data/input/era_files/averages/"    
         add = "_FGRN11_60-79_ave.nc"
     elseif (domain == "FGRN055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FGRN055-era055/input/averages"    
+        pad = path_dir//trim(username)//"/FGRN055-era055/input/averages"    
         add = "_FGRN055-era055_1960-1981.nc"
     elseif (domain == "PAT055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
         add = "_PAT055_79-12_ave.nc"
     elseif (domain == "XDML055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/XDML055_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/XDML055_averages/"    
         add = "_XDML055_79-15_ave.nc"
     elseif (domain == "ASE055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/ASE055_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/ASE055_averages/"    
         add = "_ASE055_79-15_ave.nc"
     elseif (domain == "DMIS055") then
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
+        pad = path_dir//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
         add = "_DMIS055_79-17_ave.nc"
     else
         call Handle_Error(41,'no valid domain') 
