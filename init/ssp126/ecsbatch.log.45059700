@@ -1,0 +1,33 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 47284, mtime: Mon Feb  6 17:01:01 2023
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed Feb  8 18:13:17 2023 (1675879997.8050532) on ad6-100.bullx:/perm/rumb/scripts/input/ssp126
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ad
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /perm/rumb/pbs/loadscripts/input/loadscript_fil_ff10m
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH -q nf
+[ECMWF-INFO -sbatch] - #SBATCH -J SCjob_fil_ff10m
+[ECMWF-INFO -sbatch] - #SBATCH --time=48:00:00
+[ECMWF-INFO -sbatch] - #SBATCH -o /perm/rumb/pbs/"/logfiles/input/log_SCjob_"fil_ff10m".log"
+[ECMWF-INFO -sbatch] - #SBATCH --mem-per-cpu=4000mb
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['/perm/rumb/pbs/loadscripts/input/loadscript_fil_ff10m']
+[ECMWF-INFO -sbatch] - ARG --job_name=SCjob_fil_ff10m
+[ECMWF-INFO -sbatch] - ARG --output=/perm/rumb/pbs/"/logfiles/input/log_SCjob_"fil_ff10m".log"
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=48:00:00
+[ECMWF-INFO -sbatch] - ARG --mem_per_cpu=4000mb
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: rumb-SCjob_fil_ff10m-1x2-/perm/rumb/pbs/"/logfiles/input/log_SCjob_"fil_ff10m".log"
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--job-name=SCjob_fil_ff10m', '--output=/perm/rumb/pbs//logfiles/input/log_SCjob_fil_ff10m.log', '--qos=nf', '--time=48:00:00', '--mem-per-cpu=4000mb', '--licenses=h2resw01', '--export=EC_user_time_limit=48:00:00', '/perm/rumb/pbs/loadscripts/input/loadscript_fil_ff10m']
+[ECMWF-INFO -sbatch] - sbatch executed on ad
+[ECMWF-INFO -sbatch] - Job queued on ad using method local
+[ECMWF-INFO -sbatch] - Submitted batch job 45059700
