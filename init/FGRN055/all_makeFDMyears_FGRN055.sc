@@ -5,9 +5,9 @@
 ## --------------------------------------------------------- ##
 
 base_name="FGRN055"
-project_name="FGRN055-era055"
-base_dir=/ec/res4/scratch/nld4814/RACMO23p2_GR/ # "${HPCPERM}/${project_name}/"
-script_dir="$PERM/code/init-scripts/FGRN055/"
+project_name="FGRN055_era055"
+base_dir="${HPCPERM}/${project_name}/raw/historical"
+script_dir="$PERM/code/init/FGRN055/"
 
 make_years="makeFDMyears_FGRN055.sc"
 make_files="makeFDMfiles_FGRN055.sc"
@@ -22,7 +22,7 @@ cell_width=5
 
 ## 1:job name 2:script name 3: variable 4:project name 5:base directory 6: script directory 7: start year 8: end year 9: number of longitudinal bands 10: cell width
 
-for var in "evap" "snowfall" "snowmelt" "precip" "sndiv" "tskin" "ff10m"; do
+for var in "evap";do #"snowfall" "snowmelt" "precip" "sndiv" "tskin" "ff10m"; do
 	#./run_sc_job.sc ave_${var} makeFDMyears_FGRN055.sc ${var} ${project_name} ${base_dir} ${script_dir} ${base_name}
 	./makeFDMyears_FGRN055.sc ${var} ${project_name} ${base_dir} ${script_dir} ${base_name}
 done
