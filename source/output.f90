@@ -8,7 +8,7 @@ module output
     implicit none
     private
 
-    public :: Accumulate_Output, Write_Initial_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_restart
+    public :: Accumulate_Output, Write_Initial_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, save_out_restart
     
 contains
 
@@ -118,31 +118,37 @@ end subroutine Write_Initial_Output
 
 ! *******************************************************
 
-
-subroutine Save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
-    DZ, point_numb, fname_p1, username)
+! TKTK RESTART IN PROGRESS
+subroutine save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
+    DZ, point_numb, fname_p1, username, project_name)
     !*** Write a netcdf file containing the firn profile and all the variables necessary for the restart functionality ***!
     
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t
-    double precision, dimension(ind_z_max), intent(in) ::  M, T, Depth, Mlwc, DenRho, Rho, Year, Refreeze, DZ
-    character*255, intent(in) :: point_numb, fname_p1, username
+    integer, intent(in) :: ind_t, ind_z_max, ind_z_surf
+    double precision, dimension(ind_z_max), intent(in) ::  Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, DZ
+    character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
     ! declare local arguments
+    ! what should varID be? Is this the number of variables?
     integer :: status, ncid, dimID(2), varID(11)
     character*255 :: pad
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/restart/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)"/restart/"
     
     ! CREATE NETCDF FILES
+
+    ncid=0
+    dimID(:) = 0
+    varID(:) = 0
+
     status = nf90_create(trim(pad)//trim(fname_p1)//"_restart_"//trim(point_numb)//".nc",0,ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_create')
     
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid,"layer",ind_z_max,dimID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim1')
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim1_restart')
     status = nf90_def_dim(ncid,"constant",1,dimID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim2')
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim2_restart')
     
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid,"dens",nf90_real,dimID(1),varID(1))
@@ -202,7 +208,7 @@ subroutine Save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Dep
     status = nf90_close(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
     
-end subroutine Save_out_restart
+end subroutine save_out_restart
 
 
 ! *******************************************************

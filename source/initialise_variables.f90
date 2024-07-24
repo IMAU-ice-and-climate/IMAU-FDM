@@ -32,22 +32,25 @@ end subroutine Define_Constants
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_fname)
+subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_fname, project_name)
     !*** Get all command line arguments ***!
 
     ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, fname_p1, ini_fname
+    character*255, intent(out) :: username, point_numb, domain, fname_p1, ini_fname, project_name
 
     ! 1: ECMWF username (e.g. nmg)
     ! 2: Simulation number, corresponding to the line number in the IN-file.
     ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27)
     ! 4: General part of output filename
     ! 5: Optional, name of the initialization file
+    ! 6: Path to output - **TKTK IN PROGRESS**
     call get_command_argument(1, username)
     call get_command_argument(2, point_numb)
     call get_command_argument(3, domain)
     call get_command_argument(4, fname_p1)
-    call get_command_argument(5, ini_fname)
+    call get_command_argument(5, project_name)
+    call get_command_argument(6, ini_fname)
+    
     
 end subroutine Get_All_Command_Line_Arg
 
@@ -87,20 +90,20 @@ end subroutine Get_Forcing_Dims
 
 subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
     beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-    lon_current, lat_current, point_numb, username, domain)
+    lon_current, lat_current, point_numb, username, domain, project_name)
     !*** Load model settings from file ***!
     
     ! declare arguments
     integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
         dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers
     double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
-    character*255, intent(in) :: point_numb, username, domain
+    character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
     character*255 :: pad
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"trim(project_name)"/ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"

@@ -4,31 +4,30 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 forcing="era055"
-myname="ehc-test-1p2"
-export outputname="${domain}_${forcing}_${myname}"
+
+export outputname="${domain}_${forcing}_${project_name}"
 export runname="${domain}_${myname}" 
 export p2input="$HPCPERM/${domain}_${forcing}/reference/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
 export p2exe="$PERM/code/IMAU-FDM"
-#export FDM_executable="IMAU-FDM_np_${myname}.x"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$homedir/pointlists/pointlist_${myname}.txt" 
+gridpointlist="$homedir/pointlists/pointlist_${project_name}.txt" 
 export ini_filename=""
 export filename_part1="ECMWF_${outputname}"
 
 # hardcoded FDM input
 # change in output.f90, 
-expname="${myname}" #"era055/${myname}"
-outputdir="${SCRATCH}/${expname}/output" #"$SCRATCH/data/output/$expname/" 
-restartdir="${SCRATCH}/${expname}/restart" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export p2ms="${SCRATCH}/${expname}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
+export project_name="ehc-test-1p2"
+export outputdir="${SCRATCH}/${project_name}/output" #"$SCRATCH/data/output/$expname/" 
+export restartdir="${SCRATCH}/${project_name}/restart" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export p2ms="${SCRATCH}/${project_name}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 # not hardcoded, FDM output
-export p2logs="${SCRATCH}/${expname}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
+export p2logs="${SCRATCH}/${project_name}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
 
 # 
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
-export workdir="${SCRATCH}/${expname}"
+export workdir="${SCRATCH}/${project_name}"
 export hostname="cca"
 export relaunch="no"        # with "no", no new iteration will be launched
 

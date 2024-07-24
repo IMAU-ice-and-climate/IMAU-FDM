@@ -1,10 +1,18 @@
 !------------------------------------------------------
 !- MAIN PROGRAM OF THE FIRN DENSIFICATION MODEL
 !--------------
+!- Cleaned up to become IMAU-FDM v1.2
 !- Cleaned up to become IMAU-FDM v1.0 (SL: 12-2014)
 !- Adapted for ECMWF use (01-2012)
 !- Made by: Stefan Ligtenberg (02-2010) 
 !- based on the firn model of Michiel Helsen (2004-2007)
+!
+!- Current TO DOs
+!   - remove ini_file
+!   - save restart
+!   - initialise from restart
+!   - remove hard-coded paths
+!   - reconcile FGRN055 and FGRN055-era (change if statements for domain matching)
 !------------------------------------------------------
 
 program main
@@ -26,7 +34,7 @@ program main
     integer :: nyears, nyearsSU
     integer, parameter :: ind_z_max = 20000
     
-    character*255 :: username, point_numb, domain, fname_p1, ini_fname
+    character*255 :: username, point_numb, domain, fname_p1, ini_fname, project_name
     
     double precision :: dzmax, initdepth, th, rho0_init, rhoi, R, pi, Ec, Eg, g, Lh, detthick
     double precision :: tsav, acav, ffav, lon_current, lat_current
@@ -47,13 +55,15 @@ program main
     print *, "----- FIRN DENSIFICATION MODEL -----"
     print *, "------------------------------------"
     print *, " "
+
+    ! TKTK RESTART IN PROGRESS
     
-    call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_fname)
+    call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, ini_fname)
     
     ! Read in the model settings, input settings and constants
     call Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
         beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-        lon_current, lat_current, point_numb, username, domain)
+        lon_current, lat_current, point_numb, username, domain, project_name)
     
     ! Read in resolution of the forcing data
     call Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
@@ -118,7 +128,7 @@ program main
     ! Spin up the model to a 'steady state'
     call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax, M, T, DZ, Rho, &
         DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-        ImpExp, nyears, nyearsSU, domain)
+        ImpExp, nyears, nyearsSU, domain, project_name)
 
     ! Write intitial profile to NetCDF-file and prepare output arrays
     call Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username)
