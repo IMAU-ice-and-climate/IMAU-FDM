@@ -25,6 +25,7 @@ export readydir="${readydir_base}/iter_${submission_iteration}"
 mkdir -p $readydir
 export EC_FARMID="ns"
 
+# FDM executable called
 echo "$(date +%c): ns_script: start running gridpoint $gridpoint"
 $homedir/start_model_ccab.sc $hostname $p2exe/$FDM_executable $gridpoint 
 

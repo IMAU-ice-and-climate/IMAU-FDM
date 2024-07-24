@@ -99,6 +99,7 @@ export domain="$domain"
 export p2input="$p2input"
 export p2exe="$p2exe"
 export FDM_executable="$FDM_executable"
+export project_name="$project_name"
 
 # other FDM input
 export p2ms="$p2ms"
