@@ -11,11 +11,6 @@ if [ "$myenvfile" == "" ]; then
 fi  
 source $myenvfile
 
-# load this module to allow for numberin of the ranks in a nf job.
-#if [[ "$jobtype" == "nf" ]]; then
-  #module load cray-snplauncher 
-#fi  
-
 echo "npnf_outer: Run at max $maxFDMs jobs at the same time (cooldown = ${coolFDMs} jobs)"
 
 # set ready-dir for this iteration
@@ -83,7 +78,7 @@ ls -1 $readydir >> "${readydir_base}/AllCompletedPoints.txt"
 # clean work executables
 rm $workexe/*
 
-echo "$(date +%c): np_script ended"
+echo "$(date +%c): npnf_outer_script ended"
 echo "--------------------------------------------------------------------------------"
 exit 0
 # the script is ready

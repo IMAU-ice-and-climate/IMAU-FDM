@@ -62,14 +62,6 @@ export readydir="${readydir_base}/iter_${submission_iteration}"
 # define request file
 requestfile=${requestdir}"/"`printf "%.5d\n" $rank`
 oldrequest=${requestfile}"_old"
-# echo "$(date +%c): ${rankmss} Use requestfile $requestfile"
-
-# change compilor
-#prgenvswitchto gnu >> $logfile 2>> $logfile
-
-## hopefully this helps to prevent pmi errors
-#export PMI_MMAP_SYNC_WAIT_TIME=360
-# Well, it didn't help! 
 
 # start loop
 action="request"

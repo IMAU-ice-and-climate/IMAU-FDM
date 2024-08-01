@@ -86,7 +86,7 @@ export readydir_base=$readydir_base
 export nplogdir=$nplogdir
 export workexe=$workexe
 export requestdir=$requestdir
-export requestdir=$restartdir
+export restartdir=$restartdir
 export hostname="$hostname"
 
 export readpointexe=$readpointexe
@@ -101,6 +101,7 @@ export p2input="$p2input"
 export p2exe="$p2exe"
 export FDM_executable="$FDM_executable"
 export project_name="$project_name"
+export restart_type="$restart_type"
 
 # other FDM input
 export p2ms="$p2ms"
@@ -135,7 +136,6 @@ cat << EOFp > $workdir/${jobname}.sc
 #!/bin/bash
 
 #SBATCH -q np 
-#SBATCH --cpus-per-task=1
 #SBATCH --nodes=$nnodes
 #SBATCH -J $jobname 
 #SBATCH --time=$walltime
@@ -166,7 +166,6 @@ cat << EOFf > $workdir/${jobname}.sc
 #!/bin/bash
 
 #SBATCH -q nf 
-#SBATCH --cpus-per-task=1
 #SBATCH -J $jobname 
 #SBATCH --time=$walltime
 #SBATCH -o $nplogdir/${myname}.log
