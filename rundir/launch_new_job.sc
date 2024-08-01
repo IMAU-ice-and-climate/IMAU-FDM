@@ -4,6 +4,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 forcing="era055"
+export project_name="ehc-test-1p2"
 
 export outputname="${domain}_${forcing}_${project_name}"
 export runname="${domain}_${myname}" 
@@ -17,9 +18,8 @@ export filename_part1="ECMWF_${outputname}"
 
 # hardcoded FDM input
 # change in output.f90, 
-export project_name="ehc-test-1p2"
 export outputdir="${SCRATCH}/${project_name}/output" #"$SCRATCH/data/output/$expname/" 
-export restartdir="${SCRATCH}/${project_name}/restart" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
 export p2ms="${SCRATCH}/${project_name}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 # not hardcoded, FDM output
 export p2logs="${SCRATCH}/${project_name}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
@@ -38,8 +38,8 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${myname}_i"
 export nnodes_max=1 #8
-export tasks_per_node=4 #128 # this is not to be changed
-export FDMs_per_node=4 #128 # play around for the optimal performance 
+export tasks_per_node=64 #64 this is not to be changed
+export FDMs_per_node=32 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export taskfactor="1."                  # prior launch at least 5. task per core must be available    
