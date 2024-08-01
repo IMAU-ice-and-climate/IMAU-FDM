@@ -8,7 +8,7 @@ module output
     implicit none
     private
 
-    public :: Accumulate_Output, Write_Initial_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, save_out_restart
+    public :: Accumulate_Output, Write_Initial_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_restart
     
 contains
 
@@ -58,15 +58,15 @@ end subroutine Accumulate_Output
 ! *******************************************************
 
 
-subroutine Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username)
+subroutine Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username, project_name)
     !*** Write a netcdf file containing the firn profile after the spin-up ***!
     
     integer :: status, ncid,ID, varID(10), ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
-    character*255 :: pad, point_numb, fname_p1, username
+    character*255 :: pad, point_numb, fname_p1, username, project_name
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_ini_"//trim(point_numb)//".nc",0,ncid)
@@ -119,7 +119,7 @@ end subroutine Write_Initial_Output
 ! *******************************************************
 
 ! TKTK RESTART IN PROGRESS
-subroutine save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
+subroutine Save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
     DZ, point_numb, fname_p1, username, project_name)
     !*** Write a netcdf file containing the firn profile and all the variables necessary for the restart functionality ***!
     
@@ -133,7 +133,7 @@ subroutine save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Dep
     integer :: status, ncid, dimID(2), varID(11)
     character*255 :: pad
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)"/restart/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/restart/"
     
     ! CREATE NETCDF FILES
 
@@ -208,7 +208,7 @@ subroutine save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Dep
     status = nf90_close(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
     
-end subroutine save_out_restart
+end subroutine Save_out_restart
 
 
 ! *******************************************************
@@ -422,19 +422,19 @@ end subroutine To_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D)
+subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, project_name)
     !*** Write the 1D output variables to a netcdf file !***
     
     ! declare arguments
     integer, intent(in) :: outputSpeed
     double precision, dimension((outputSpeed+50),18), intent(in) :: out_1D
-    character*255, intent(in) :: point_numb, fname_p1, username
+    character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -595,20 +595,20 @@ end subroutine Save_out_1D
 
 
 subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
-    out_2D_year, point_numb, fname_p1, username)
+    out_2D_year, point_numb, fname_p1, username, project_name)
     !*** Write the 2D output variables to a netcdf file !***
 
     ! declare arguments
     integer, intent(in) :: outputProf, proflayers
     double precision, dimension((outputProf+50),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
         out_2D_depth, out_2D_dRho, out_2D_year
-    character*255, intent(in) :: point_numb, fname_p1, username
+    character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -692,7 +692,7 @@ end subroutine Save_out_2D
 
 
 subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, &
-    out_2D_det_refreeze, point_numb, fname_p1, username)
+    out_2D_det_refreeze, point_numb, fname_p1, username, project_name)
     !*** Write the 2Ddetail output variables to a netcdf file !***
     
     ! declare arguments
@@ -701,13 +701,13 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     double precision, dimension(detlayers) :: DetDepth, DetDZ
     double precision, dimension((outputDetail+50),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
         out_2D_det_lwc, out_2D_det_refreeze
-    character*255, intent(in) :: point_numb, fname_p1, username
+    character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
     ! declare local arguments
     integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/ehc-test-1p2/output/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
 
     ncid(:) = 0
     IDs(:,:) = 0

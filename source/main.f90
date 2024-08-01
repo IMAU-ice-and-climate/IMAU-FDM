@@ -34,7 +34,7 @@ program main
     integer :: nyears, nyearsSU
     integer, parameter :: ind_z_max = 20000
     
-    character*255 :: username, point_numb, domain, fname_p1, ini_fname, project_name
+    character*255 :: username, point_numb, domain, fname_p1, project_name
     
     double precision :: dzmax, initdepth, th, rho0_init, rhoi, R, pi, Ec, Eg, g, Lh, detthick
     double precision :: tsav, acav, ffav, lon_current, lat_current
@@ -58,7 +58,7 @@ program main
 
     ! TKTK RESTART IN PROGRESS
     
-    call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, ini_fname)
+    call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name)
     
     ! Read in the model settings, input settings and constants
     call Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
@@ -131,7 +131,7 @@ program main
         ImpExp, nyears, nyearsSU, domain, project_name)
 
     ! Write intitial profile to NetCDF-file and prepare output arrays
-    call Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username)
+    call Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username, project_name)
     
     ! Call subprogram for spin-up and the time-integration			
     call Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
@@ -141,12 +141,12 @@ program main
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
 
     ! Write output to netcdf files
-    call Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D)
+    call Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, project_name)
     call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        point_numb, fname_p1, username)
+        point_numb, fname_p1, username, project_name)
     call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, &
-        out_2D_det_refreeze, point_numb, fname_p1, username)
-    call Save_out_restart(Nt_model_tot, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, DZ, point_numb, fname_p1, username)
+        out_2D_det_refreeze, point_numb, fname_p1, username, project_name)
+    !call Save_out_restart(Nt_model_tot, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, DZ, point_numb, fname_p1, username, project_name)
     
     print *, "Written output data to files"
     

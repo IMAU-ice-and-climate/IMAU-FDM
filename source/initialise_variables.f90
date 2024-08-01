@@ -32,11 +32,11 @@ end subroutine Define_Constants
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_fname, project_name)
+subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name)
     !*** Get all command line arguments ***!
 
     ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, fname_p1, ini_fname, project_name
+    character*255, intent(out) :: username, point_numb, domain, fname_p1, project_name
 
     ! 1: ECMWF username (e.g. nmg)
     ! 2: Simulation number, corresponding to the line number in the IN-file.
@@ -49,7 +49,6 @@ subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_
     call get_command_argument(3, domain)
     call get_command_argument(4, fname_p1)
     call get_command_argument(5, project_name)
-    call get_command_argument(6, ini_fname)
     
     
 end subroutine Get_All_Command_Line_Arg
@@ -103,7 +102,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255 :: pad
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/"trim(project_name)"/ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
