@@ -5,6 +5,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 export domain="FGRN055"
 forcing="era055"
 export project_name="clean-fdm"
+export restart_type="none" # none - do spinup; spinup - restart from spinup; (not working yet -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}" 
@@ -68,6 +69,7 @@ echo "distributor: ${distributor}"
 echo "requestdir: ${requestdir}"
 echo "nplogdir: ${nplogdir}"
 echo "workexe: ${workexe}"
+echo "restart_type=${restart_type}"
 
 echo "Continuing will remove all current files in the workdir!"
 echo

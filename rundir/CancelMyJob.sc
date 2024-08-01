@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "Cancel job FGRN055_. If that is not what you want, you have five seconds left."
+echo "Cancel job FGRN055_clean-fdm. If that is not what you want, you have five seconds left."
 sleep 5
 
 echo "Start canceling"
