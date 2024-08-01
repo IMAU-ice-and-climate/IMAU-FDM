@@ -86,6 +86,7 @@ export readydir_base=$readydir_base
 export nplogdir=$nplogdir
 export workexe=$workexe
 export requestdir=$requestdir
+export requestdir=$restartdir
 export hostname="$hostname"
 
 export readpointexe=$readpointexe
