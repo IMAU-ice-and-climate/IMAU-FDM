@@ -107,7 +107,6 @@ export p2ms="$p2ms"
 export p2logs="$p2logs"
 export usern="$usern"
 export filename_part1="$filename_part1"
-export ini_filename="$ini_filename"
 export workpointlist="$workpointlist"
 
 # job management

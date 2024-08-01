@@ -24,7 +24,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     
     character*255 :: add,pad,username,domain,path_dir
 
-    path_dir = "/ec/res4/hpcperm/"
+    path_dir = "/ec/res4/scratch/"
         
     if (domain == "ANT27") then    
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
@@ -146,7 +146,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     elseif (domain == "FGRN055") then
 
         status = nf90_open(trim(pad)//"../../mask/FGRN055_Masks.nc",0,ncid(1))
-        print *,"looking for mask at: (character)../../mask/FGRN055_Masks.nc", pad
+        print *,"looking for mask at: ../../mask/FGRN055_Masks.nc", pad
         if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid_lsm')    
@@ -264,8 +264,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     endif 
 
-    print *, 'trim(pad)//"snowmelt"//trim(add)'
-    print *, trim(pad)//"snowmelt"//trim(add)
+    print *, 'trim(pad)//"var"//trim(add)'
+    print *, trim(pad)//"var"//trim(add)
     print *, ' '
 
     status = nf90_open(trim(pad)//"snowmelt"//trim(add),0,ncid(1))
@@ -403,8 +403,8 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
 
         latfile = ind_lat
 
-        pad = "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/input/timeseries/"    
-        add = "_FGRN055-era055_1957-2020_p"//trim(fnumb)//".nc"
+        pad = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/timeseries/"    
+        add = "_FGRN055-era055_1957-2023_p"//trim(fnumb)//".nc"
 
     elseif (domain == "PAT055") then
 
