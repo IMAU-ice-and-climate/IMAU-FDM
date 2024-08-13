@@ -27,9 +27,9 @@ if [[ $mintasks -le $ntodo ]]; then
   nnodes=$nnodes_max
   jobtype="np"
 else
-# derive needed number of nodes (as a real) and take int value while rounding down
+  # derive needed number of nodes (as a real) and take int value while rounding down
   nnodes_real=`echo "${ntodo}.0/(${FDMs_per_node}.0*${taskfactor})" | bc`
-# somehow bc provides already a rounded down integer, nevertheless...  
+  # somehow bc provides already a rounded down integer, nevertheless...  
   nnodes=${nnodes_real%.*} 
   if [[ $nnodes -gt 0 ]]; then
     echo "submit_job: Only ${nnodes} node(s) needed now."
@@ -37,9 +37,9 @@ else
   else
     ntasks_real=`echo "${ntodo}/${taskfactor}" | bc`
     ntasks=${ntasks_real%.*}
-# if the number of tasks is less than ~50, go for ns
+    # if the number of tasks is less than ~50, go for ns
     if [[ $ntasks -gt 20 || ${ntodo} -gt 120 ]]; then
-# limit the number of tasks to half of a node.
+      # limit the number of tasks to half of a node.
       let "halfnode=${tasks_per_node}/2"
       if [[ $ntasks -gt $halfnode ]]; then
         ntasks=$halfnode
@@ -57,15 +57,15 @@ fi
 
 # get maximum number of parallel FDM runs in a job
 if [[ "$jobtype" == "np" ]]; then
-# tasks are defined by the number of tasks per node, cool down at the end
+  # tasks are defined by the number of tasks per node, cool down at the end
   let "maxFDMs=${nnodes}*${FDMs_per_node}"
   let "coolFDMs=${maxFDMs}/2"
 elif [[ "$jobtype" == "nf" ]]; then
-# a FDM run for every task, no cool down
+  # a FDM run for every task, no cool down
   maxFDMs=$ntasks
   coolFDMs=$ntasks
 else
-# ns
+  # ns
   maxFDMs=1
   coolFDMs=1
 fi    
@@ -179,7 +179,6 @@ $homedir/npnf_outer_script.sc $workdir/$envfile >& $nplogdir/${runlog}.log
 
 exit 0
 EOFf
-  echo "try1"
   
   # make it executable
   chmod u+x $workdir/${jobname}.sc

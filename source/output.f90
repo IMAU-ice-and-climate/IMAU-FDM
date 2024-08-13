@@ -8,7 +8,7 @@ module output
     implicit none
     private
 
-    public :: Accumulate_Output, Write_Initial_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_restart
+    public :: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
     
 contains
 
@@ -53,163 +53,6 @@ subroutine Accumulate_Output(dtmodel, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy,
     Msolin = 0.
     
 end subroutine Accumulate_Output
-
-
-! *******************************************************
-
-
-subroutine Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username, project_name)
-    !*** Write a netcdf file containing the firn profile after the spin-up ***!
-    
-    integer :: status, ncid,ID, varID(10), ind_z_max, ind_z_surf
-    double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
-    double precision, dimension(ind_z_max) :: Rho, Year
-    character*255 :: pad, point_numb, fname_p1, username, project_name
-    
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
-
-    ! CREATE NETCDF FILES
-    status = nf90_create(trim(pad)//trim(fname_p1)//"_ini_"//trim(point_numb)//".nc",0,ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_create')
-
-    ! DEFINE DIMENSIONS
-    status = nf90_def_dim(ncid,"layer",ind_z_surf,ID)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim1')
-    
-    ! DEFINE VARIABLES
-    status = nf90_def_var(ncid,"dens",nf90_real,ID,varID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
-    status = nf90_def_var(ncid,"temp",nf90_real,ID,varID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var2')
-    status = nf90_def_var(ncid,"mass",nf90_real,ID,varID(3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var3')
-    status = nf90_def_var(ncid,"depth",nf90_real,ID,varID(4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var4')
-    status = nf90_def_var(ncid,"lwc",nf90_real,ID,varID(5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var5')
-    status = nf90_def_var(ncid,"year",nf90_real,ID,varID(6))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var6')    
-    
-    ! END OF DEFINING FILES
-    status = nf90_enddef(ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_enddef')
-    
-    ! PUT VARIABLES
-    status = nf90_put_var(ncid,varID(1),Rho(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var1')    
-    status = nf90_put_var(ncid,varID(2),T(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var2')
-    status = nf90_put_var(ncid,varID(3),M(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var3')
-    status = nf90_put_var(ncid,varID(4),Depth(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var4')
-    status = nf90_put_var(ncid,varID(5),Mlwc(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var5')
-        
-    status = nf90_put_var(ncid,varID(6),Year(1:ind_z_surf))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var6')
-    
-    ! CLOSE NETCDF FILE
-    status = nf90_close(ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
-    
-end subroutine Write_Initial_Output
-
-
-! *******************************************************
-
-! TKTK RESTART IN PROGRESS
-subroutine Save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
-    DZ, point_numb, fname_p1, username, project_name)
-    !*** Write a netcdf file containing the firn profile and all the variables necessary for the restart functionality ***!
-    
-    ! declare arguments
-    integer, intent(in) :: ind_t, ind_z_max, ind_z_surf
-    double precision, dimension(ind_z_max), intent(in) ::  Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, DZ
-    character*255, intent(in) :: point_numb, fname_p1, username, project_name
-
-    ! declare local arguments
-    ! what should varID be? Is this the number of variables?
-    integer :: status, ncid, dimID(2), varID(11)
-    character*255 :: pad
-    
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/restart/"
-    
-    ! CREATE NETCDF FILES
-
-    ncid=0
-    dimID(:) = 0
-    varID(:) = 0
-
-    status = nf90_create(trim(pad)//trim(fname_p1)//"_restart_"//trim(point_numb)//".nc",0,ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_create')
-    
-    ! DEFINE DIMENSIONS
-    status = nf90_def_dim(ncid,"layer",ind_z_max,dimID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim1_restart')
-    status = nf90_def_dim(ncid,"constant",1,dimID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim2_restart')
-    
-    ! DEFINE VARIABLES
-    status = nf90_def_var(ncid,"dens",nf90_real,dimID(1),varID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
-    status = nf90_def_var(ncid,"temp",nf90_real,dimID(1),varID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var2')
-    status = nf90_def_var(ncid,"mass",nf90_real,dimID(1),varID(3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var3')
-    status = nf90_def_var(ncid,"depth",nf90_real,dimID(1),varID(4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var4')
-    status = nf90_def_var(ncid,"lwc",nf90_real,dimID(1),varID(5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var5')
-    status = nf90_def_var(ncid,"year",nf90_real,dimID(1),varID(6))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var6')
-    status = nf90_def_var(ncid,"refreeze",nf90_real,dimID(1),varID(7))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var7')
-    status = nf90_def_var(ncid,"dz",nf90_real,dimID(1),varID(8))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var8')
-    status = nf90_def_var(ncid,"drho",nf90_real,dimID(1),varID(9))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var9')
-    
-    status = nf90_def_var(ncid,"ind_z_surf",nf90_int,dimID(2),varID(10))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var10')
-    status = nf90_def_var(ncid,"ind_t",nf90_int,dimID(2),varID(11))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var11')
-    
-    ! END OF DEFINING FILES
-    status = nf90_enddef(ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_enddef')
-    
-    ! PUT VARIABLES
-    status = nf90_put_var(ncid,varID(1),Rho)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var1')
-    status = nf90_put_var(ncid,varID(2),T)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var2')
-    status = nf90_put_var(ncid,varID(3),M)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var3')
-    status = nf90_put_var(ncid,varID(4),Depth)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var4')
-    status = nf90_put_var(ncid,varID(5),Mlwc)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var5')
-    status = nf90_put_var(ncid,varID(6),Year)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var6')
-    status = nf90_put_var(ncid,varID(7),Refreeze)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var7')
-    status = nf90_put_var(ncid,varID(8),DZ)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var8')
-    status = nf90_put_var(ncid,varID(9),DenRho)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var9')
-    
-    status = nf90_put_var(ncid,varID(10),ind_z_surf)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var10')
-    status = nf90_put_var(ncid,varID(11),ind_t)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var11')
-    
-    ! CLOSE NETCDF FILE
-    status = nf90_close(ncid)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
-    
-end subroutine Save_out_restart
-
 
 ! *******************************************************
 
@@ -445,148 +288,148 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(32),"ind_t",outputSpeed+50,IDs(32,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim1')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_dim1')
     
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid(32),"h_surf",nf90_real,(/IDs(32,1)/),varID(32,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var1')
     status = nf90_def_var(ncid(32),"vice",nf90_real,(/IDs(32,1)/),varID(32,2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var2')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var2')
     status = nf90_def_var(ncid(32),"vacc",nf90_real,(/IDs(32,1)/),varID(32,3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var3')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var3')
     status = nf90_def_var(ncid(32),"vfc",nf90_real,(/IDs(32,1)/),varID(32,4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var4')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var4')
     status = nf90_def_var(ncid(32),"vmelt",nf90_real,(/IDs(32,1)/),varID(32,5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var5')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var5')
     status = nf90_def_var(ncid(32),"vbouy",nf90_real,(/IDs(32,1)/),varID(32,6))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var6')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var6')
     status = nf90_def_var(ncid(32),"vsub",nf90_real,(/IDs(32,1)/),varID(32,7))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var7')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var7')
     status = nf90_def_var(ncid(32),"vsnd",nf90_real,(/IDs(32,1)/),varID(32,8))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var8')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var8')
     status = nf90_def_var(ncid(32),"vtotal",nf90_real,(/IDs(32,1)/),varID(32,9))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var9')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var9')
     status = nf90_def_var(ncid(32),"Runoff",nf90_real,(/IDs(32,1)/),varID(32,10))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var10')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var10')
     status = nf90_def_var(ncid(32),"FirnAir",nf90_real,(/IDs(32,1)/),varID(32,11))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var11')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var11')
     status = nf90_def_var(ncid(32),"TotLwc",nf90_real,(/IDs(32,1)/),varID(32,12))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var12')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var12')
     status = nf90_def_var(ncid(32),"refreeze",nf90_real,(/IDs(32,1)/),varID(32,13)) 
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var13') 
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var13') 
     status = nf90_def_var(ncid(32),"rain",nf90_real,(/IDs(32,1)/),varID(32,14))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var14')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var14')
     status = nf90_def_var(ncid(32),"surfmelt",nf90_real,(/IDs(32,1)/),varID(32,15)) 
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var15') 
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var15') 
     status = nf90_def_var(ncid(32),"solin",nf90_real,(/IDs(32,1)/),varID(32,16))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var16') 
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var16') 
     status = nf90_def_var(ncid(32),"icemass",nf90_real,(/IDs(32,1)/),varID(32,17))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var17') 
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var17') 
     status = nf90_def_var(ncid(32),"Rho0",nf90_real,(/IDs(32,1)/),varID(32,18))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var18')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var18')
     
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1')
     status = nf90_put_att(ncid(32),varID(32,2),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_2')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2')
     status = nf90_put_att(ncid(32),varID(32,3),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_3')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3')
     status = nf90_put_att(ncid(32),varID(32,4),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_4')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
     status = nf90_put_att(ncid(32),varID(32,5),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_5')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_5')
     status = nf90_put_att(ncid(32),varID(32,6),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_6')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_6')
     status = nf90_put_att(ncid(32),varID(32,7),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_7')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_7')
     status = nf90_put_att(ncid(32),varID(32,8),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_8')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_8')
     status = nf90_put_att(ncid(32),varID(32,9),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_9')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_9')
     status = nf90_put_att(ncid(32),varID(32,10),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_10')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_10')
     status = nf90_put_att(ncid(32),varID(32,11),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_11')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11')
     status = nf90_put_att(ncid(32),varID(32,12),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_12')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_12')
     status = nf90_put_att(ncid(32),varID(32,13),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_13')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_13')
     status = nf90_put_att(ncid(32),varID(32,14),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_14')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_14')
     status = nf90_put_att(ncid(32),varID(32,15),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_15')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_15')
     status = nf90_put_att(ncid(32),varID(32,16),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_16')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_16')
     status = nf90_put_att(ncid(32),varID(32,17),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_17')    
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
     status = nf90_put_att(ncid(32),varID(32,18),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_18')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
     
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(32))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_enddef')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_enddef')
 
     ! SAVE DATA
     status = nf90_put_var(ncid(32),varID(32,1),out_1D(:,1), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed1')    
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed1')    
     status = nf90_put_var(ncid(32),varID(32,2),out_1D(:,2), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var2')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var2')
     status = nf90_put_var(ncid(32),varID(32,3),out_1D(:,3), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed3')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed3')
     status = nf90_put_var(ncid(32),varID(32,4),out_1D(:,4), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed4')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed4')
     status = nf90_put_var(ncid(32),varID(32,5),out_1D(:,5), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed5')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed5')
     status = nf90_put_var(ncid(32),varID(32,6),out_1D(:,6), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed6')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed6')
     status = nf90_put_var(ncid(32),varID(32,7),out_1D(:,7), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed7')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed7')
     status = nf90_put_var(ncid(32),varID(32,8),out_1D(:,8), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed8')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed8')
     status = nf90_put_var(ncid(32),varID(32,9),out_1D(:,9), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed9')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed9')
     status = nf90_put_var(ncid(32),varID(32,10),out_1D(:,10), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed10')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed10')
     status = nf90_put_var(ncid(32),varID(32,11),out_1D(:,11), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed11')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed11')
     status = nf90_put_var(ncid(32),varID(32,12),out_1D(:,12), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed12')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed12')
     status = nf90_put_var(ncid(32),varID(32,13),out_1D(:,13), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed13')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed13')
     status = nf90_put_var(ncid(32),varID(32,14),out_1D(:,14), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed14')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed14')
     status = nf90_put_var(ncid(32),varID(32,15),out_1D(:,15), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed15')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed15')
     status = nf90_put_var(ncid(32),varID(32,16),out_1D(:,16), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed16')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed16')
     status = nf90_put_var(ncid(32),varID(32,17),out_1D(:,17), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed17')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed17')
     status = nf90_put_var(ncid(32),varID(32,18),out_1D(:,18), &
     start=(/1/),count=(/(outputSpeed+50)/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_speed18')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed18')
 
     
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(32))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_close')
     
 end subroutine Save_out_1D
 
@@ -619,71 +462,71 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(31),"ind_t",outputProf+50,IDs(31,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim2')    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim2')    
     status = nf90_def_dim(ncid(31),"layer",proflayers,IDs(31,2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim3')
 
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid(31),"dens",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     status = nf90_def_var(ncid(31),"temp",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var2')
     status = nf90_def_var(ncid(31),"year",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var3')
     status = nf90_def_var(ncid(31),"lwc",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var4')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var4')
     status = nf90_def_var(ncid(31),"depth",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var5')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var5')
     status = nf90_def_var(ncid(31),"dRho",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,6))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var6')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(31),varID(31,1),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
     status = nf90_put_att(ncid(31),varID(31,2),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
     status = nf90_put_att(ncid(31),varID(31,3),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
     status = nf90_put_att(ncid(31),varID(31,4),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_4')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
     status = nf90_put_att(ncid(31),varID(31,5),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_5')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
     status = nf90_put_att(ncid(31),varID(31,6),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_6')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
 
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(31))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_enddef')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_enddef')
 
     ! SAVE DATA
     status = nf90_put_var(ncid(31),varID(31,1),out_2D_dens,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid1')    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid1')    
     status = nf90_put_var(ncid(31),varID(31,2),out_2D_temp,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid2')
     status = nf90_put_var(ncid(31),varID(31,3),out_2D_year,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid3')
     status = nf90_put_var(ncid(31),varID(31,4),out_2D_lwc,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid4')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid4')
     status = nf90_put_var(ncid(31),varID(31,5),out_2D_depth,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid5')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid5')
     status = nf90_put_var(ncid(31),varID(31,6),out_2D_dRho,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_grid6')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid6')
     
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(31))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_close')
     
 end subroutine Save_out_2D
 
@@ -725,67 +568,201 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(33),"ind_t",outputDetail+50,IDs(33,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim4')    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim4')    
     status = nf90_def_dim(ncid(33),"layer",detlayers,IDs(33,2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_dim5')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim5')
 
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid(33),"dens",nf90_real,(/IDs(33,1),IDs(33,2)/), &
         varID(33,1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     status = nf90_def_var(ncid(33),"temp",nf90_real,(/IDs(33,1),IDs(33,2)/), &
         varID(33,2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var2')
     status = nf90_def_var(ncid(33),"lwc",nf90_real,(/IDs(33,1),IDs(33,2)/), &
         varID(33,3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var3')
     status = nf90_def_var(ncid(33),"depth",nf90_real,(/IDs(33,2)/),varID(33,4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var4')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var4')
     status = nf90_def_var(ncid(33),"dz",nf90_real,(/IDs(33,2)/),varID(33,5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var5')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var5')
     status = nf90_def_var(ncid(33),"refreeze",nf90_real,(/IDs(33,1),IDs(33,2)/), & 
         varID(33,6))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_var1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(33),varID(33,1),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
     status = nf90_put_att(ncid(33),varID(33,2),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
     status = nf90_put_att(ncid(33),varID(33,3),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
     status = nf90_put_att(ncid(33),varID(33,4),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_def_att_miss_val_4')    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')    
     
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(33))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_enddef')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_enddef')
     
     ! PUT IN THE CONSTANT Z-AXIS in 2Ddetail
     status = nf90_put_var(ncid(33),varID(33,4),DetDepth)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var1_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var1_1')
     status = nf90_put_var(ncid(33),varID(33,5),DetDZ)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var2_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var2_1')
     
     ! SAVE DATA
     status = nf90_put_var(ncid(33),varID(33,1),out_2D_det_dens, &
         start=(/1,1/),count=(/(outputDetail+50),detlayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_detail1')    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail1')    
     status = nf90_put_var(ncid(33),varID(33,2),out_2D_det_temp, &
         start=(/1,1/),count=(/(outputDetail+50),detlayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_detail2')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail2')
     status = nf90_put_var(ncid(33),varID(33,3),out_2D_det_lwc, &
         start=(/1,1/),count=(/(outputDetail+50),detlayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_detail3')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail3')
     status = nf90_put_var(ncid(33),varID(33,6),out_2D_det_refreeze, &
         start=(/1,1/),count=(/(outputDetail+50),detlayers/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_put_var_detail6')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail6')
 
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(33))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close')
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_close')
     
 end subroutine Save_out_2Ddetail
 
+! *******************************************************
+
+
+subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username, project_name)
+    !*** Write a netcdf file containing the firn profile after the spin-up ***!
+    
+    integer :: status, ncid, dimID, varID(10), ind_z_max, ind_z_surf
+    double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
+    double precision, dimension(ind_z_max) :: Rho, Year
+    character*255 :: pad, point_numb, fname_p1, username, project_name
+    
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+
+    ! CREATE NETCDF FILES
+    status = nf90_create(trim(pad)//trim(fname_p1)//"_restart_from_spinup_"//trim(point_numb)//".nc",0,ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_create')
+
+    ! DEFINE DIMENSIONS
+    ! TODO: should ind_z_surf be ind_z_max?
+    status = nf90_def_dim(ncid,"layer",ind_z_surf,dimID)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_dim1')
+    
+    ! DEFINE VARIABLES
+    status = nf90_def_var(ncid,"dens",nf90_real,dimID,varID(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var1')
+    status = nf90_def_var(ncid,"temp",nf90_real,dimID,varID(2))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var2')
+    status = nf90_def_var(ncid,"mass",nf90_real,dimID,varID(3))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var3')
+    status = nf90_def_var(ncid,"depth",nf90_real,dimID,varID(4))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var4')
+    status = nf90_def_var(ncid,"lwc",nf90_real,dimID,varID(5))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var5')
+    status = nf90_def_var(ncid,"year",nf90_real,dimID,varID(6))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var6')    
+    
+    ! END OF DEFINING FILES
+    status = nf90_enddef(ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_enddef')
+    
+    ! PUT VARIABLES
+    status = nf90_put_var(ncid,varID(1),Rho(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var1')    
+    status = nf90_put_var(ncid,varID(2),T(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var2')
+    status = nf90_put_var(ncid,varID(3),M(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var3')
+    status = nf90_put_var(ncid,varID(4),Depth(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var4')
+    status = nf90_put_var(ncid,varID(5),Mlwc(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var5')
+        
+    status = nf90_put_var(ncid,varID(6),Year(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var6')
+    
+    ! CLOSE NETCDF FILE
+    status = nf90_close(ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_close')
+    
+end subroutine Save_out_spinup
+
+! *******************************************************
+
+
+subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, &
+    DenRho, Refreeze, point_numb, fname_p1, username, project_name)
+    !*** Write a netcdf file containing the firn profile after the spin-up ***!
+    
+    integer :: status, ncid, dimID(2), varID(10), ind_z_max, ind_z_surf, Nt_model_tot
+    double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc, DenRho, Refreeze
+    double precision, dimension(ind_z_max) :: Rho, Year
+    character*255 :: pad, point_numb, fname_p1, username, project_name
+    
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+
+    ! CREATE NETCDF FILES
+    status = nf90_create(trim(pad)//trim(fname_p1)//"_restart_from_2023_run_"//trim(point_numb)//".nc",0,ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_create')
+
+    ! DEFINE DIMENSIONS
+    status = nf90_def_dim(ncid,"layer",ind_z_surf,dimID(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_dim1')
+    status = nf90_def_dim(ncid,"constant",1,dimID(2))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_dim1')
+    
+    ! DEFINE VARIABLES
+    status = nf90_def_var(ncid,"dens",nf90_real,dimID(1),varID(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var1')
+    status = nf90_def_var(ncid,"temp",nf90_real,dimID(1),varID(2))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var2')
+    status = nf90_def_var(ncid,"mass",nf90_real,dimID(1),varID(3))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var3')
+    status = nf90_def_var(ncid,"depth",nf90_real,dimID(1),varID(4))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var4')
+    status = nf90_def_var(ncid,"lwc",nf90_real,dimID(1),varID(5))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var5')
+    status = nf90_def_var(ncid,"year",nf90_real,dimID(1),varID(6))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var6')
+    status = nf90_def_var(ncid,"refreeze",nf90_real,dimID(1),varID(7))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var7')
+    status = nf90_def_var(ncid,"denrho",nf90_real,dimID(1),varID(8))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var8')
+    status = nf90_def_var(ncid,"prev_nt",nf90_real,dimID(2),varID(9))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var9')
+    
+    ! END OF DEFINING FILES
+    status = nf90_enddef(ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_enddef')
+    
+    ! PUT VARIABLES
+    status = nf90_put_var(ncid,varID(1),Rho(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var1')    
+    status = nf90_put_var(ncid,varID(2),T(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var2')
+    status = nf90_put_var(ncid,varID(3),M(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var3')
+    status = nf90_put_var(ncid,varID(4),Depth(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var4')
+    status = nf90_put_var(ncid,varID(5),Mlwc(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var5')
+    status = nf90_put_var(ncid,varID(6),Year(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var6')
+    status = nf90_put_var(ncid,varID(7),Refreeze(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var7')
+    status = nf90_put_var(ncid,varID(8),DenRho(1:ind_z_surf))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var8')
+    status = nf90_put_var(ncid,varID(9),Nt_model_tot)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var9')
+    
+    ! CLOSE NETCDF FILE
+    status = nf90_close(ncid)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_close')
+    
+end subroutine Save_out_run
 
 end module output

@@ -4,8 +4,8 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 forcing="era055"
-export project_name="clean-fdm"
-export restart_type="none" # none - do spinup; spinup - restart from spinup; (not working yet -> run - restart from run)
+export project_name="run-1957-2023-FGRN055-era055"
+export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}" 
@@ -33,9 +33,9 @@ export usern=$USER
 # likely not to change
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
-export nnodes_max=1 #8
+export nnodes_max=8 #8
 export tasks_per_node=64 #64 this is not to be changed
-export FDMs_per_node=32 #128 # play around for the optimal performance 
+export FDMs_per_node=60 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export taskfactor="1."                  # prior launch at least 5. task per core must be available    
