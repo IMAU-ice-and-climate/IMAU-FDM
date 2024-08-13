@@ -3,7 +3,7 @@ module time_loop
 
     use grid_routines, only: Split_Layers, Merge_Layers, Delete_Layers, Add_Layers
     use firn_physics, only: Update_Surface, Densific, Solve_Temp_Imp, Solve_Temp_Exp, Calc_Integrated_Var
-    use output, only: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail, save_out_restart
+    use output, only: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail
 
     implicit none
     private
@@ -124,10 +124,6 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
 
     enddo  ! spin-ups
 
-    ! TKTK RESTART IN PROGRESS - RESTART PROFILE OUTPUT HERE ?
-    ! save_out_restart(ind_t, ind_z_max, ind_z_surf, Rho, DenRho, M, T, Depth, Mlwc, Year, Refreeze, &
-    !    DZ, point_numb, fname_p1, username, project_name)
-
     ! Reset profiles that need to start at zero after the spin-up
     DenRho(:) = 0.
     Refreeze(:) = 0.
@@ -142,11 +138,11 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
     fname_p1, username, domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
     
     ! declare arguments
-    integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, proflayers, detlayers
+    integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, proflayers, detlayers, prev_nt
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
     integer, intent(inout) :: ind_z_surf
@@ -156,10 +152,10 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision, dimension((outputSpeed+50), 18), intent(inout) :: out_1D
     double precision, dimension((outputProf+50), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension((outputDetail+50), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
-    character*255, intent(in) :: fname_p1, username, domain
+    character*255, intent(in) :: fname_p1, username, domain, restart_type
     
     ! declare local variables
-    integer :: ind_z, ind_t
+    integer :: ind_z, ind_t, ind_t_i
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
     double precision :: h_surf = 0., Totvice = 0., Totvfc = 0., Totvacc = 0., Totvsub = 0., Totvsnd = 0., Totvmelt = 0., Totvbouy = 0.
@@ -168,7 +164,15 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     
     ! Time integration
     print *, "Start of main time loop"
-    do ind_t = 1, Nt_model_tot
+
+    ! start from last time step if restarting from loaded run
+    if ( restart_type=="run" ) then
+        ind_t_i = prev_nt
+    else
+        ind_t_i = 1
+    endif
+
+    do ind_t = ind_t_i, Nt_model_tot
         
         ! Index the forcing at the current time step
         rho0 = Rho0FM(ind_t)

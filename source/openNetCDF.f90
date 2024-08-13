@@ -7,7 +7,7 @@ module openNetCDF
     implicit none
     private
 
-    public :: Load_Ave_Forcing, Load_TimeSeries_Forcing, Init_From_File, Handle_Error
+    public :: Load_Ave_Forcing, Load_TimeSeries_Forcing, Handle_Error, Restart_From_Spinup, Restart_From_Run
     
 contains
 
@@ -35,7 +35,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     elseif (domain == "FGRN11") then
         pad = ''//trim(path_dir)//''//trim(username)//"/data/input/era_files/averages/"    
         add = "_FGRN11_60-79_ave.nc"
-    elseif (domain == "FGRN055") then
+    elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FGRN055_era055/input/averages/"    
         add = "_FGRN055-era055_1960-1981_ave.nc"
     elseif (domain == "PAT055") then
@@ -143,25 +143,25 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         ! No Ice Shelves in Greenland
         ISM(:,:) = 0
 
-    elseif (domain == "FGRN055") then
+    elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
 
         status = nf90_open(trim(pad)//"../../mask/FGRN055_Masks.nc",0,ncid(1))
-        print *,"looking for mask at: ../../mask/FGRN055_Masks.nc", pad
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
+        
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid_lsm')    
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid_lsm')    
         status = nf90_inq_varid(ncid(1),"lat",ID(11))
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid11')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid11')
         status = nf90_inq_varid(ncid(1),"lon",ID(12))
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid12')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid12')
         
         status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lsm')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lsm')
         status  = nf90_get_var(ncid(1),ID(11),Latitude)        
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lat')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lat')
         status  = nf90_get_var(ncid(1),ID(12),Longitude)    
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lon')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lon')
 
         ! No Ice Shelves in Greenland
         ISM(:,:) = 0
@@ -264,35 +264,31 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     endif 
 
-    print *, 'trim(pad)//"var"//trim(add)'
-    print *, trim(pad)//"var"//trim(add)
-    print *, ' '
-
     status = nf90_open(trim(pad)//"snowmelt"//trim(add),0,ncid(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open1')
     status = nf90_open(trim(pad)//"precip"//trim(add),0,ncid(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open2')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open2')
     status = nf90_open(trim(pad)//"ff10m"//trim(add),0,ncid(3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open3')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open3')
     status = nf90_open(trim(pad)//"tskin"//trim(add),0,ncid(4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open4')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open4')
     status = nf90_open(trim(pad)//"evap"//trim(add),0,ncid(5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open5')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open5')
     status = nf90_open(trim(pad)//"sndiv"//trim(add),0,ncid(7))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open7')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open7')
 
     status = nf90_inq_varid(ncid(1),"snowmelt",ID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
     status = nf90_inq_varid(ncid(2),"precip",ID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
     status = nf90_inq_varid(ncid(3),"ff10m",ID(3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
     status = nf90_inq_varid(ncid(4),"tskin",ID(4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
     status = nf90_inq_varid(ncid(5),"evap",ID(5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
     status = nf90_inq_varid(ncid(7),"sndiv",ID(7))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+    if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
 
     status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1,1,1/), &
         count=(/Nlon,Nlat,1,1/))
@@ -393,7 +389,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         pad = "/ec/res4/scratch/"//trim(username)//"/data/input/era_files/files/"    
         add = "_FGRN11_60-16_p"//trim(fnumb)//".nc"
 
-    elseif (domain == "FGRN055") then
+    elseif (domain == "FGRN055" .OR. domain == "FGRN055_era055") then
 
         lonfile = mod(ind_lon,6)
         if (lonfile==0) lonfile = 6
@@ -601,66 +597,159 @@ end subroutine Load_TimeSeries_Forcing
 ! *******************************************************
 
 
-subroutine Init_From_File(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ,username, domain, ini_fname, point_numb)
+subroutine Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, &
+                                domain, point_numb, fname_p1, project_name)
         
     integer :: ind_z_max, ind_z_surf
     integer :: ind_z, status, ncid(50), ID(50), LayerID
     
-    double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ 
+    double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze
     
-    character*255 :: fname, pad, username, domain, ini_fname, point_numb
+    character*255 :: fname, pad, username, domain, ini_fname, point_numb, project_name, fname_p1
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/ini_files/"//trim(domain)//"/"    
-    fname = trim(ini_fname)//"_ini_"//trim(point_numb)//".nc"
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     
-    print *, 'trim(pad)//trim(fname) for ini file:'
-    print *, trim(pad)//trim(fname)
+    print *, 'pad for restart file:'
+    print *, trim(pad)
     print *, ' '
 
     ! Open the snowmelt netCDF file
-    status = nf90_open(trim(pad)//trim(fname),0,ncid(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
+    status = nf90_open(trim(pad),0,ncid(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_open1')
 
     !Get ID of the variables in the NetCDF files
     status = nf90_inq_varid(ncid(1),"dens",ID(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid1')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_varid1')
     status = nf90_inq_varid(ncid(1),"temp",ID(2))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid2')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_varid2')
     status = nf90_inq_varid(ncid(1),"mass",ID(3))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid3')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_varid3')
     status = nf90_inq_varid(ncid(1),"depth",ID(4))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid4')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_varid4')
     status = nf90_inq_varid(ncid(1),"lwc",ID(5))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid5')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_varid5')
 
     ! Get dimension of the array
     status = nf90_inq_dimid(ncid(1),"layer",LayerID)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_dimid1')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_dimid1')
     status = nf90_inquire_dimension(ncid(1),LayerID,len=ind_z_surf)
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_dim1')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_inq_dim1')
     
     ! Get all variables from the netCDF files
     status  = nf90_get_var(ncid(1),ID(1),Rho(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var1')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_get_var1')
     status  = nf90_get_var(ncid(1),ID(2),T(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var2')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_get_var2')
     status  = nf90_get_var(ncid(1),ID(3),M(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var3')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_get_var3')
     status  = nf90_get_var(ncid(1),ID(4),Depth(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var4')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_get_var4')
     status  = nf90_get_var(ncid(1),ID(5),Mlwc(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var5')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_get_var5')
     
     ! Close all netCDF files    
     status = nf90_close(ncid(1))
-    if(status /= nf90_noerr) call Handle_Error(status,'nf_close1')
+    if(status /= nf90_noerr) call Handle_Error(status,'load_restart_close1')
 
     DZ(ind_z_surf) = Depth(ind_z_surf) * 2.
     do ind_z = (ind_z_surf-1), 1, -1
         DZ(ind_z) = (Depth(ind_z) - Depth(ind_z+1) - 0.5*DZ(ind_z+1)) * 2.
     end do
+
+    ! Reset profiles that need to start at zero after the spin-up
+    DenRho(:) = 0.
+    Refreeze(:) = 0.
     
-end subroutine Init_From_File
+end subroutine Restart_From_Spinup
+
+
+! *******************************************************
+
+subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
+                                domain, point_numb, fname_p1, project_name)
+        
+    integer :: ind_z_max, ind_z_surf, prev_nt
+    integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
+    
+    double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
+    
+    character*255 :: fname, pad, username, domain, ini_fname, point_numb, project_name, fname_p1
+    
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//&
+    "_restart_from_2023_run_"//trim(point_numb)//".nc"
+    
+    print *, 'pad for restart file:'
+    print *, trim(pad)
+    print *, ' '
+
+    ! Open the snowmelt netCDF file
+    status = nf90_open(trim(pad),0,ncid(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_open1')
+
+    !Get ID of the variables in the NetCDF files
+    status = nf90_inq_varid(ncid(1),"dens",ID(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid1')
+    status = nf90_inq_varid(ncid(1),"temp",ID(2))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid2')
+    status = nf90_inq_varid(ncid(1),"mass",ID(3))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid3')
+    status = nf90_inq_varid(ncid(1),"depth",ID(4))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid4')
+    status = nf90_inq_varid(ncid(1),"lwc",ID(5))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid5')
+    status = nf90_inq_varid(ncid(1),"year",ID(6))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid6')
+    status = nf90_inq_varid(ncid(1),"refreeze",ID(7))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid7')
+    status = nf90_inq_varid(ncid(1),"denrho",ID(8))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid8')
+    status = nf90_inq_varid(ncid(1),"prev_nt",ID(9))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid9')
+
+    ! Get dimension of the array
+    status = nf90_inq_dimid(ncid(1),"layer",LayerID(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dimid1')
+    status = nf90_inquire_dimension(ncid(1),LayerID(1),len=ind_z_surf)
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dim1')
+    status = nf90_inq_dimid(ncid(1),"constant",LayerID(2))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dimid2')
+    status = nf90_inquire_dimension(ncid(1),LayerID(2))!,len=1)
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dim2')
+    
+    ! Get all variables from the netCDF files
+    status  = nf90_get_var(ncid(1),ID(1),Rho(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var1')
+    status  = nf90_get_var(ncid(1),ID(2),T(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var2')
+    status  = nf90_get_var(ncid(1),ID(3),M(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var3')
+    status  = nf90_get_var(ncid(1),ID(4),Depth(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var4')
+    status  = nf90_get_var(ncid(1),ID(5),Mlwc(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var5')
+    status  = nf90_get_var(ncid(1),ID(6),Year(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var6')
+    status  = nf90_get_var(ncid(1),ID(7),Refreeze(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var7')
+    status  = nf90_get_var(ncid(1),ID(8),DenRho(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var8')
+    status  = nf90_get_var(ncid(1),ID(9),prev_nt)!,start=1,count=1)
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var9')
+    
+    ! Close all netCDF files    
+    status = nf90_close(ncid(1))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_close1')
+
+    DZ(ind_z_surf) = Depth(ind_z_surf) * 2.
+    do ind_z = (ind_z_surf-1), 1, -1
+        DZ(ind_z) = (Depth(ind_z) - Depth(ind_z+1) - 0.5*DZ(ind_z+1)) * 2.
+    end do
+
+    ! Reset profiles that need to start at zero after the spin-up
+    ! DenRho(:) = 0.
+    ! Refreeze(:) = 0.
+    
+end subroutine Restart_From_Run
 
 
 ! *******************************************************

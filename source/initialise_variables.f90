@@ -32,11 +32,11 @@ end subroutine Define_Constants
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name)
+subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, restart_type)
     !*** Get all command line arguments ***!
 
     ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, fname_p1, project_name
+    character*255, intent(out) :: username, point_numb, domain, fname_p1, project_name, restart_type
 
     ! 1: ECMWF username (e.g. nmg)
     ! 2: Simulation number, corresponding to the line number in the IN-file.
@@ -49,6 +49,7 @@ subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, proj
     call get_command_argument(3, domain)
     call get_command_argument(4, fname_p1)
     call get_command_argument(5, project_name)
+    call get_command_argument(6, restart_type)
     
     
 end subroutine Get_All_Command_Line_Arg
