@@ -25,7 +25,7 @@ export filename_part1="${outputname}"
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
 export hostname="cca"
-export relaunch="no"        # with "no", no new iteration will be launched
+export relaunch="yes"        # with "no", no new iteration will be launched
 
 # other FDM input
 export usern=$USER
