@@ -32,7 +32,7 @@ mkdir -p $innerlogdir
 
 #------------------- launch parallel task script -----------
 if [[ "$jobtype" == "np" ]]; then
-  srun -n ${maxFDMs} --ntasks-per-node 128 --threads-per-core 1 $homedir/npnf_inner_script.sc $myenvfile
+  srun -n ${maxFDMs} --ntasks-per-node $tasks_per_node --threads-per-core 1 $homedir/npnf_inner_script.sc $myenvfile
 elif [[ "$jobtype" == "nf" ]]; then
   srun -n ${maxFDMs} $homedir/npnf_inner_script.sc $myenvfile
 else

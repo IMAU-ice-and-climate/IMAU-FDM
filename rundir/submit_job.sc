@@ -143,7 +143,7 @@ cat << EOFp > $workdir/${jobname}.sc
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=$tasks_per_node
 #SBATCH --mem-per-cpu=$memory_per_task
-#SBATCH --threads-per-core=$EC_hyperthreads
+#SBATCH --threads-per-core=1
 
 
 # launch script
@@ -172,7 +172,7 @@ cat << EOFf > $workdir/${jobname}.sc
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=$tasks_per_node
 #SBATCH --mem-per-cpu=$memory_per_task
-#SBATCH --threads-per-core=$EC_hyperthreads
+#SBATCH --threads-per-core=1
 
 # launch script
 $homedir/npnf_outer_script.sc $workdir/$envfile >& $nplogdir/${runlog}.log
