@@ -286,7 +286,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
             if ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
                 MO = 0.6688 + 0.0048*log(acav)      ! fit after debugging heat eq.
             else
-                MO = 1.435 - 0.151*log(acav)
+                MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
             endif
             if (MO < 0.25) MO = 0.25
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
@@ -295,7 +295,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
             if ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
                 MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq.
             else
-                MO = 2.366 - 0.293*log(acav)
+                MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
             endif
             if (MO < 0.25) MO = 0.25
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
