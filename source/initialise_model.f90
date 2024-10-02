@@ -119,8 +119,12 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ff10FM(step) = FF10m(Nt_forcing)
     end do
 
-    numSnow = max( int(dtSnow/dtmodel), 1)
-
+    if (trim(domain) == "ANT27") then 
+    	numSnow = 1
+    else
+    	numSnow = max(int(dtSnow/dtmodel),1)
+    end if 
+    
     print *, 'numSnow: ', numSnow
     print *, ' '
 
