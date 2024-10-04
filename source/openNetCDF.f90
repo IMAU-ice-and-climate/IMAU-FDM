@@ -22,7 +22,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude
     
-    character*255 :: add,pad,username,domain,path_dir
+    character*255 :: add,pad,username,domain,path_dir,pad_mask
 
     path_dir = "/ec/res4/scratch/"
         
@@ -145,7 +145,11 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
 
-        status = nf90_open(trim(pad)//"../../mask/FGRN055_Masks.nc",0,ncid(1))
+        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//""
+        
+        print *, "To do (2 Oct 2024) check if new mask pad works: ", pad_mask
+        
+        status = nf90_open(trim(pad_mask)//"/FGRN055_Masks.nc",0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
