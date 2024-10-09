@@ -30,3 +30,13 @@
 *.exe
 *.out
 *.app
+
+# Ignore pointlists
+rundir/pointlists/
+
+# Ignore reference files -- too big
+reference/
+
+# Ignore modules and objects
+modules/
+objects/
