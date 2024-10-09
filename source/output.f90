@@ -66,7 +66,7 @@ subroutine Write_Initial_Output(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Y
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad, point_numb, fname_p1, username
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/highres/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_ini_"//trim(point_numb)//".nc",0,ncid)
