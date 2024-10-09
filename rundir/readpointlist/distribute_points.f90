@@ -199,6 +199,7 @@ do while ( count(threadok).ge.mintreads )
     reqfile = trim(path2request) // "/" // cit
     
     open(112, file=reqfile, action='read', status='old', iostat=io_open)
+    
     if ( io_open == 0 ) then
       
       read(112,'(A)', iostat = io_read) request
@@ -213,9 +214,33 @@ do while ( count(threadok).ge.mintreads )
             read(112,'(I8)', iostat = io_inline) nsecleft
   	        close(112)
   	        
-            if ( io_inline /= 0 ) write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
+            if ( io_inline /= 0 ) then 
 
-  	        if ( ipoint <= npoints ) call update_list(&
+
+                  read(112,'(I8)', iostat = io_inline) nsecleft
+                  close(112)
+
+                  if ( io_inline /= 0 ) then 
+
+
+                        read(112,'(I8)', iostat = io_inline) nsecleft
+                        close(112)
+
+
+                          if ( io_inline /= 0 ) then
+
+                            write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
+                          
+                          else
+
+                            write(0,'(A,I10)'), 'DP: nsecleft: ', nsecleft
+                          
+                          endif
+                  endif
+
+  	        endif
+
+            if ( ipoint <= npoints ) call update_list(&
   &             ipoint, npoints, ntimesort, itact, sortedlist, &
   &             ngridpointsmax, pointlist, expruntime)
             
@@ -324,7 +349,7 @@ do while ( count(threadok).ge.mintreads )
   
   if ( lgoon ) then
     call ftnsleep(nanosleep, sleeperror)
-    if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error ',sleeperror 
+    if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error at end of loop',sleeperror 
   endif
 
 enddo
@@ -362,7 +387,7 @@ enddo
 
 ! make the list of points yet to do
 if ( any(ptodo) .or. any(p4thread > 1) ) then
-  write(6,'(A)') 'distribute_points has still points to do.'
+  write(6,'(A)') 'distribute_points still has points to do.'
   nabort = 0
   nover  = 0
   open(111,file=pointlistfile,action='write')
@@ -382,9 +407,18 @@ if ( any(ptodo) .or. any(p4thread > 1) ) then
 
   write(6,'(I6,A,I6,A,I6,A)') nabort,' points will be aborted, ', &
   & nover, ' points are not yet started. In total ',nabort+nover, &
-  & ' points.'
+  & ' points to do.'
 
   request = "continue"
+
+  ! prevente the distributor from continuing to try to run a single point
+  ! because we still have an error where 1 point can't be run alone, 
+  ! so many jobs are submitted in a short amount of time
+
+  if ( nabort+nover .le. 2) then
+    request = "done"
+    write(6, '(A)') 'Only 2 points are left, so job is *NOT* resubmitted.'
+  endif
 
 else
   write(6,'(A)') 'distribute_points sees that everyting is completed!'
@@ -409,6 +443,7 @@ end
 
 !------------------------------------------------------------------
 subroutine update_list(ipoint, npoint, nlist, ilist, sortedlist, nexpt, pointlist, expruntime)
+! need this commented 
 implicit none
 integer, intent(inout):: ipoint
 integer, intent(in)   :: npoint
