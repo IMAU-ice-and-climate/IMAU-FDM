@@ -1,39 +1,48 @@
 #!/bin/ksh -x
 
-raw_dir="$SCRATCH/data/input/era055_files/rawfiles/"
-ave_dir="$SCRATCH/data/input/era055_files/averages/"
-files_dir="$SCRATCH/data/input/era055_files/files/"
+## make average inputs for FDM                                ##
+## requirements: `makeFDMyears_FGRN055.sc` must be run first  ##
+## ---------------------------------------------------------- ##
 
-nco_dir="/usr/local/apps/nco/4.3.7/bin/"
-ncra=${nco_dir}"ncra"
-ncrcat=${nco_dir}"ncrcat"
+## one var per job, set in `all_*`                            ##
+## will be one of: precip snowfall evap tskin sndiv snowmelt  ##
+## ---------------------------------------------------------- ##
+varname=$1 
 
-netcdf_dir="/opt/cray/netcdf/4.3.1/bin/"
-nccopy=${netcdf_dir}"nccopy"
+## set project name & filepaths                               ##
+## ---------------------------------------------------------- ##
+project_name=$2
+base_dir=$3
+years_dir=$4
+ave_dir=$5
 
-varlist=$1 #"precip snowfall evap tskin sndiv snowmelt"
+## set start and end years for averaging                      ##
+## ---------------------------------------------------------- ##
+start_year=${10} #1960
+end_year=${11} #1981
 
-temp1=${raw_dir}"temp1.nc"
-temp2=${raw_dir}"temp2.nc"
+## takes averages across year files                           ##
+## ---------------------------------------------------------- ##
 
-for varname in $varlist; do
-  (( year = 1960 ))
-  while [ $year -lt 1981 ]; do
-    echo $year
+temp1="${years_dir}temp1.nc"
+temp2="${years_dir}temp2.nc"
 
-    fname=${raw_dir}${varname}"_FGRN055_forFDM_Year"${year}".nc"
-    fname_yave=${raw_dir}${varname}"_Yave_"${year}".nc"
-    ${ncra} ${fname} ${fname_yave}
-   
-    (( year = year + 1 ))
-  done
+(( year = $start_year ))
+while [ $year -lt $end_year ]; do
+  echo $year
 
-  fname_out=${ave_dir}${varname}"_FGRN055_60-80_ave.nc"
-  
-  ${ncrcat} ${raw_dir}${varname}"_Yave"*".nc" ${temp1}
-  ${ncra} ${temp1} ${temp2}
-  ${nccopy} -k classic ${temp2} ${fname_out}
-  
-  rm ${raw_dir}${varname}"_Yave"*".nc" ${temp1} ${temp2}
+  fname="${years_dir}${varname}_${project_name}_forFDM_Year${year}.nc"
+  fname_yave="${years_dir}${varname}_Yave_${year}.nc"
 
+  ncra ${fname} ${fname_yave}
+ 
+  (( year = year + 1 ))
 done
+
+fname_out="${ave_dir}${varname}_${project_name}_${start_year}-${end_year}_ave.nc"
+
+ncrcat ${years_dir}${varname}"_Yave"*".nc" ${temp1}
+ncra ${temp1} ${temp2}
+nccopy -k classic ${temp2} ${fname_out}
+
+rm ${years_dir}${varname}"_Yave"*".nc" ${temp1} ${temp2}
