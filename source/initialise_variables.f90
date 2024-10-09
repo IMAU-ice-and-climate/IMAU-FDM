@@ -59,19 +59,27 @@ end subroutine Get_All_Command_Line_Arg
 
 
 subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
+    !TO DO: CHECK THIS WORKS WITH UPDATED PATH (2 OCT 2024)
+
     !*** Load dimensions of forcing data from file ***!
     
     ! declare arguments
     integer, intent(out) :: Nlon, Nlat, Nt_forcing
     character*255, intent(in) :: domain, username
 
+    print *, "To do: Check if new path works"
     print *, "Path to model dimensions file:"
+
+    print *, "/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+    open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
+    
     !print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
-    print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt"
+    !print *, "/ec/res4/perm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt"
 
     !open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
-    open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
+    !open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
     
+
     read(12,*)
     read(12,*)
     read(12,*) Nlon
