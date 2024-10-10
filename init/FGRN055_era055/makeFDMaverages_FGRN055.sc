@@ -14,12 +14,13 @@ varname=$1
 project_name=$2
 base_dir=$3
 years_dir=$4
-ave_dir=$5
+ave_dir=$6
+ts_start_year=$9
 
 ## set start and end years for averaging                      ##
 ## ---------------------------------------------------------- ##
-start_year=${10} #1960
-end_year=${11} #1981
+start_year=${11}
+end_year=${12} 
 
 ## takes averages across year files                           ##
 ## ---------------------------------------------------------- ##
@@ -28,7 +29,7 @@ temp1="${years_dir}temp1.nc"
 temp2="${years_dir}temp2.nc"
 
 (( year = $start_year ))
-while [ $year -lt $end_year ]; do
+while [ $year -le $end_year ]; do
   echo $year
 
   fname="${years_dir}${varname}_${project_name}_forFDM_Year${year}.nc"
@@ -39,7 +40,7 @@ while [ $year -lt $end_year ]; do
   (( year = year + 1 ))
 done
 
-fname_out="${ave_dir}${varname}_${project_name}_${start_year}-${end_year}_ave.nc"
+fname_out="${ave_dir}${varname}_${project_name}-${ts_start_year}_${start_year}-${end_year}_ave.nc"
 
 ncrcat ${years_dir}${varname}"_Yave"*".nc" ${temp1}
 ncra ${temp1} ${temp2}
