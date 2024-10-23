@@ -136,7 +136,8 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             end do
         else
             do step = 1, Nt_model_tot
-                Rho0FM(step) = 97.49 + 0.769*TempFM(step) + 4.49*ff10FM(step)
+                Rho0FM(step) = 97.49 - 14.52 + 0.769*TempFM(step) + 4.49*ff10FM(step)*2.6
+                Rho0FM(step) = MIN(470.,Rho0FM(step))
             end do
         end if
     else
@@ -156,12 +157,14 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             ff10Snow = sum( ff10FM(1:numSnow) )/numSnow
             do step = 1, numSnow
-                Rho0FM(step) = 97.49 + 0.769*TempSnow + 4.49*ff10Snow
+                Rho0FM(step) = 97.49 - 14.52 + 0.769*TempSnow + 4.49*ff10Snow*2.6
+                Rho0FM(step) = MIN(470.,Rho0FM(step))
             end do
             do step = (numSnow+1), Nt_model_tot
                 TempSnow = sum( TempFM(step-numSnow:step) )/numSnow
                 ff10Snow = sum( ff10FM(step-numSnow:step) )/numSnow
-                Rho0FM(step) = 97.49 + 0.769*TempSnow + 4.49*ff10Snow
+                Rho0FM(step) = 97.49 -14.52 + 0.769*TempSnow + 4.49*ff10Snow*2.6
+                Rho0FM(step) = MIN(470.,Rho0FM(step))
             end do
         end if
     end if
