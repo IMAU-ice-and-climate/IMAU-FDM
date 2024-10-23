@@ -2,15 +2,17 @@
 shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
-export domain="FGRN055"
-forcing="era055"
-export project_name="run-1957-2023-FGRN055-era055"
+export domain="ANT27"
+forcing="era027"
+export project_name="run-1979-2023-ANT27-era027_test4"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}" 
-export p2input="$HPCPERM/${domain}_${forcing}/reference/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
-export p2exe="$PERM/code/IMAU-FDM"
+#export p2input="$HPCPERM/${domain}_${forcing}/reference/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
+#export p2input="$HPCPERM/IMAU_FDM/code/reference/IN_ll_ANT27_evaluation.txt"
+export p2exe="$PERM/IMAU_FDM/code/Github/IMAU-FDM/"
+export p2input="${p2exe}/reference/${domain}/IN_ll_ANT27_CB1979-2020_nor.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
 gridpointlist="$homedir/pointlists/pointlist_${project_name}.txt"
@@ -25,7 +27,7 @@ export filename_part1="${outputname}"
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
 export hostname="cca"
-export relaunch="yes"        # with "no", no new iteration will be launched
+export relaunch="no"        # with "no", no new iteration will be launched
 
 # other FDM input
 export usern=$USER
