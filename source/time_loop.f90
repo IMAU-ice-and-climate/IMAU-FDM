@@ -44,11 +44,17 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     fac_error = 1.E3
 
     ! do at least 3 spin-ups
-    ! never do more than 70 spin-ups.
-    ! stop when the elevation at the end changes less than 1 cm
+    ! never do more than 70 spin-ups. (for Greenland & 200 for Antarctica) 
+    ! stop when the elevation at the end changes less than 1 cm (for Greenland and 2 cm for Antarctica)
     ! and FAC changes less than 1 cm.
-    do while ( ( ( (z_surf_error > 0.0001) .or. (fac_error > 0.0001) ) .and. (spinup_numb < 70) ) .or. (spinup_numb < 3) )
-        
+    if (domain .eq. "FGRN055") then
+            spinup_bound = 70
+            error_bound = 0.0001
+    else 
+           spinup_bound = 200  !perhaps this one can be reduced 
+           error_bound = 0.004 
+    end if 
+    do while ( ( ( (z_surf_error > error_bound) .or. (fac_error > error_bound) ) .and. (spinup_numb < spinup_bound) ) .or. (spinup_numb < 3) )   
         spinup_numb = spinup_numb + 1
         z_surf_old = h_surf
         fac_old = FirnAir
@@ -186,7 +192,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         ! Calculate the density profile      
         call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
         
-        ! Calculate the temperature profile (explicit or implicit)          
+        ! Calculate the temperature profile (explicit or implicit)         
         if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
         if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
                 
