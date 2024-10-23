@@ -67,11 +67,12 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
 
     print *, "Path to model dimensions file:"
     !print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
-    print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt"
+    !print *, "/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt"
 
     !open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
-    open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
-    
+    !open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
+    open(unit=12,file="/perm/"//trim(username)//"/IMAU_FDM/code/Github/IMAU-FDM/reference/ANT27/input_settings_"//trim(domain)//".txt")
+
     read(12,*)
     read(12,*)
     read(12,*) Nlon
@@ -116,7 +117,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     read (11,*)
     read (11,*) nyears              ! simulation time [yr]
     read (11,*) nyearsSU            ! simulation time during the spin up period [yr]
-    read (11,*) dtmodelExp          ! time step in model with explicit T-scheme [s]
+    read (11,*) dtmodelExp          ! time step in model with explicit T-scheme [s] 
     read (11,*) dtmodelImp          ! time step in model with implicit T-scheme [s]
     read (11,*) ImpExp              ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
     read (11,*) dtobs               ! time step in input data [s]
@@ -161,7 +162,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     integer, intent(inout) :: dtmodel
 
     if (ImpExp == 2) then
-        dtmodel = dtmodelExp
+        dtmodel = dtmodelExp   !You could use this for dry locations in Antarctica, but should not be called dtmodelExp because explicit was meant for wet locations
     else
         dtmodel = dtmodelImp
     endif
