@@ -27,8 +27,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     path_dir = "/ec/res4/scratch/"
         
     if (domain == "ANT27") then    
-        pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/ANT27_averages/"    
-        add = "_ANT27_79-16_ave.nc"
+        pad = ''//trim(path_dir)//''//trim(username)//"/backup_HPC/data/input/ant27_era_files/averages/"    
+        add = "_ANT27_79-20_ave.nc"
     elseif (domain == "XPEN055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
         add = "_XPEN055_79-16_ave.nc"
@@ -58,13 +58,14 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     
     if (domain == "ANT27") then
 
-        status = nf90_open(trim(pad)//"../lsm_ANT27.nc",0,ncid(1))
+        status = nf90_open(trim(pad)//"/ANT27_Masks_ice_and_shelves.nc",0,ncid(1))
+        !status = nf90_open(trim(pad)//"../lsm_ANT27.nc",0,ncid(1))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
-        status = nf90_inq_varid(ncid(1),"LSM",ID(1))
+        status = nf90_inq_varid(ncid(1),"IceMask",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')    
-        status = nf90_inq_varid(ncid(1),"Lat",ID(11))
+        status = nf90_inq_varid(ncid(1),"lat",ID(11))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid11')
-        status = nf90_inq_varid(ncid(1),"Lon",ID(12))
+        status = nf90_inq_varid(ncid(1),"lon",ID(12))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid12')
         
         status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1,1,1/), &
@@ -77,9 +78,9 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
         ! Open Ice Shelf Mask
 
-        status = nf90_open(trim(pad)//"../ism_ANT27.nc",0,ncid(6))
+        status = nf90_open(trim(pad)//"/ANT27_Masks_ice_and_shelves.nc",0,ncid(6))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_open6')
-        status = nf90_inq_varid(ncid(6),"ISM",ID(6))
+        status = nf90_inq_varid(ncid(6),"IceShelve",ID(6))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
         status  = nf90_get_var(ncid(6),ID(6),ISM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
@@ -89,8 +90,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         status = nf90_close(ncid(1))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_close1')
         status = nf90_close(ncid(6))
-        if(status /= nf90_noerr) call Handle_Error(status,'nf_close6')
-
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_close6')   
+   
     elseif (domain == "XPEN055") then
 
         status = nf90_open(trim(pad)//"../Height_latlon_XPEN055.nc",0,ncid(1))
@@ -148,7 +149,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         status = nf90_open(trim(pad)//"../../mask/FGRN055_Masks.nc",0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
-        status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
+        !status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid_lsm')    
         status = nf90_inq_varid(ncid(1),"lat",ID(11))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid11')
@@ -352,16 +353,24 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     
     if (domain == "ANT27") then
 
-        latfile = mod(ind_lat,15)
-        if (latfile==0) latfile = 15
-        fnumb_i = floor((real(ind_lat)-0.001)/15.)+1
-        if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
-        if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
+        !latfile = mod(ind_lat,15)
+        !if (latfile==0) latfile = 15
+        !fnumb_i = floor((real(ind_lat)-0.001)/15.)+1
+        !if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
+        !if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
 
-        lonfile = ind_lon
+        !lonfile = ind_lon
+         !from here
+        lonfile = mod(ind_lon,15)
+        if (lonfile.eq.0) lonfile = 15
+        fnumb_i = floor((real(ind_lon)-0.001)/15.)+1
+        if (fnumb_i.le.9) write(fnumb,'(I1)') fnumb_i
+        if (fnumb_i.ge.10) write(fnumb,'(I2)') fnumb_i
 
-        pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/ANT27_files/"    
-        add = "_ANT27_79-16_p"//trim(fnumb)//".nc"
+        latfile = ind_lat
+
+        pad = "/ec/res4/scratch/"//trim(username)//"/backup_HPC/data/input/ant27_era_files/files_2023/"    
+        add = "_ANT27_79-23_p"//trim(fnumb)//".nc"
 
     elseif (domain == "XPEN055") then
 
