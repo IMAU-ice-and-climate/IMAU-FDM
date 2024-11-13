@@ -35,7 +35,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: h_surf, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
     double precision :: Mrain = 0., Mrunoff = 0., Mrefreeze = 0., Msurfmelt = 0., Msolin = 0., Rho0out = 0.
-    double precision :: z_surf_old, fac_old, z_surf_error, fac_error
+    double precision :: z_surf_old, fac_old, z_surf_error, fac_error, spinup_bound, error_bound
 
     spinup_numb = 0
     h_surf = 1.E3
@@ -50,9 +50,11 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     if (domain .eq. "FGRN055") then
             spinup_bound = 70
             error_bound = 0.0001
-    else 
+    elseif (domain .eq. "ANT27") then 
            spinup_bound = 200  !perhaps this one can be reduced 
            error_bound = 0.004 
+    else
+            print *, "Incorrect domain for spinup bounds: ", domain
     end if 
     do while ( ( ( (z_surf_error > error_bound) .or. (fac_error > error_bound) ) .and. (spinup_numb < spinup_bound) ) .or. (spinup_numb < 3) )   
         spinup_numb = spinup_numb + 1
