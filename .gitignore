@@ -31,9 +31,3 @@
 *.out
 *.app
 *.x
-
-# Temporary files 
-*.swp
-
-# CancelMyJob.sc file
-CancelMyJob.sc
