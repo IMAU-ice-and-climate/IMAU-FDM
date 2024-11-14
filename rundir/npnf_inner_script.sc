@@ -71,6 +71,7 @@ duration=$SECONDS
 nlisten=0
 npimerr=0
 
+sleep 10
 
 while [[ "$action" != "stop" ]]; do
 
@@ -82,7 +83,6 @@ while [[ "$action" != "stop" ]]; do
     echo ${timeleft} >> $requestfile
     action="listen"
     nlisten=0
-    # wait 2 seconds for response         
     sleep 2
   fi
  

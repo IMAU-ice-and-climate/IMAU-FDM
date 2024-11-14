@@ -49,7 +49,7 @@ else
       maxFDMs=${ntasks}
     else
       jobtype="nf"
-      echo "submit_job: submit remaining tasks as ns jobs."
+      echo "submit_job: submit remaining tasks as single-point jobs."
       maxFDMs=1
     fi  
   fi    	 
@@ -196,16 +196,15 @@ else
     echo "submit_job: Jobname: ${jobname}"
 cat << EOFs > $workdir/${jobname}.sc
 #!/bin/bash
-#PBS -S   /bin/bash
-#PBS -A   $account_no
-#PBS -q   ns
-#PBS -N   $jobname
-#PBS -o   $nplogdir/${myname}_p${gridpoint}.log
-#PBS -j   oe
-#PBS -m   a
-#PBS -l   EC_memory_per_task=$memory_per_task
-#PBS -l   EC_ecfs=$EC_ecfs
-#PBS -l   walltime=$walltime
+#SBATCH -q nf 
+#SBATCH -J $jobname 
+#SBATCH --time=$walltime
+#SBATCH -o $nplogdir/${myname}.log
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=$tasks_per_node
+#SBATCH --mem-per-cpu=$memory_per_task
+#SBATCH --threads-per-core=1
+#SBATCH --time=$walltime
 
 # launch script
 $homedir/ns_script.sc $workdir/$envfile $gridpoint >& $nplogdir/${runlog}_p${gridpoint}.log
