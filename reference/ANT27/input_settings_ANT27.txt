@@ -1,0 +1,5 @@
+!-	SETTINGS of the RACMO2 DATA of ANT27 - 45 years (1979-2023)
+!-----------------------------------------------------
+262	! numLons, number of longitude points
+240 	! numLats, number of latitude points
+131488 	! numTimes, number of time points 122728 122696 128568
