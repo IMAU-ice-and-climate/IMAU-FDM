@@ -22,10 +22,10 @@ if [[ "$domain" == "ANT27" ]]; then
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-42	! nyears; simulation time [yr]
+45	! nyears; simulation time [yr]
 42	! nyears; simulation time during the spin-up [yr]
-180	! dtmodelExp; timestep in model with explicit T-scheme [s]
-3600	! dtmodelImp; timestep in model with implicit T-scheme [s]
+180	! dtmodelExp; timestep in model with explicit T-scheme [s] this could be changed to 3600 for dry locations in Antarctica, but should be renamed
+900	! dtmodelImp; timestep in model with implicit T-scheme [s]
 $ImpExp ! ImpExp; implicit or explicit scheme, based on melt or not. (1=Implicit, 2=Explicit)
 10800	! dtobs; timestep in input data [s]
 31557600  ! dtSnow; duration of the running average used in the snow parameterisation [s]
