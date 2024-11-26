@@ -109,6 +109,8 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255 :: pad, cwd
     integer :: NoR
 
+    ! TODO: add option here for offline (where data/settings are located in a place other than scratch)
+    ! TODO: instead, maybe path to data should be set in launch new job and used as input for FDM?
     pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"ms_files/"
     
     print *, "Path to input settings file:"
