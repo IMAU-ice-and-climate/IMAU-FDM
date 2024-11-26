@@ -3,10 +3,12 @@
 SRC_DIR = source
 MOD_DIR = modules
 OBJ_DIR = objects
+NETCDF4_INCLUDE = -I/opt/homebrew/include
+LDFLAGS = -L/opt/homebrew/lib -lnetcdff
 
 # Compiler and flags configuration
-FC = mpifort  # Specify the Fortran compiler
-FFLAGS = -O3 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+FC = gfortran  # Specify the Fortran compiler
+FFLAGS = -O3 -g -Wall -J $(MOD_DIR) $(NETCDF4_INCLUDE) $(LDFLAGS) #-Wl,-ld_classic # Compilation flags: optimization, module directory, and NetCDF include
 
 # List of source files
 SRC_FILES = \
