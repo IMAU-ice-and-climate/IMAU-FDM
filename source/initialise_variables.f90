@@ -65,11 +65,12 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
     
     ! declare arguments
     integer, intent(out) :: Nlon, Nlat, Nt_forcing
-    character*255, intent(in) :: domain, username, pad, cwd
+    character*255 :: pad, cwd 
+    character*255, intent(in) :: domain, username
 
     call getcwd(cwd)
 
-    pad = ""//trim(cwd)//"/reference"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+    pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
     print *, "Path to model dimensions file:"
 
     print *, trim(pad)
@@ -109,7 +110,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255 :: pad, cwd
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
