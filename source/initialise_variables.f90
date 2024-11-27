@@ -65,16 +65,18 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
     
     ! declare arguments
     integer, intent(out) :: Nlon, Nlat, Nt_forcing
-    character*255, intent(in) :: domain, username
+    character*255, intent(in) :: domain, username, pad, cwd
 
-    print *, "To do: Check if new path works"
+    call getcwd(cwd)
+
+    pad = ""//trim(cwd)//"/reference"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
     print *, "Path to model dimensions file:"
 
-    print *, "/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+    print *, trim(pad)
     !open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
     
     !open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
-    open(unit=12,file="/perm/"//trim(username)//"/IMAU_FDM/code/Github/IMAU-FDM/reference/trim(domain)/input_settings_"//trim(domain)//".txt")
+    open(unit=12,file=trim(pad))
 
     read(12,*)
     read(12,*)
@@ -104,10 +106,10 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
-    character*255 :: pad
+    character*255 :: pad, cwd
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
