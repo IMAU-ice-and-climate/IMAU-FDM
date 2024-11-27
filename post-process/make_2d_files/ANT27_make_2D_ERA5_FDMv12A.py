@@ -1,3 +1,11 @@
+"""
+This script makes gridded output (3D: lon,lat,time) of 2D files (time,depth) from IMAU-FDM output
+Can be used for example for z550 and z830
+
+Notes:
+- it gives the depth of the deepest layer with density = 550/830 kg/m3: so it does not account for ice layers or moving averages
+"""
+
 # import modules 
 import os
 import glob

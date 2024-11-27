@@ -1,3 +1,12 @@
+"""
+This script makes gridded output (3D: lon,lat,time) of 2Ddetail files (time,depth) from IMAU-FDM output
+
+This can be used for example for surface snow density (upper 50 cm) or 10-m temperature. 
+
+Notes:
+- each layer is 4cm, given for the upper 20 m of the firn pack
+"""
+
 # import modules 
 import os
 import glob
