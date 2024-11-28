@@ -9,39 +9,30 @@
 domain="FGRN055"
 forcing="era055"
 
-vars=("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin") #("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
-
 jobname=$1
-
-if [ "$jobname" = "years" ]; then
-	scriptname="makeFDMyears_${domain}.sc"
-elif [ "$jobname" = "timeseries" ]; then
-	scriptname="makeFDMtimeseries_${domain}.sc"
-elif [ "$jobname" = "averages" ]; then
-	scriptname="makeFDMaverages_${domain}.sc"
-else
-	echo "Invalid script name: ${jobname}_${domain}.sc"
-	exit 1
-fi
+scriptname="${2}_${domain}.sc"
+vars=$3
 
 project_name="${domain}_${forcing}"
 base_dir="$SCRATCH/${project_name}"
 script_dir="$PERM/IMAU-FDM/init/${domain}_${forcing}"
 
-ts_start_year=1939
+ts_start_year=1957
 ts_end_year=2023
-ave_start_year=1940
-ave_end_year=1970
-num_long_bands=74
-cell_width=5
+ave_start_year=1960
+ave_end_year=1980
+num_long_bands=74 #TODO: update so that files creates num_lon_bands = instead of <
+cell_width=5 #TODO: update so that files slices for cell_width, not cell_width + 1
 
 years_dir="${base_dir}/process-RACMO/years-${ts_start_year}/"
+parts_dir="${years_dir}parts/"
 files_dir="${base_dir}/input/timeseries-${ts_start_year}/"
 ave_dir="${base_dir}/input/averages-${ts_start_year}_${ave_start_year}-${ave_end_year}/"
 jobfile_dir="${base_dir}/process-RACMO/jobs/"
-logfile_dir="${base_dir}/process-RACMO/logs/"
+logfile_dir="${base_dir}/logfiles/process-RACMO/"
 
 mkdir -p ${years_dir}
+mkdir -p ${parts_dir}
 mkdir -p ${files_dir}
 mkdir -p ${ave_dir}
 mkdir -p ${logfile_dir}
@@ -57,17 +48,15 @@ mkdir -p ${jobfile_dir}
 ##																		##
 ## -------------------------------------------------------------------	##
 
-for var in ${vars[@]}; do
-
-initRacmoFile="${jobfile_dir}preprocess-RACMO_job_${jobname}_${var}"
+initRacmoFile="${jobfile_dir}preprocess-RACMO_job_${jobname}-${ts_start_year}"
 
 cat <<EOS1 > ${initRacmoFile} 
 #!/bin/ksh -f
 
 #SBATCH -q nf
-#SBATCH -J ${jobname}_${var}_preprocess
+#SBATCH -J ${jobname}_preprocess-${ts_start_year}
 #SBATCH --time=48:00:00
-#SBATCH -o ${logfile_dir}${jobname}_${var}_preprocess.log
+#SBATCH -o ${logfile_dir}${jobname}_preprocess-${ts_start_year}.log
 #SBATCH --mem-per-cpu=4000mb
 
 module load nco
@@ -81,10 +70,9 @@ echo "Cell width: " ${cell_width}
 
 cd ${script_dir}
 
-./${scriptname} ${var} ${project_name} ${base_dir} ${years_dir} ${files_dir} ${ave_dir} ${num_long_bands} ${cell_width} ${ts_start_year} ${ts_end_year} ${ave_start_year} ${ave_end_year}
+./${scriptname} ${vars} ${project_name} ${base_dir} ${years_dir} ${files_dir} ${ave_dir} ${num_long_bands} ${cell_width} ${ts_start_year} ${ts_end_year} ${ave_start_year} ${ave_end_year}
+
 
 EOS1
 
 sbatch ${initRacmoFile}
-
-done
