@@ -12,24 +12,16 @@ years_dir=$4
 start_year=$9
 
 RACMO_3H_dir="${base_dir}/raw/historical-${start_year}"
-
-#for era5 runs
-fname_extra_1=".FGRN055.BN_RACMO2.3p2_ERA5_3h_1940_FGRN055.3H.nc"
-fname_extra_2=".FGRN055.BN_RACMO2.3p2_ERA5_3h_1940_FGRN055.3H.nc"
+fname_extra_1=".FGRN055.BN_RACMO2.3p2_FGRN055.3H.nc"
+fname_extra_2=".FGRN055.BN_RACMO2.3p2_ERA5_3h_FGRN055.3H.nc"
 fname_extra_3=".FGRN055.BN_RACMO2.3p2_ERA5_3h_1940_FGRN055.3H.nc"
 
-# for interim runs
-#fname_extra_1=".FGRN055.BN_RACMO2.3p2_FGRN055.3H.nc"
-#fname_extra_2=".FGRN055.BN_RACMO2.3p2_ERA5_3h_FGRN055.3H.nc"
-#fname_extra_3=".FGRN055.BN_RACMO2.3p2_ERA5_3h_1940_FGRN055.3H.nc"
-
 ## sets number of data points in each year (#d/yr * #pts/d)     ##
-## TK: update to 2023?                                          ##
-## in korn, -A assigns parametr to Y01list                      ##
+## in korn, -A assigns parametr to list                         ##
 ## https://www.mkssoftware.com/docs/man1/set.1.asp              ##
 ## ------------------------------------------------------------ ##
 
-if [ "${start_year}" = 1957 ]; then
+if [ ${start_year} == 1957 ]; then
 
   set -A yearlist 1957 1961 1971 1981 1991 2001 2011 2021 2023
   set -A nyears   4    10   10   10   10   10   10   2    1
@@ -46,7 +38,7 @@ if [ "${start_year}" = 1957 ]; then
 
   set -A data_in_years_list Y57list Y61list Y71list Y81list Y91list Y01list Y11list Y21list Y23list
 
-elif [ "${start_year}" = 1939 ]; then
+elif [ ${start_year} == 1939 ]; then
 
   set -A yearlist 1939 1941 1951 1961 1971 1981 1991 2001 2011 2021 2023
   set -A nyears   2    10   10   10   10   10   10   10   10   2    1
@@ -71,6 +63,7 @@ else
 
 fi
 
+echo "Creating part files for ${start_year} set"
 ## for each variable and each year, create year file            ##
 ## ------------------------------------------------------------ ##
 
@@ -80,14 +73,18 @@ for ii in {0..$years_i}; do
 
    (( fileyear = yearlist[ii] ))
   
-  if [[ ${fileyear} -lt 1990 ]]; then
-    infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_1}"
-  elif [[ ${fileyear} -gt 1990 ]] && [[ ${fileyear} -le 2020 ]]; then
-    infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_2}"
-  elif [[ ${fileyear} -gt 2020 ]]; then 
+  if [ ${start_year} == 1957 ]; then
+    if [[ ${fileyear} -lt 1990 ]]; then
+      infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_1}"
+    elif [[ ${fileyear} -gt 1990 ]] && [[ ${fileyear} -le 2020 ]]; then
+      infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_2}"
+    elif [[ ${fileyear} -gt 2020 ]]; then 
+      infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_3}"
+    fi
+  elif [ ${start_year} == 1939 ]; then
     infile="${RACMO_3H_dir}/${varname}.KNMI-${fileyear}${fname_extra_3}"
   fi
-  
+    
    start_t=0
    end_t=-1
 
