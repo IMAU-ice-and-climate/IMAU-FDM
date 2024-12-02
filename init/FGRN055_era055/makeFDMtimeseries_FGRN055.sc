@@ -40,36 +40,36 @@ cell_width=$8
 for varname in $varlist; do
   temp1="${years_dir}/parts/${varname}_temp1.nc"
 
-  (( year = ${start_year} ))
-  while [ $year -le ${end_year} ]; do
+  # (( year = ${start_year} ))
+  # while [ $year -le ${end_year} ]; do
     
-    fname_in="${years_dir}/${varname}_${project_name}_forFDM_Year${year}.nc"
+  #   fname_in="${years_dir}/${varname}_${project_name}_forFDM_Year${year}.nc"
 
-    ## loop through all years
-    ## ------------------------------------------------------------ ##
-    (( part = 1 ))
-    (( start_t = 0 ))
-    (( end_t = -1 ))
+  #   ## loop through all years
+  #   ## ------------------------------------------------------------ ##
+  #   (( part = 1 ))
+  #   (( start_t = 0 ))
+  #   (( end_t = -1 ))
     
-    ## loop through all longitude bands
-    ## ------------------------------------------------------------ ##
-    while [ $part -le ${num_long_bands} ]; do
-      (( start_t = end_t + 1 ))
-      (( end_t = start_t + ${cell_width} - 1)) 
-      fname_out="${years_dir}parts/${varname}_${year}_part${part}.nc"
+  #   ## loop through all longitude bands
+  #   ## ------------------------------------------------------------ ##
+  #   while [ $part -le ${num_long_bands} ]; do
+  #     (( start_t = end_t + 1 ))
+  #     (( end_t = start_t + ${cell_width} - 1)) 
+  #     fname_out="${years_dir}parts/${varname}_${year}_part${part}.nc"
       
-      ## check if file exists, then slice year files into bands       ##
-      ## ------------------------------------------------------------ ##
-      if [[ -f ${fname_out} ]]; then
-        echo "File is already present"
-      else    
-        ncks -d rlon,${start_t},${end_t} ${fname_in} ${fname_out}
-      fi
+  #     ## check if file exists, then slice year files into bands       ##
+  #     ## ------------------------------------------------------------ ##
+  #     if [[ -f ${fname_out} ]]; then
+  #       echo "File is already present"
+  #     else    
+  #       ncks -d rlon,${start_t},${end_t} ${fname_in} ${fname_out}
+  #     fi
       
-      (( part = part + 1 ))
-    done 
-    (( year = year + 1 ))
-  done
+  #     (( part = part + 1 ))
+  #   done 
+  #   (( year = year + 1 ))
+  # done
   
   (( part2 = 1 ))
 

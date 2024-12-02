@@ -9,7 +9,7 @@
 domain="FGRN055"
 forcing="era055"
 
-vars=("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
+vars=("evap") #("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
 
 jobname=$1
 
