@@ -11,11 +11,6 @@ if [ "$myenvfile" == "" ]; then
 fi  
 source $myenvfile
 
-# load this module to allow for numberin of the ranks in a nf job.
-#if [[ "$jobtype" == "nf" ]]; then
-  #module load cray-snplauncher 
-#fi  
-
 echo "npnf_outer: Run at max $maxFDMs jobs at the same time (cooldown = ${coolFDMs} jobs)"
 
 # set ready-dir for this iteration
@@ -23,10 +18,9 @@ export readydir="${readydir_base}/iter_${submission_iteration}"
 mkdir -p $readydir
 rm -f $readydir/*
 
-# clean requestdir, backup workpointlist and start the distributor
+# clean requestdir, backup workpointlist
 rm -f $requestdir/*
 cp ${workpointlist}.txt ${workpointlist}_${submission_iteration}.txt
-$distributor ${workpointlist}.txt $maxFDMs ${requestdir} -t $p2input & #>& ${workdir}/DP_log.txt &
 
 # make that every code works individually
 export PMI_NO_FORK=1
@@ -35,9 +29,27 @@ export PMI_NO_FORK=1
 export innerlogdir="$nplogdir/Threads_iter_${submission_iteration}"
 mkdir -p $innerlogdir
 
+# make initial request file
+# define end second 
+# requestfile=${requestdir}"/"`printf "%.5d\n" $rank`
+
+# exittime=600
+# hours=`echo $walltime | awk '{print substr($1,1,2)}'`
+# mins=`echo $walltime | awk '{print substr($1,4,2)}'`
+# secs=`echo $walltime | awk '{print substr($1,7,2)}'`
+# endsec=`echo "($hours*3600)+($mins*60)+$secs-$exittime" | bc`
+# duration=$SECONDS
+
+# let "timeleft=${endsec}-${duration}"
+# echo "provide" > $requestfile
+# echo ${timeleft} >> $requestfile
+
+# start the distributor
+$distributor ${workpointlist}.txt $maxFDMs ${requestdir} -t $p2input & #>& ${workdir}/DP_log.txt &
+
 #------------------- launch parallel task script -----------
 if [[ "$jobtype" == "np" ]]; then
-  srun -n ${maxFDMs} --ntasks-per-node 128 --threads-per-core 1 $homedir/npnf_inner_script.sc $myenvfile
+  srun -n ${maxFDMs} --ntasks-per-node $tasks_per_node --threads-per-core 1 $homedir/npnf_inner_script.sc $myenvfile
 elif [[ "$jobtype" == "nf" ]]; then
   srun -n ${maxFDMs} $homedir/npnf_inner_script.sc $myenvfile
 else
@@ -83,7 +95,7 @@ ls -1 $readydir >> "${readydir_base}/AllCompletedPoints.txt"
 # clean work executables
 rm $workexe/*
 
-echo "$(date +%c): np_script ended"
+echo "$(date +%c): npnf_outer_script ended"
 echo "--------------------------------------------------------------------------------"
 exit 0
 # the script is ready

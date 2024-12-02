@@ -18,7 +18,7 @@ contains
 
 subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax, M, T, DZ, Rho, &
     DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-    ImpExp, nyears, nyearsSU, domain)
+    ImpExp, nyears, nyearsSU, domain, project_name)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
         
     ! declare arguments
@@ -28,14 +28,14 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
-    character*255, intent(in) :: domain
+    character*255, intent(in) :: domain, project_name
 
     ! declare local variables
     integer :: spinup_numb, ind_z, ind_t
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: h_surf, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
     double precision :: Mrain = 0., Mrunoff = 0., Mrefreeze = 0., Msurfmelt = 0., Msolin = 0., Rho0out = 0.
-    double precision :: z_surf_old, fac_old, z_surf_error, fac_error
+    double precision :: z_surf_old, fac_old, z_surf_error, fac_error, spinup_bound, error_bound
 
     spinup_numb = 0
     h_surf = 1.E3
@@ -44,11 +44,19 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     fac_error = 1.E3
 
     ! do at least 3 spin-ups
-    ! never do more than 70 spin-ups.
-    ! stop when the elevation at the end changes less than 1 cm
+    ! never do more than 70 spin-ups. (for Greenland & 200 for Antarctica) 
+    ! stop when the elevation at the end changes less than 1 cm (for Greenland and 2 cm for Antarctica)
     ! and FAC changes less than 1 cm.
-    do while ( ( ( (z_surf_error > 0.0001) .or. (fac_error > 0.0001) ) .and. (spinup_numb < 70) ) .or. (spinup_numb < 3) )
-        
+    if (domain .eq. "FGRN055") then
+            spinup_bound = 70
+            error_bound = 0.0001
+    elseif (domain .eq. "ANT27") then 
+           spinup_bound = 200  !perhaps this one can be reduced 
+           error_bound = 0.004 
+    else
+            print *, "Incorrect domain for spinup bounds: ", domain
+    end if 
+    do while ( ( ( (z_surf_error > error_bound) .or. (fac_error > error_bound) ) .and. (spinup_numb < spinup_bound) ) .or. (spinup_numb < 3) )   
         spinup_numb = spinup_numb + 1
         z_surf_old = h_surf
         fac_old = FirnAir
@@ -138,11 +146,11 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
     fname_p1, username, domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
     
     ! declare arguments
-    integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, proflayers, detlayers
+    integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, proflayers, detlayers, prev_nt
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
     integer, intent(inout) :: ind_z_surf
@@ -152,10 +160,10 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision, dimension((outputSpeed+50), 18), intent(inout) :: out_1D
     double precision, dimension((outputProf+50), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension((outputDetail+50), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
-    character*255, intent(in) :: fname_p1, username, domain
+    character*255, intent(in) :: fname_p1, username, domain, restart_type
     
     ! declare local variables
-    integer :: ind_z, ind_t
+    integer :: ind_z, ind_t, ind_t_i
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
     double precision :: h_surf = 0., Totvice = 0., Totvfc = 0., Totvacc = 0., Totvsub = 0., Totvsnd = 0., Totvmelt = 0., Totvbouy = 0.
@@ -164,7 +172,15 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     
     ! Time integration
     print *, "Start of main time loop"
-    do ind_t = 1, Nt_model_tot
+
+    ! start from last time step if restarting from loaded run
+    if ( restart_type=="run" ) then
+        ind_t_i = prev_nt
+    else
+        ind_t_i = 1
+    endif
+
+    do ind_t = ind_t_i, Nt_model_tot
         
         ! Index the forcing at the current time step
         rho0 = Rho0FM(ind_t)
@@ -178,7 +194,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         ! Calculate the density profile      
         call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
         
-        ! Calculate the temperature profile (explicit or implicit)          
+        ! Calculate the temperature profile (explicit or implicit)         
         if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
         if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
                 

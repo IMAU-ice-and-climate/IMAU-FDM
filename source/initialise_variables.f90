@@ -32,22 +32,25 @@ end subroutine Define_Constants
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, ini_fname)
+subroutine Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, restart_type)
     !*** Get all command line arguments ***!
 
     ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, fname_p1, ini_fname
+    character*255, intent(out) :: username, point_numb, domain, fname_p1, project_name, restart_type
 
     ! 1: ECMWF username (e.g. nmg)
     ! 2: Simulation number, corresponding to the line number in the IN-file.
     ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27)
     ! 4: General part of output filename
     ! 5: Optional, name of the initialization file
+    ! 6: Path to output - **TKTK IN PROGRESS**
     call get_command_argument(1, username)
     call get_command_argument(2, point_numb)
     call get_command_argument(3, domain)
     call get_command_argument(4, fname_p1)
-    call get_command_argument(5, ini_fname)
+    call get_command_argument(5, project_name)
+    call get_command_argument(6, restart_type)
+    
     
 end subroutine Get_All_Command_Line_Arg
 
@@ -56,17 +59,26 @@ end subroutine Get_All_Command_Line_Arg
 
 
 subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
+    !TO DO: CHECK THIS WORKS WITH UPDATED PATH (2 OCT 2024)
+
     !*** Load dimensions of forcing data from file ***!
     
     ! declare arguments
     integer, intent(out) :: Nlon, Nlat, Nt_forcing
+    character*255 :: pad, cwd 
     character*255, intent(in) :: domain, username
 
-    print *, "Path to model dimensions file:"
-    print *, "/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt"
+    call getcwd(cwd)
 
-    open(unit=12,file="/perm/"//trim(username)//"/code/DATA/input_settings_"//trim(domain)//".txt")
+    pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+    print *, "Path to model dimensions file:"
+
+    print *, trim(pad)
+    !open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
     
+    !open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
+    open(unit=12,file=trim(pad))
+
     read(12,*)
     read(12,*)
     read(12,*) Nlon
@@ -85,20 +97,20 @@ end subroutine Get_Forcing_Dims
 
 subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
     beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-    lon_current, lat_current, point_numb, username, domain)
+    lon_current, lat_current, point_numb, username, domain, project_name)
     !*** Load model settings from file ***!
     
     ! declare arguments
     integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
         dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers
     double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
-    character*255, intent(in) :: point_numb, username, domain
+    character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
-    character*255 :: pad
+    character*255 :: pad, cwd
     integer :: NoR
 
-    pad = "/ec/res4/scratch/"//trim(username)//"/data/ms_files/"
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
     
     print *, "Path to input settings file:"
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
@@ -111,7 +123,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     read (11,*)
     read (11,*) nyears              ! simulation time [yr]
     read (11,*) nyearsSU            ! simulation time during the spin up period [yr]
-    read (11,*) dtmodelExp          ! time step in model with explicit T-scheme [s]
+    read (11,*) dtmodelExp          ! time step in model with explicit T-scheme [s] 
     read (11,*) dtmodelImp          ! time step in model with implicit T-scheme [s]
     read (11,*) ImpExp              ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
     read (11,*) dtobs               ! time step in input data [s]
@@ -156,7 +168,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     integer, intent(inout) :: dtmodel
 
     if (ImpExp == 2) then
-        dtmodel = dtmodelExp
+        dtmodel = dtmodelExp   !You could use this for dry locations in Antarctica, but should not be called dtmodelExp because explicit was meant for wet locations
     else
         dtmodel = dtmodelImp
     endif
