@@ -27,9 +27,9 @@ if [[ $mintasks -le $ntodo ]]; then
   nnodes=$nnodes_max
   jobtype="np"
 else
-# derive needed number of nodes (as a real) and take int value while rounding down
+  # derive needed number of nodes (as a real) and take int value while rounding down
   nnodes_real=`echo "${ntodo}.0/(${FDMs_per_node}.0*${taskfactor})" | bc`
-# somehow bc provides already a rounded down integer, nevertheless...  
+  # somehow bc provides already a rounded down integer, nevertheless...  
   nnodes=${nnodes_real%.*} 
   if [[ $nnodes -gt 0 ]]; then
     echo "submit_job: Only ${nnodes} node(s) needed now."
@@ -37,9 +37,9 @@ else
   else
     ntasks_real=`echo "${ntodo}/${taskfactor}" | bc`
     ntasks=${ntasks_real%.*}
-# if the number of tasks is less than ~50, go for ns
+    # if the number of tasks is less than ~50, go for ns
     if [[ $ntasks -gt 20 || ${ntodo} -gt 120 ]]; then
-# limit the number of tasks to half of a node.
+      # limit the number of tasks to half of a node.
       let "halfnode=${tasks_per_node}/2"
       if [[ $ntasks -gt $halfnode ]]; then
         ntasks=$halfnode
@@ -49,7 +49,7 @@ else
       maxFDMs=${ntasks}
     else
       jobtype="nf"
-      echo "submit_job: submit remaining tasks as ns jobs."
+      echo "submit_job: submit remaining tasks as single-point jobs."
       maxFDMs=1
     fi  
   fi    	 
@@ -57,15 +57,15 @@ fi
 
 # get maximum number of parallel FDM runs in a job
 if [[ "$jobtype" == "np" ]]; then
-# tasks are defined by the number of tasks per node, cool down at the end
+  # tasks are defined by the number of tasks per node, cool down at the end
   let "maxFDMs=${nnodes}*${FDMs_per_node}"
   let "coolFDMs=${maxFDMs}/2"
 elif [[ "$jobtype" == "nf" ]]; then
-# a FDM run for every task, no cool down
+  # a FDM run for every task, no cool down
   maxFDMs=$ntasks
   coolFDMs=$ntasks
 else
-# ns
+  # ns
   maxFDMs=1
   coolFDMs=1
 fi    
@@ -86,6 +86,7 @@ export readydir_base=$readydir_base
 export nplogdir=$nplogdir
 export workexe=$workexe
 export requestdir=$requestdir
+export restartdir=$restartdir
 export hostname="$hostname"
 
 export readpointexe=$readpointexe
@@ -99,13 +100,14 @@ export domain="$domain"
 export p2input="$p2input"
 export p2exe="$p2exe"
 export FDM_executable="$FDM_executable"
+export project_name="$project_name"
+export restart_type="$restart_type"
 
 # other FDM input
 export p2ms="$p2ms"
 export p2logs="$p2logs"
 export usern="$usern"
 export filename_part1="$filename_part1"
-export ini_filename="$ini_filename"
 export workpointlist="$workpointlist"
 
 # job management
@@ -134,7 +136,6 @@ cat << EOFp > $workdir/${jobname}.sc
 #!/bin/bash
 
 #SBATCH -q np 
-#SBATCH --cpus-per-task=1
 #SBATCH --nodes=$nnodes
 #SBATCH -J $jobname 
 #SBATCH --time=$walltime
@@ -142,7 +143,7 @@ cat << EOFp > $workdir/${jobname}.sc
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=$tasks_per_node
 #SBATCH --mem-per-cpu=$memory_per_task
-#SBATCH --threads-per-core=$EC_hyperthreads
+#SBATCH --threads-per-core=1
 
 
 # launch script
@@ -165,21 +166,19 @@ cat << EOFf > $workdir/${jobname}.sc
 #!/bin/bash
 
 #SBATCH -q nf 
-#SBATCH --cpus-per-task=1
 #SBATCH -J $jobname 
 #SBATCH --time=$walltime
 #SBATCH -o $nplogdir/${myname}.log
 #SBATCH --cpus-per-task=1
 #SBATCH --ntasks-per-node=$tasks_per_node
 #SBATCH --mem-per-cpu=$memory_per_task
-#SBATCH --threads-per-core=$EC_hyperthreads
+#SBATCH --threads-per-core=1
 
 # launch script
 $homedir/npnf_outer_script.sc $workdir/$envfile >& $nplogdir/${runlog}.log
 
 exit 0
 EOFf
-  echo "try1"
   
   # make it executable
   chmod u+x $workdir/${jobname}.sc
@@ -197,16 +196,15 @@ else
     echo "submit_job: Jobname: ${jobname}"
 cat << EOFs > $workdir/${jobname}.sc
 #!/bin/bash
-#PBS -S   /bin/bash
-#PBS -A   $account_no
-#PBS -q   ns
-#PBS -N   $jobname
-#PBS -o   $nplogdir/${myname}_p${gridpoint}.log
-#PBS -j   oe
-#PBS -m   a
-#PBS -l   EC_memory_per_task=$memory_per_task
-#PBS -l   EC_ecfs=$EC_ecfs
-#PBS -l   walltime=$walltime
+#SBATCH -q nf 
+#SBATCH -J $jobname 
+#SBATCH --time=$walltime
+#SBATCH -o $nplogdir/${myname}.log
+#SBATCH --cpus-per-task=1
+#SBATCH --ntasks-per-node=$tasks_per_node
+#SBATCH --mem-per-cpu=$memory_per_task
+#SBATCH --threads-per-core=1
+#SBATCH --time=$walltime
 
 # launch script
 $homedir/ns_script.sc $workdir/$envfile $gridpoint >& $nplogdir/${runlog}_p${gridpoint}.log

@@ -1,3 +1,12 @@
+!------------------------------------------------------
+!- Distributor for the IMAU-FDM
+!--------------
+!
+!- Current TO DOs
+!   - fix request file is called before it is made. 
+!      ->This means that the first thread always fails.
+!------------------------------------------------------
+
 program distribute_points
 implicit none
 integer       :: nargs, iargc, zargs
@@ -72,6 +81,9 @@ allocate(p4thread(nthreads))
 allocate(threadok(nthreads))
 threadok = .true.
 mintreads = nthreads/11
+if ( mintreads .lt. 1 ) then ! otherwise does not terminate for runs with few number of points
+  mintreads = 1
+endif
 write(6,'(A,I5,A)') 'DP will terminate once less than ',mintreads,' are active.'
 
 call getarg(3,path2request)
@@ -85,7 +97,7 @@ do while ( zargs <= nargs )
     zargs = zargs + 1
     call getarg(zargs, settingsfile)
   case default  
-    write(0,'(2A)') 'DP: Unknown action provided: ',trim(argv)
+    write(6,'(2A)') 'DP: Unknown action provided: ',trim(argv)
   end select
   zargs = zargs + 1
 enddo
@@ -94,8 +106,8 @@ enddo
 call getarg(1,pointlistfile)
 open(111,file=pointlistfile,action='read',status='old',iostat=io_open)
 if (io_open /= 0 ) then
-  write(0,'(A,I8,A)') "DP: Error ",io_open," occurred during opening pointlistfile."
-  write(0,'(2A)') "pointlistfile = ",trim(pointlistfile)
+  write(6,'(A,I8,A)') "DP: Error ",io_open," occurred during opening pointlistfile."
+  write(6,'(2A)') "pointlistfile = ",trim(pointlistfile)
   stop
 endif
 
@@ -111,60 +123,64 @@ enddo
 close(111)
 
 if ( io_read == 0 ) then
-  write(0,'(A,I8,A)') 'DP: More than ',ngridpointsmax,&
+  write(6,'(A,I8,A)') 'DP: More than ',ngridpointsmax,&
   & ' points in file, adjust ngridpointsmax'
   stop
 endif
 
 !-------- read settingsfile if provided
 if ( usetimeguess ) then
- open(111,file=settingsfile,action='read',status='old',iostat=io_open)
- if (io_open /= 0 ) then
-  write(0,'(A,I8,A)') "DP: Error ",io_open," occurred during opening the settingsfile."
-  write(0,'(2A)') "settingsfile = ",trim(settingsfile)
-  stop
- endif
+  open(111,file=settingsfile,action='read',status='old',iostat=io_open)
+  if (io_open /= 0 ) then
+    write(6,'(A,I8,A)') "DP: Error ",io_open," occurred during opening the settingsfile."
+    write(6,'(2A)') "settingsfile = ",trim(settingsfile)
+    stop
+  endif
  
- ipoint = 0
- read(111,'(A)', iostat = io_read) settingsline
- do while (io_read == 0)
-  ipoint = ipoint + 1
-  nc     = 0
-  ic     = 1
-  do while ( nc < 5)
-   if ( settingsline(ic:ic) .eq. "," ) then
-    nc = nc + 1
-    is = ie
-    ie = ic
-   endif
-   ic = ic + 1
-  enddo
-  read(settingsline(is+2:ie-1),*, iostat=io_inline) exprunhours
-  if ( io_inline /= 0 ) &
-&   write(0,'(A,I6,3A)') "DP: Error while reading duration from line ",ipoint,", segment:",&
-&     settingsline(is+2:ie-1),", line:",trim(settingsline)
-  expruntime(ipoint)= int(exprunhours*3600.)
+  ipoint = 0
+  read(111,'(A)', iostat = io_read) settingsline
+  do while (io_read == 0)
+    ipoint = ipoint + 1
+    nc     = 0
+    ic     = 1
+    do while ( nc < 5)
+      if ( settingsline(ic:ic) .eq. "," ) then
+        nc = nc + 1
+        is = ie
+        ie = ic
+      endif
+      ic = ic + 1
+    enddo
+    
+    read(settingsline(is+2:ie-1),*, iostat=io_inline) exprunhours
+    
+    if ( io_inline /= 0 ) then
+      write(6,'(A,I6,3A)') "DP: Error while reading duration from line ",ipoint,", segment:",&
+&       settingsline(is+2:ie-1),", line:",trim(settingsline)
+    endif
+    expruntime(ipoint)= int(exprunhours*3600.)
   
-  read(111,'(A)', iostat = io_read) settingsline  
- enddo
+    read(111,'(A)', iostat = io_read) settingsline  
+  enddo
  
- close (111)
+  close (111)
  
-! some info output
- totalhours = sum(expruntime(pointlist(1:npoints))/3600.)
- write(6,'(A,I6,A)')  'DP: ', ipoint, ' durations readed from settingsfile.'
- write(6,'(A,F8.1,A)')'DP: Total estimated calculation time is ',totalhours,' hours,'
- write(6,'(A,F8.1,A,I4,A)') 'DP: and ',totalhours/nthreads,' hours using ',&
- & nthreads,' threads.'
- 
- expruntime(ipoint+1:) = 0
- 
- ntimesort = 5*nthreads
- allocate(sortedlist(ntimesort))
- sortedlist = -1
- itact      = 0
+  ! some info output
+  totalhours = sum(expruntime(pointlist(1:npoints))/3600.)
+  write(6,'(A,I6,A)')  'DP: ', ipoint, ' durations readed from settingsfile.'
+  write(6,'(A,F8.1,A)')'DP: Total estimated calculation time is ',totalhours,' hours,'
+  write(6,'(A,F8.1,A,I4,A)') 'DP: and ',totalhours/nthreads,' hours using ',&
+  & nthreads,' threads.'
+
+  expruntime(ipoint+1:) = 0
+
+  ntimesort = 5*nthreads
+  allocate(sortedlist(ntimesort))
+  sortedlist = -1
+  itact      = 0
+
 else
- expruntime = -60 
+  expruntime = -60 
 endif
 
 
@@ -174,122 +190,175 @@ ptodo(npoints+1:) = .false.
 
 ipoint = 1
 do while ( count(threadok).ge.mintreads )
- lgoon = .true.
- do it=1,nthreads
-! note that the ranks go from 0 to nthread-1  
+  lgoon = .true.
+  do it=1,nthreads
+    ! note that the ranks go from 0 to nthread-1  
+    ! TODO: fix ask for request file before it is created
+
     write(cit,'(I5.5)') it-1
     reqfile = trim(path2request) // "/" // cit
     
     open(112, file=reqfile, action='read', status='old', iostat=io_open)
+    
     if ( io_open == 0 ) then
+      
       read(112,'(A)', iostat = io_read) request
       if ( io_read /= 0 ) request = ""
+      
       select case (trim(request))
-      case ( 'provide')
-       if ( usetimeguess) then
-        read(112,'(I8)', iostat = io_inline) nsecleft
-	close(112)
-	if ( io_inline /= 0 ) write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
-!	write(6,'(A,I4,A,I6,A)') 'Get a point for ',it,' with ', nsecleft, ' seconds left.'
+      
+        case ( 'provide')
+          
+          if ( usetimeguess) then
+            
+            read(112,'(I8)', iostat = io_inline) nsecleft
+  	        close(112)
+  	        
+            if ( io_inline /= 0 ) then 
 
-	if ( ipoint <= npoints ) call update_list(&
-&         ipoint, npoints, ntimesort, itact, sortedlist, &
-&         ngridpointsmax, pointlist, expruntime)
-        if ( itact >= 1 ) then
-	  call get_point_list(ntimesort, itact, sortedlist, &
-&           ngridpointsmax, pointlist, expruntime, nsecleft, itodo)
-        else 
-	  itodo = -1
-	endif
+                  read(112,'(I8)', iostat = io_inline) nsecleft
+                  close(112)
 
-	if ( itodo > 0 ) then
-	  open(112, file=reqfile, action='write')
-	  write(112,'(I8)') pointlist(itodo)
-	  write(112,'(I8)') expruntime(pointlist(itodo))/60
-	  close(112)
-	  ptodo(itodo) = .false.
-	  p4thread(it)  = pointlist(itodo)
-          write(6,'(A,I4,A,I6,A,I4,A,I4,A)') &
-	  & 'DP: Give thread ',it-1,' # ',pointlist(itodo),&
-	  & ' , exprt ',expruntime(pointlist(itodo))/60, &
-	  & ' m; ',nsecleft/60, ' m left.'
-	  
-	else
-	  close(112)
-	  open(112, file=reqfile, action='write')
-	  write(112,'(A)') 'wait'
-	  close(112)
-	  threadok(it) = .false.
-	  p4thread(it) = -1
-	  write(6,'(A,I4,A,I4,A,I4,A)') &
-	  & 'DP: No points for thread ',it-1,'; no points available suitable with ',&
-	  & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
-	
-	endif  
-       else
-        close(112)
-        if ( ipoint <= npoints ) then
-	  open(112, file=reqfile, action='write')
-	  write(112,'(I8)') pointlist(ipoint)
-	  close(112)
-	  ptodo(ipoint) = .false.
-	  p4thread(it)  = pointlist(ipoint)
-	  ipoint        = ipoint + 1
-	   
-	else
-	  open(112, file=reqfile, action='write')
-	  write(112,'(A)') 'wait'
-	  close(112)
-	  threadok(it) = .false.
-	  p4thread(it) = -1
-	endif
-	lgoon = .false. 
-       endif	 
-      case ( 'abort' )
-        close(112, status='delete')
-        ! terminate
-	threadok(it) = .false.
-	lgoon        = .false.
-	write(6,'(A,I4,A,I4)') 'DP: Thread ',it-1,' aborts, ', count(threadok), &
-	& ' threads still active.'
-	
-      case ( 'nonew' )
-	p4thread(it) = -1
-        close(112, status='delete')
-        ! terminate
-	threadok(it) = .false.
-	lgoon        = .false.
+                  if ( io_inline /= 0 ) then 
 
-	write(6,'(A,I4,A,I4)') 'DP: Thread ',it-1,' do not nead a new point, ', count(threadok), &
-	& ' threads still active.'
 
-      case ( 'fatal' )
-        close(112, status='delete')
-        write(6,'(A,I4,A)') 'DP: Thread ',it-1,' sends fatal error - abort without restart.'
-	threadok = .false. ! so simply stop
-	lgoon    = .false.
-	lfatal   = .true.
-	
-      case default ! = wait, stop, a number
-        ! don't do anything, leave file there
-	close(112)
+                        read(112,'(I8)', iostat = io_inline) nsecleft
+                        close(112)
+
+
+                          if ( io_inline /= 0 ) then
+
+                            write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
+                          
+                          else
+
+                            write(0,'(A,I10)'), 'DP: nsecleft: ', nsecleft
+                          
+                          endif
+                  endif
+
+  	        endif
+
+            if ( ipoint <= npoints ) call update_list(&
+  &             ipoint, npoints, ntimesort, itact, sortedlist, &
+  &             ngridpointsmax, pointlist, expruntime)
+            
+            if ( itact > 1 ) then
+  	          
+              call get_point_list(ntimesort, itact, sortedlist, &
+  &                               ngridpointsmax, pointlist, expruntime, nsecleft, itodo)
+            else 
+  	           
+               itodo = -1
+
+  	        endif
+
+            if ( itodo > 0 ) then
+          	  
+              open(112, file=reqfile, action='write')
+          	  write(112,'(I8)') pointlist(itodo)
+          	  write(112,'(I8)') expruntime(pointlist(itodo))/60
+          	  close(112)
+          	  ptodo(itodo) = .false.
+          	  p4thread(it)  = pointlist(itodo)
+                    write(6,'(A,I4,A,I6,A,I4,A,I4,A)') &
+          	  & 'DP: Give thread ',it-1,' # ',pointlist(itodo),&
+          	  & ' , exprt ',expruntime(pointlist(itodo))/60, &
+          	  & ' m; ',nsecleft/60, ' m left.'
+  	  
+  	        else
+
+          	  close(112)
+          	  open(112, file=reqfile, action='write')
+          	  write(112,'(A)') 'wait'
+          	  close(112)
+          	  threadok(it) = .false.
+          	  p4thread(it) = -1
+          	  write(6,'(A,I4,A,I4,A,I4,A)') &
+          	  & 'DP: No points for thread ',it-1,'; no points available suitable with ',&
+          	  & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
+  	
+  	        endif  
+         
+          else
+            
+            close(112)
+            
+            if ( ipoint <= npoints ) then
+  	          
+              open(112, file=reqfile, action='write')
+  	          write(112,'(I8)') pointlist(ipoint)
+              close(112)
+              ptodo(ipoint) = .false.
+              p4thread(it)  = pointlist(ipoint)
+              ipoint        = ipoint + 1
+               
+  	        else
+              
+              open(112, file=reqfile, action='write')
+              write(112,'(A)') 'wait'
+              close(112)
+              threadok(it) = .false.
+              p4thread(it) = -1
+  	        
+            endif
+  	         
+            lgoon = .false. 
+          
+          endif	 
+        
+        case ( 'abort' )
+          
+          close(112, status='delete')
+          ! terminate
+        	threadok(it) = .false.
+        	lgoon        = .false.
+  	      write(6,'(A,I4,A,I4)') 'DP: Thread ',it-1,' aborts, ', count(threadok), &
+  	           & ' threads still active.'
+  	
+        case ( 'nonew' )
+  	      
+          p4thread(it) = -1
+          close(112, status='delete')
+          ! terminate
+  	      threadok(it) = .false.
+  	      lgoon        = .false.
+
+  	      write(6,'(A,I4,A,I4)') 'DP: Thread ',it-1,' do not nead a new point, ', count(threadok), &
+  	           & ' threads still active.'
+
+        case ( 'fatal' )
+          
+          close(112, status='delete')
+          write(6,'(A,I4,A)') 'DP: Thread ',it-1,' sends fatal error - abort without restart.'
+  	      threadok = .false. ! so simply stop
+  	      lgoon    = .false.
+  	      lfatal   = .true.
+  	
+        case default ! = wait, stop, a number
+          ! don't do anything, leave file there
+  	      close(112)
 
       end select	
+    
     ! else no file thus no request
+    
     endif    
   enddo
   
   if ( lgoon ) then
     call ftnsleep(nanosleep, sleeperror)
-    if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error ',sleeperror 
-  endif  
+    if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error at end of loop',sleeperror 
+  endif
+
 enddo
 
 ! ----- end of normal operations
 ! notifiy the scripts they need to stop
 ! as the threads may write as well, some error-safety is needed
 do it=1,nthreads
-! note that the ranks go from 0 to nthread-1  
+  
+  ! note that the ranks go from 0 to nthread-1  
   write(cit,'(I5.5)') it-1
   reqfile = trim(path2request) // "/" // cit
   
@@ -297,10 +366,12 @@ do it=1,nthreads
   lgoon = .true.
   do while ( lgoon )
     open(112, file=reqfile, action='write', iostat=io_open)
+    
     if ( io_open == 0 ) then
       write(112,'(A)', iostat=io_write) 'stop'
       close(112, iostat=io_close)
     endif
+    
     if ( io_open==0 .and. io_write==0 .and. io_close==0 ) then
       lgoon = .false.
     elseif ( is == 2 ) then
@@ -308,12 +379,14 @@ do it=1,nthreads
     else  
       is = is + 1
     endif
+  
   enddo       
+
 enddo
 
 ! make the list of points yet to do
 if ( any(ptodo) .or. any(p4thread > 1) ) then
-  write(6,'(A)') 'distribute_points has still points to do.'
+  write(6,'(A)') 'distribute_points still has points to do.'
   nabort = 0
   nover  = 0
   open(111,file=pointlistfile,action='write')
@@ -333,9 +406,18 @@ if ( any(ptodo) .or. any(p4thread > 1) ) then
 
   write(6,'(I6,A,I6,A,I6,A)') nabort,' points will be aborted, ', &
   & nover, ' points are not yet started. In total ',nabort+nover, &
-  & ' points.'
+  & ' points to do.'
 
   request = "continue"
+
+  ! prevente the distributor from continuing to try to run a single point
+  ! because we still have an error where 1 point can't be run alone, 
+  ! so many jobs are submitted in a short amount of time
+
+  if ( nabort+nover .le. 2) then
+    request = "done"
+    write(6, '(A)') 'Only 2 points are left, so job is *NOT* resubmitted.'
+  endif
 
 else
   write(6,'(A)') 'distribute_points sees that everyting is completed!'
@@ -360,6 +442,7 @@ end
 
 !------------------------------------------------------------------
 subroutine update_list(ipoint, npoint, nlist, ilist, sortedlist, nexpt, pointlist, expruntime)
+! need this commented 
 implicit none
 integer, intent(inout):: ipoint
 integer, intent(in)   :: npoint

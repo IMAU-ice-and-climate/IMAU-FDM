@@ -36,3 +36,13 @@
 
 # mac specific
 *.DS_STORE
+
+# Ignore pointlists
+rundir/pointlists/
+
+# Ignore reference files -- too big
+reference/
+
+# Ignore modules and objects
+modules/
+objects/

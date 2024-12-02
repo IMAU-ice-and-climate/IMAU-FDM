@@ -22,10 +22,10 @@ if [[ "$domain" == "ANT27" ]]; then
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-42	! nyears; simulation time [yr]
+45	! nyears; simulation time [yr]
 42	! nyears; simulation time during the spin-up [yr]
-180	! dtmodelExp; timestep in model with explicit T-scheme [s]
-3600	! dtmodelImp; timestep in model with implicit T-scheme [s]
+180	! dtmodelExp; timestep in model with explicit T-scheme [s] this could be changed to 3600 for dry locations in Antarctica, but should be renamed
+900	! dtmodelImp; timestep in model with implicit T-scheme [s]
 $ImpExp ! ImpExp; implicit or explicit scheme, based on melt or not. (1=Implicit, 2=Explicit)
 10800	! dtobs; timestep in input data [s]
 31557600  ! dtSnow; duration of the running average used in the snow parameterisation [s]
@@ -82,7 +82,7 @@ EOS
 
 fi
 
-if [ $domain = "FGRN11" ] ; then
+if [[ $domain = "FGRN11" ]] ; then
 
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
@@ -114,12 +114,12 @@ EOS
 
 fi
 
-if [[ "$domain" == "FGRN055" ]]; then
+if [[ "$domain" == "FGRN055" || "$domain" == "FGRN055_era055" ]]; then
 
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-67	! nyears; simulation time [yr]
+66	! nyears; simulation time [yr]
 20	! nyears; simulation time during the spin-up [yr]
 180	! dtmodelExp; timestep in model with explicit T-scheme [s]
 900	! dtmodelImp; timestep in model with implicit T-scheme [s]
@@ -311,8 +311,9 @@ fi
 # Run the model
 log_fname=${p2logs}/log_IMAU-FDM_${ccab}_${cpoint}.out
 echo "$(date +%c) ${EC_FARM_ID}: We launch the model for ${cpoint} with:"
-echo "$exe_id $usern $cpoint $domain $filename_part1 $ini_filename &> ${log_fname}"
-$exe_id $usern $cpoint $domain $filename_part1 $ini_filename &> ${log_fname}
+
+echo "$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname}" # TKTK RESTART IN PROGRESS 
+$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname} # TKTK RESTART IN PROGRESS 
 
 echo "$(date +%c) ${EC_FARM_ID}: Model run complete, report back..."
 # report back that we are ready
