@@ -4,4 +4,4 @@
 ## structure: ./run_sc_job <FILE_PREFIX> <CODE_SOURCE> <VAR> ##
 ## --------------------------------------------------------- ##
 
-./run_sc_job.sc years ${script_filename}
+./run_sc_job.sc years
