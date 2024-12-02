@@ -59,7 +59,7 @@ mkdir -p ${jobfile_dir}
 
 for var in ${vars[@]}; do
 
-initRacmoFile="${jobfile_dir}preprocess-RACMO_job_${jobname}_${var}"
+initRacmoFile="${jobfile_dir}/preprocess-RACMO_job_${jobname}_${var}"
 
 cat <<EOS1 > ${initRacmoFile} 
 #!/bin/ksh -f
@@ -67,7 +67,7 @@ cat <<EOS1 > ${initRacmoFile}
 #SBATCH -q nf
 #SBATCH -J ${jobname}_${var}_preprocess
 #SBATCH --time=48:00:00
-#SBATCH -o ${logfile_dir}${jobname}_${var}_preprocess.log
+#SBATCH -o ${logfile_dir}/${jobname}_${var}_preprocess.log
 #SBATCH --mem-per-cpu=4000mb
 
 module load nco
