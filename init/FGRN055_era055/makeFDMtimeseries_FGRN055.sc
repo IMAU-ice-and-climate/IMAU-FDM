@@ -38,12 +38,12 @@ cell_width=$8
 ## create timeseries for each variable
 ## ------------------------------------------------------------ ##
 for varname in $varlist; do
-  temp1="${years_dir}parts/${varname}_temp1.nc"
+  temp1="${years_dir}/parts/${varname}_temp1.nc"
 
   (( year = ${start_year} ))
   while [ $year -le ${end_year} ]; do
     
-    fname_in="${years_dir}${varname}_${project_name}_forFDM_Year${year}.nc"
+    fname_in="${years_dir}/${varname}_${project_name}_forFDM_Year${year}.nc"
 
     ## loop through all years
     ## ------------------------------------------------------------ ##
@@ -53,9 +53,9 @@ for varname in $varlist; do
     
     ## loop through all longitude bands
     ## ------------------------------------------------------------ ##
-    while [ $part -lt ${num_long_bands} ]; do
+    while [ $part -le ${num_long_bands} ]; do
       (( start_t = end_t + 1 ))
-      (( end_t = start_t + ${cell_width} )) 
+      (( end_t = start_t + ${cell_width} - 1)) 
       fname_out="${years_dir}parts/${varname}_${year}_part${part}.nc"
       
       ## check if file exists, then slice year files into bands       ##
@@ -77,12 +77,11 @@ for varname in $varlist; do
   ## ------------------------------------------------------------ ##
   while [ $part2 -lt ${num_long_bands} ]; do
     fname_final="${files_dir}/${varname}_${project_name}_${start_year}-${end_year}_p${part2}.nc"
-    touch $fname_final
 
       if [[ -f ${fname_final} ]]; then
         echo "File is already present"
       else  
-        ncrcat ${years_dir}"parts/"${varname}"_"*"_part"${part2}".nc" ${temp1}
+        ncrcat ${years_dir}"/parts/"${varname}"_"*"_part"${part2}".nc" ${temp1}
         nccopy -k classic ${temp1} ${fname_final} 
         rm ${temp1}
       fi  

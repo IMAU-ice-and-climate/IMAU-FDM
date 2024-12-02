@@ -9,7 +9,7 @@
 domain="FGRN055"
 forcing="era055"
 
-vars=("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin") #("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
+vars=("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
 
 jobname=$1
 
@@ -32,14 +32,14 @@ ts_start_year=1939
 ts_end_year=2023
 ave_start_year=1940
 ave_end_year=1970
-num_long_bands=74
-cell_width=5
+num_long_bands=73
+cell_width=6
 
-years_dir="${base_dir}/process-RACMO/years-${ts_start_year}/"
-files_dir="${base_dir}/input/timeseries-${ts_start_year}/"
-ave_dir="${base_dir}/input/averages-${ts_start_year}_${ave_start_year}-${ave_end_year}/"
-jobfile_dir="${base_dir}/process-RACMO/jobs/"
-logfile_dir="${base_dir}/process-RACMO/logs/"
+years_dir="${base_dir}/process-RACMO/years-${ts_start_year}"
+files_dir="${base_dir}/input/timeseries-${ts_start_year}"
+ave_dir="${base_dir}/input/averages-${ts_start_year}_${ave_start_year}-${ave_end_year}"
+jobfile_dir="${base_dir}/process-RACMO/jobs"
+logfile_dir="${base_dir}/process-RACMO/logs"
 
 mkdir -p ${years_dir}
 mkdir -p ${files_dir}
