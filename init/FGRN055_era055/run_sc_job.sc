@@ -9,7 +9,7 @@
 domain="FGRN055"
 forcing="era055"
 
-vars=("evap") #("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
+vars=("ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin") #("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
 
 jobname=$1
 
@@ -24,9 +24,12 @@ else
 	exit 1
 fi
 
+data_base_dir="$SCRATCH" #where the data should be stored
+scripts_base_dir="$PERM/code" #where IMAU-FDM directory is
+
 project_name="${domain}_${forcing}"
-base_dir="$SCRATCH/${project_name}"
-script_dir="$PERM/IMAU-FDM/init/${domain}_${forcing}"
+base_dir="${data_base_dir}/${project_name}"
+script_dir="${scripts_base_dir}/IMAU-FDM/init/${domain}_${forcing}"
 
 ts_start_year=1939
 ts_end_year=2023

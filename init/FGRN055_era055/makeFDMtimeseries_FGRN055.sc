@@ -75,7 +75,7 @@ for varname in $varlist; do
 
   ## sew slices from each year into single timeseries             ##
   ## ------------------------------------------------------------ ##
-  while [ $part2 -lt ${num_long_bands} ]; do
+  while [ $part2 -le ${num_long_bands} ]; do
     fname_final="${files_dir}/${varname}_${project_name}_${start_year}-${end_year}_p${part2}.nc"
 
       if [[ -f ${fname_final} ]]; then
