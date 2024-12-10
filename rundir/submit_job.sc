@@ -37,7 +37,7 @@ else
   else
     ntasks_real=`echo "${ntodo}/${taskfactor}" | bc`
     ntasks=${ntasks_real%.*}
-    # if the number of tasks is less than ~50, go for ns
+    
     if [[ $ntasks -gt 20 || ${ntodo} -gt 120 ]]; then
       # limit the number of tasks to half of a node.
       let "halfnode=${tasks_per_node}/2"

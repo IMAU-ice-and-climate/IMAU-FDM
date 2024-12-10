@@ -5,7 +5,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 export domain="FGRN055"
 forcing="era055"
 
-export project_name="ten-point-2-oct"
+export project_name="testMask"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
@@ -35,7 +35,7 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export nnodes_max=1 #8
-export tasks_per_node=128 #64 this is not to be change
+export tasks_per_node=64 #64 this is not to be change
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
