@@ -48,7 +48,6 @@ else
       echo "submit_job: Only ${ntasks} tasks in a nf job needed now."
     else
       jobtype="nf"
-      echo "submit_job: submit remaining tasks as single-point jobs."
     fi  
   fi    	 
 fi

@@ -195,6 +195,9 @@ do while ( count(threadok).ge.mintreads )
     ! note that the ranks go from 0 to nthread-1  
     ! TODO: fix ask for request file before it is created
 
+    call ftnsleep(nanosleep, sleeperror)
+    if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error at beginning of loop',sleeperror 
+
     write(cit,'(I5.5)') it-1
     reqfile = trim(path2request) // "/" // cit
     
@@ -210,6 +213,9 @@ do while ( count(threadok).ge.mintreads )
         case ( 'provide')
           
           if ( usetimeguess) then
+
+              call ftnsleep(nanosleep, sleeperror)
+              if ( sleeperror /= 0 ) write(0,'(A,I8)') 'DP: ftnsleep gave error at beginning of loop',sleeperror 
             
             read(112,'(I8)', iostat = io_inline) nsecleft
   	        close(112)
@@ -219,22 +225,15 @@ do while ( count(threadok).ge.mintreads )
                   read(112,'(I8)', iostat = io_inline) nsecleft
                   close(112)
 
-                  if ( io_inline /= 0 ) then 
 
+                  if ( io_inline /= 0 ) then
 
-                        read(112,'(I8)', iostat = io_inline) nsecleft
-                        close(112)
+                    write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
+                  
+                  else
 
-
-                          if ( io_inline /= 0 ) then
-
-                            write(0,'(A,I6,A)') 'DP: Error ',io_inline,' while reading nsecleft'
-                          
-                          else
-
-                            write(0,'(A,I10)'), 'DP: nsecleft: ', nsecleft
-                          
-                          endif
+                    write(0,'(A,I10)'), 'DP: nsecleft: ', nsecleft
+                  
                   endif
 
   	        endif
@@ -250,6 +249,8 @@ do while ( count(threadok).ge.mintreads )
             else 
   	           
                itodo = -1
+               write(0,'(A,I8)') 'itodo = ', itodo
+               write(0,'(2A)') 'request = ', trim(request)
 
   	        endif
 
