@@ -1,0 +1,82 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 52065, mtime: Tue Nov 12 09:54:58 2024
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Tue Dec 10 14:43:10 2024 (1733841790.1520464) on ac6-194.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/rundir, std(out|err): (/lus/h2resw01/scratch/nld4814/testMask/nplogs/FDM_testMask_i6_runlog.log|/lus/h2resw01/scratch/nld4814/testMask/nplogs/FDM_testMask_i6_runlog.log)
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - SLURM_MEM_PER_CPU=999
+[ECMWF-INFO -sbatch] - SLURM_NODEID=0
+[ECMWF-INFO -sbatch] - SLURM_TASK_PID=163851
+[ECMWF-INFO -sbatch] - SLURM_PRIO_PROCESS=0
+[ECMWF-INFO -sbatch] - SLURM_SUBMIT_DIR=/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/rundir
+[ECMWF-INFO -sbatch] - SLURM_CPUS_PER_TASK=1
+[ECMWF-INFO -sbatch] - SLURM_JOB_LICENSES=h2resw01
+[ECMWF-INFO -sbatch] - SLURM_PROCID=0
+[ECMWF-INFO -sbatch] - SLURM_JOB_GID=2090
+[ECMWF-INFO -sbatch] - SLURMD_NODENAME=ac6-194
+[ECMWF-INFO -sbatch] - SLURM_JOB_END_TIME=1734014510
+[ECMWF-INFO -sbatch] - SLURM_TASKS_PER_NODE=64
+[ECMWF-INFO -sbatch] - SLURM_NNODES=1
+[ECMWF-INFO -sbatch] - SLURM_GET_USER_ENV=1
+[ECMWF-INFO -sbatch] - SLURM_JOB_START_TIME=1733841710
+[ECMWF-INFO -sbatch] - SLURM_NTASKS_PER_NODE=64
+[ECMWF-INFO -sbatch] - SLURM_JOB_NODELIST=ac6-194
+[ECMWF-INFO -sbatch] - SLURM_CLUSTER_NAME=ac
+[ECMWF-INFO -sbatch] - SLURM_NODELIST=ac6-194
+[ECMWF-INFO -sbatch] - SLURM_NTASKS=64
+[ECMWF-INFO -sbatch] - SLURM_JOB_CPUS_PER_NODE=64
+[ECMWF-INFO -sbatch] - SLURM_THREADS_PER_CORE=1
+[ECMWF-INFO -sbatch] - SLURM_TOPOLOGY_ADDR=root_switch.gpil.isw6-c16zg-l1.ac6-194
+[ECMWF-INFO -sbatch] - SLURM_WORKING_CLUSTER=ac:10.100.130.24:6817:9984:109
+[ECMWF-INFO -sbatch] - SLURM_JOB_NAME=FDM_testMask_i6_nf
+[ECMWF-INFO -sbatch] - SLURM_JOBID=34543563
+[ECMWF-INFO -sbatch] - SLURM_CONF=/etc/slurm/slurm.conf
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_NODE_ALIASES=(null)
+[ECMWF-INFO -sbatch] - SLURM_JOB_QOS=nf
+[ECMWF-INFO -sbatch] - SLURM_TOPOLOGY_ADDR_PATTERN=switch.switch.switch.node
+[ECMWF-INFO -sbatch] - SLURM_CPUS_ON_NODE=64
+[ECMWF-INFO -sbatch] - SLURM_JOB_NUM_NODES=1
+[ECMWF-INFO -sbatch] - SLURM_JOB_UID=26513
+[ECMWF-INFO -sbatch] - SLURM_JOB_PARTITION=gpil
+[ECMWF-INFO -sbatch] - SLURM_SCRIPT_CONTEXT=prolog_task
+[ECMWF-INFO -sbatch] - SLURM_JOB_STDOUT=/ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i1_nf.log
+[ECMWF-INFO -sbatch] - SLURM_JOB_USER=nld4814
+[ECMWF-INFO -sbatch] - SLURM_NPROCS=64
+[ECMWF-INFO -sbatch] - SLURM_SUBMIT_HOST=ac6-147.bullx
+[ECMWF-INFO -sbatch] - SLURM_JOB_ACCOUNT=spnlberg
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SLURM_GTIDS=0
+[ECMWF-INFO -sbatch] - SLURM_JOB_ID=34543563
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - SLURM_LOCALID=0
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /lus/h2resw01/scratch/nld4814/testMask/FDM_testMask_i7_nf.sc
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH -q nf
+[ECMWF-INFO -sbatch] - #SBATCH -J FDM_testMask_i7_nf
+[ECMWF-INFO -sbatch] - #SBATCH --time=48:00:00
+[ECMWF-INFO -sbatch] - #SBATCH -o /ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i7_nf.log
+[ECMWF-INFO -sbatch] - #SBATCH --cpus-per-task=1
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks-per-node=64
+[ECMWF-INFO -sbatch] - #SBATCH --mem-per-cpu=999Mb
+[ECMWF-INFO -sbatch] - #SBATCH --threads-per-core=1
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['/ec/res4/scratch/nld4814/testMask/FDM_testMask_i7_nf.sc']
+[ECMWF-INFO -sbatch] - ARG --cpus_per_task=1
+[ECMWF-INFO -sbatch] - ARG --job_name=FDM_testMask_i7_nf
+[ECMWF-INFO -sbatch] - ARG --ntasks_per_node=64
+[ECMWF-INFO -sbatch] - ARG --output=/ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i7_nf.log
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=48:00:00
+[ECMWF-INFO -sbatch] - ARG --mem_per_cpu=999Mb
+[ECMWF-INFO -sbatch] - ARG --threads_per_core=1
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: nld4814-FDM_testMask_i7_nf-1x64-/ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i7_nf.log
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--cpus-per-task=1', '--job-name=FDM_testMask_i7_nf', '--ntasks-per-node=64', '--output=/ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i7_nf.log', '--qos=nf', '--time=48:00:00', '--mem-per-cpu=999Mb', '--threads-per-core=1', '--export=SLURM_JOB_STDOUT=/ec/res4/scratch/nld4814/testMask/nplogs/FDM_testMask_i7_nf.log,EC_user_time_limit=48:00:00', '--licenses=h2resw01', '/lus/h2resw01/scratch/nld4814/testMask/FDM_testMask_i7_nf.sc']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-INFO -sbatch] - Submitted batch job 34544026
