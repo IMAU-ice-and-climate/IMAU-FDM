@@ -146,11 +146,11 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
 
-        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//""
+        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/FGRN055_Masks.nc"
         
-        print *, "To do (2 Oct 2024) check if new mask pad works: ", pad_mask
+        print *, "Path to mask ", pad_mask
         
-        status = nf90_open(trim(pad_mask)//"/FGRN055_Masks.nc",0,ncid(1))
+        status = nf90_open(trim(pad_mask),0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
