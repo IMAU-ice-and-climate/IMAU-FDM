@@ -59,8 +59,6 @@ end subroutine Get_All_Command_Line_Arg
 
 
 subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
-    !TO DO: CHECK THIS WORKS WITH UPDATED PATH (2 OCT 2024)
-
     !*** Load dimensions of forcing data from file ***!
     
     ! declare arguments
