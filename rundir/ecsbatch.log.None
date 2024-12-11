@@ -1,0 +1,40 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 52065, mtime: Tue Nov 12 09:54:58 2024
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed Dec 11 14:45:38 2024 (1733928338.9844782) on ac6-102.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/rundir
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /lus/h2resw01/scratch/nld4814/test-memory/FDM_test-memory_i1_nf.sc
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH -q nf
+[ECMWF-INFO -sbatch] - #SBATCH -J FDM_test-memory_i1_nf
+[ECMWF-INFO -sbatch] - #SBATCH --time=48:00:00
+[ECMWF-INFO -sbatch] - #SBATCH -o /ec/res4/scratch/nld4814/test-memory/nplogs/FDM_test-memory_i1_nf.log
+[ECMWF-INFO -sbatch] - #SBATCH --cpus-per-task=1
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks-per-node=64
+[ECMWF-INFO -sbatch] - #SBATCH --mem-per-cpu=3Gb
+[ECMWF-INFO -sbatch] - #SBATCH --threads-per-core=1
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['/ec/res4/scratch/nld4814/test-memory/FDM_test-memory_i1_nf.sc']
+[ECMWF-INFO -sbatch] - ARG --cpus_per_task=1
+[ECMWF-INFO -sbatch] - ARG --job_name=FDM_test-memory_i1_nf
+[ECMWF-INFO -sbatch] - ARG --ntasks_per_node=64
+[ECMWF-INFO -sbatch] - ARG --output=/ec/res4/scratch/nld4814/test-memory/nplogs/FDM_test-memory_i1_nf.log
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=48:00:00
+[ECMWF-INFO -sbatch] - ARG --mem_per_cpu=3Gb
+[ECMWF-INFO -sbatch] - ARG --threads_per_core=1
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: nld4814-FDM_test-m_mory_i1_nf-1x64-/ec/res4/scratch/nld4814/test-memory/nplogs/FDM_test-memory_i1_nf.log
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--cpus-per-task=1', '--job-name=FDM_test-memory_i1_nf', '--ntasks-per-node=64', '--output=/ec/res4/scratch/nld4814/test-memory/nplogs/FDM_test-memory_i1_nf.log', '--qos=nf', '--time=48:00:00', '--mem-per-cpu=3Gb', '--threads-per-core=1', '--export=SLURM_JOB_STDOUT=/ec/res4/scratch/nld4814/test-memory/nplogs/FDM_test-memory_i1_nf.log,EC_user_time_limit=48:00:00', '--licenses=h2resw01', '/lus/h2resw01/scratch/nld4814/test-memory/FDM_test-memory_i1_nf.sc']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-ERROR-sbatch] - ac: sbatch: error: QOSMaxMemoryPerJob
+sbatch: error: Batch job submission failed: Job violates accounting/QOS policy (job submit limit, user's size and/or time limits)

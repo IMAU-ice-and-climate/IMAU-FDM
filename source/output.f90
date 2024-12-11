@@ -195,6 +195,9 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     IntMlwc(:) = 0.
     IntRefreeze(:) = 0.
 
+    print *, "is this a memory problem?"
+    print *, " detthick = ", detthick
+
     DZ_mod = DZ
     dist = 0.
     ind_orig = ind_z_surf
