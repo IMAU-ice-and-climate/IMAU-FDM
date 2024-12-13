@@ -37,7 +37,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         add = "_FGRN11_60-79_ave.nc"
     elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FGRN055_era055/input/averages/"    
-        add = "_FGRN055-era055_1960-1981_ave.nc"
+        add = "_FGRN055_era055-1939_1940-1970_ave.nc"
     elseif (domain == "PAT055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
         add = "_PAT055_79-12_ave.nc"
@@ -413,7 +413,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         latfile = ind_lat
 
         pad = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/timeseries/"    
-        add = "_FGRN055-era055_1957-2023_p"//trim(fnumb)//".nc"
+        add = "_FGRN055_era055_1939-2023_p"//trim(fnumb)//".nc"
 
     elseif (domain == "PAT055") then
 
