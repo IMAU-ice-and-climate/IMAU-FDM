@@ -20,7 +20,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
     
     integer :: status,ncid(50),ID(50),Nlat,Nlon,Nt_forcing,i,j,nyears
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
-        AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude
+        AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude, Icemask_GR
     
     character*255 :: add,pad,username,domain,path_dir,pad_mask
 
