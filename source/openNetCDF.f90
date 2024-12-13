@@ -149,7 +149,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/FGRN055_Masks.nc"
         
         print *, "Path to mask: ", pad_mask
-        
+
         status = nf90_open(trim(pad_mask),0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
