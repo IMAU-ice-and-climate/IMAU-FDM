@@ -56,7 +56,6 @@ end subroutine Accumulate_Output
 
 ! *******************************************************
 
-
 subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, &
     Totvbouy, TotRunoff, FirnAir, TotLwc, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out, &
     out_1D, outputSpeed)

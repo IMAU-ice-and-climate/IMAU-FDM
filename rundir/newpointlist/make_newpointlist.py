@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 
+username="nld4814"
 #%% MAKE LIST OF COMPLETED POINTS
 
 reference_path = '/perm/rumb/code/DATA/IN_ll_FGRN055_GrIS_GIC_implicit.txt'
@@ -21,22 +22,22 @@ ints_2ddet_done = np.zeros_like(loc_2ddet_done)
 
 for i in range(len(loc_ini_done['string'])):
     string_ini = loc_ini_done['string'][i]
-    string_ini = string_ini[len('/ec/res4/scratch/rumb/data/output/era055/newrun/ECMWF_FGRN055_imp_run_ini_'):]
+    string_ini = string_ini[len('/ec/res4/scratch/nld4814/data/output/era055/newrun/ECMWF_FGRN055_imp_run_ini_'):]
     string_ini = string_ini[:-len('.nc')]
     ints_ini_done[i] = int(string_ini)
 for i in range(len(loc_1d_done['string'])):
     string_1d = loc_1d_done['string'][i]
-    string_1d = string_1d[len('/ec/res4/scratch/rumb/data/output/era055/newrun/ECMWF_FGRN055_imp_run_1D_'):]
+    string_1d = string_1d[len('/ec/res4/scratch/nld4814/data/output/era055/newrun/ECMWF_FGRN055_imp_run_1D_'):]
     string_1d = string_1d[:-len('.nc')]
     ints_1d_done[i] = int(string_1d)
 for i in range(len(loc_2d_done['string'])):
     string_2d = loc_2d_done['string'][i]
-    string_2d = string_2d[len('/ec/res4/scratch/rumb/data/output/era055/newrun/ECMWF_FGRN055_imp_run_2D_'):]
+    string_2d = string_2d[len('/ec/res4/scratch/nld4814/data/output/era055/newrun/ECMWF_FGRN055_imp_run_2D_'):]
     string_2d = string_2d[:-len('.nc')]
     ints_2d_done[i] = int(string_2d)
 for i in range(len(loc_2ddet_done['string'])):
     string_2ddet = loc_2ddet_done['string'][i]
-    string_2ddet = string_2ddet[len('/ec/res4/scratch/rumb/data/output/era055/newrun/ECMWF_FGRN055_imp_run_2Ddetail_'):]
+    string_2ddet = string_2ddet[len('/ec/res4/scratch/nld4814/data/output/era055/newrun/ECMWF_FGRN055_imp_run_2Ddetail_'):]
     string_2ddet = string_2ddet[:-len('.nc')]
     ints_2ddet_done[i] = int(string_2ddet)
 
@@ -46,7 +47,7 @@ ints_2d_done = np.squeeze(np.sort(ints_2d_done))
 ints_2ddet_done = np.squeeze(np.sort(ints_2ddet_done))
 ints_done = np.unique(np.concatenate([ints_ini_done, ints_1d_done, ints_2d_done, ints_2ddet_done])) # ints fully or partially done
 
-#%% MAKE LIST POINTS STILL TO DO
+#%% MAKE LIST POINTS STILL TO RUN
 
 ints_ini_todo = []
 ints_1d_todo = []

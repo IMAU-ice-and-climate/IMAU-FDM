@@ -148,7 +148,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
         pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/FGRN055_Masks.nc"
         
-        print *, "Path to mask: ", pad_mask
+        print *, "Loading mask from: ", pad_mask
         
         status = nf90_open(trim(pad_mask),0,ncid(1))
         
@@ -156,9 +156,9 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid_lsm')    
         status = nf90_inq_varid(ncid(1),"lat",ID(11))
-        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid11')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lat')
         status = nf90_inq_varid(ncid(1),"lon",ID(12))
-        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid12')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lon')
         
         status  = nf90_get_var(ncid(1),ID(1),Icemask_GR,start=(/1,1/), &
             count=(/Nlon,Nlat/))
