@@ -194,9 +194,6 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     IntMlwc(:) = 0.
     IntRefreeze(:) = 0.
 
-    print *, "is this a memory problem?"
-    print *, " detthick = ", detthick
-
     DZ_mod = DZ
     dist = 0.
     ind_orig = ind_z_surf
@@ -279,6 +276,10 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
+    print *, "Saving 1D output..."
+    print *, "outputSpeed: ", outputSpeed
+    print *, "size out_1D: ", size(out_1D)
+
     pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
     
     ncid(:) = 0
@@ -288,13 +289,20 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_1D_"//trim(point_numb)//".nc",0,ncid(32))
 
+    print *, "1d-1"
+
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(32),"ind_t",outputSpeed+50,IDs(32,1))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_dim1')
     
+    print *, "1d-2"
+
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid(32),"h_surf",nf90_real,(/IDs(32,1)/),varID(32,1))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var1')
+
+    print *, "1d-3"
+
     status = nf90_def_var(ncid(32),"vice",nf90_real,(/IDs(32,1)/),varID(32,2))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var2')
     status = nf90_def_var(ncid(32),"vacc",nf90_real,(/IDs(32,1)/),varID(32,3))
@@ -330,6 +338,7 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     status = nf90_def_var(ncid(32),"Rho0",nf90_real,(/IDs(32,1)/),varID(32,18))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var18')
     
+    print *, "1d-4"
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1')
@@ -372,6 +381,7 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     status = nf90_enddef(ncid(32))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_enddef')
 
+    print *, "1d-5"
     ! SAVE DATA
     status = nf90_put_var(ncid(32),varID(32,1),out_1D(:,1), &
     start=(/1/),count=(/(outputSpeed+50)/))
@@ -453,6 +463,10 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
 
+    print *, "Saving 2D output..."
+
+    print *, "outputProf: ", outputProf
+
     pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
     
     ncid(:) = 0
@@ -462,12 +476,15 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_2D_"//trim(point_numb)//".nc",0,ncid(31))
 
+
+    print *, "2d-1"
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(31),"ind_t",outputProf+50,IDs(31,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim2')    
     status = nf90_def_dim(ncid(31),"layer",proflayers,IDs(31,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim3')
 
+    print *, "2d-2"
     ! DEFINE VARIABLES
     status = nf90_def_var(ncid(31),"dens",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,1))
@@ -488,6 +505,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
         varID(31,6))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
 
+    print *, "2d-3"
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(31),varID(31,1),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
@@ -502,10 +520,12 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     status = nf90_put_att(ncid(31),varID(31,6),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
 
+    print *, "2d-4"
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(31))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_enddef')
 
+    print *, "2d-5"
     ! SAVE DATA
     status = nf90_put_var(ncid(31),varID(31,1),out_2D_dens,start=(/1,1/), &
         count=(/(outputProf+50),proflayers/))
@@ -551,6 +571,9 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     ! declare local arguments
     integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad
+
+    print *, "Saving 2D Detail..."
+    print *, "outputDetail: ", outputDetail
     
     pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
 
