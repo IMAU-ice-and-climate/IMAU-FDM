@@ -5,7 +5,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 export domain="FGRN055"
 forcing="era055"
 
-export project_name="testMask"
+export project_name="dye2"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
@@ -39,7 +39,7 @@ export tasks_per_node=64 #64 this is not to be change
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
-export taskfactor="3." # prior launch at least 3. task per core must be available    
+export taskfactor="1." # prior launch at least 3. task per core must be available    
 export EC_ecfs=0      # number of parallel ECFS calls 
 
 # script misc

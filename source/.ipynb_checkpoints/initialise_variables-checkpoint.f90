@@ -65,16 +65,18 @@ subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
     
     ! declare arguments
     integer, intent(out) :: Nlon, Nlat, Nt_forcing
-    character*255 :: pad
+    character*255 :: pad, cwd 
     character*255, intent(in) :: domain, username
 
-    !pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+    call getcwd(cwd)
 
-    open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
-
+    pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
     print *, "Path to model dimensions file:"
+
     print *, trim(pad)
+    !open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
     
+    !open(unit=12,file="/ec/res4/hpcperm/"//trim(username)//"/FGRN055_era055/reference/input_settings_"//trim(domain)//".txt")
     open(unit=12,file=trim(pad))
 
     read(12,*)
@@ -105,7 +107,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
-    character*255 :: pad
+    character*255 :: pad, cwd
     integer :: NoR
 
     pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
@@ -161,7 +163,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     !*** Initialise time step variables ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodelImp, dtmodelExp, nyearsSU, ImpExp, Nt_forcing, dtobs
+    integer, intent(in) :: dtobs, dtmodelImp, dtmodelExp, nyearsSU, Nt_forcing, ImpExp
     integer, intent(out) :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer, intent(inout) :: dtmodel
 
@@ -176,24 +178,8 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     ! Total number of IMAU-FDM time steps
     Nt_model_tot = Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
-    ! Nt_model_spinup = INT( REAL(Nt_model_tot)*(REAL(nyearsSU)*365.25*24.*3600.)/REAL((REAL(Nt_forcing)*REAL(dtobs))) )
-    Nt_model_spinup = INT ((REAL(nyearsSU)*365.25*24.*3600.))/REAL(dtmodel)
-    
-    print *, 'Nt_model_tot: ', Nt_model_tot
-    print *, 'nyearsSU: ', nyearsSU
-    print *, 'nyearsSU*365.25*24.*3600.: ', nyearsSU*365.25*24.*3600.
-    print *, 'Nt_forcing: ', Nt_forcing
-    print *, 'dtobs: ', dtobs
-    print *, 'real(real(Nt_forcing)*real(dtobs)): ', (REAL(REAL(Nt_forcing)*REAL(dtobs)))
-
-    if (Nt_model_spinup > Nt_model_tot) then
-        Nt_model_spinup = Nt_model_tot
-    elseif (Nt_model_spinup < 0.) then
-        Nt_model_spinup = Nt_model_tot
-    else
-        print *, "Nt_model_spinup error. Value is: ", Nt_model_spinup
-    endif
-
+    Nt_model_spinup = INT( REAL(Nt_model_tot)*(REAL(nyearsSU)*365.25*24.*3600.)/(REAL(Nt_forcing*dtobs)) )
+    if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
 
     print *, "dtmodel: ", dtmodel
     print *, 'Nt_model_interpol: ', Nt_model_interpol
@@ -216,9 +202,9 @@ subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeind
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
-    outputProf = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeinprof))
-    outputSpeed = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeinspeed))
-    outputDetail = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeindetail))
+    outputProf = nyears*3600*24*365 / writeinprof
+    outputSpeed = nyears*3600*24*365 / writeinspeed
+    outputDetail = nyears*3600*24*365 / writeindetail
 
     print *, " "
     print *, "Output variables"
