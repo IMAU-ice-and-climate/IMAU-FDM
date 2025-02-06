@@ -130,7 +130,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
 
     if (numSnow == 1) then
         ! Use current temperature and wind speed for snow parameterisations
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             do step = 1, Nt_model_tot
                 Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - 273.15)
             end do
@@ -142,7 +142,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     else
         ! Use mean temperature and wind speed, averaged over numSnow time steps
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             ! Greenland
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow
@@ -236,14 +236,14 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, rhoi, R, Ec, Eg
 
         part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
         if (Rho(ind_z+1) <= 550.) then
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
+            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
                 cons = 0.6688 + 0.0048*log(acav)        ! fit after debugging heat eq.
             else
                 cons = 1.435 - 0.151*log(acav)
             endif
             drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
         else
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
+            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
                 cons = 1.7465 - 0.2045*log(acav)        ! fit after debuggin heat eq.
             else
                 cons = 2.366 - 0.293*log(acav)

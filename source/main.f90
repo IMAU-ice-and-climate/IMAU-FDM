@@ -78,7 +78,7 @@ program main
         Nt_forcing, Nt_model_tot, Nlon, Nlat)
 
     ! Get variables from the NetCDF files
-    call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, Nlat, Nlon, Nt_forcing, nyears, Latitude, &
+    call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, Nlat, Nlon, Latitude, &
         Longitude, ISM, username, domain)
     
     print *, "Read all averaged values"
@@ -120,7 +120,7 @@ program main
     
 
     if ( restart_type == "spinup" ) then
-        call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, domain, point_numb, fname_p1, project_name)
+        call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, point_numb, fname_p1, project_name)
         prev_nt=1
     else if ( restart_type == "none" ) then ! do spinup
         ! Construct an initial firn layer (T-, rho-, dz-, and M-profile)
@@ -139,7 +139,7 @@ program main
         prev_nt=1
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
         call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                domain, point_numb, fname_p1, project_name)
+                                point_numb, fname_p1, project_name)
     else
         print *, "Restart type not recognized: ", restart_type
     endif

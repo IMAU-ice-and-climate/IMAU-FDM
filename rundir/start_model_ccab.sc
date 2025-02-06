@@ -114,13 +114,13 @@ EOS
 
 fi
 
-if [[ "$domain" == "FGRN055" || "$domain" == "FGRN055_era055" ]]; then
+if [[ "$domain" == "FGRN055" ]]; then
 
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-66	! nyears; simulation time [yr]
-20	! nyears; simulation time during the spin-up [yr]
+84	! nyears; simulation time [yr]
+30	! nyears; simulation time during the spin-up [yr]
 180	! dtmodelExp; timestep in model with explicit T-scheme [s]
 900	! dtmodelImp; timestep in model with implicit T-scheme [s]
 $ImpExp ! ImpExp; implicit or explicit scheme, based on melt or not. (1=Implicit, 2=Explicit)
