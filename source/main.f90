@@ -17,7 +17,7 @@ program main
 
     use openNetCDF, only: Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
     use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
-    use initialise_variables, only: Define_Constants, Get_All_Command_Line_Arg, Get_Forcing_Dims, Get_Model_Settings, Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, &
+    use initialise_variables, only: Define_Constants, Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, &
     Init_Output_Var, Alloc_Forcing_Var
     use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main
@@ -59,13 +59,10 @@ program main
     
     call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, restart_type)
     
-    ! Read in the model settings, input settings and constants
-    call Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
+    ! Read in the model settings, input settings, constants, and forcing dimensions
+    call Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
         beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-        lon_current, lat_current, point_numb, username, domain, project_name)
-    
-    ! Read in resolution of the forcing data
-    call Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
+        lon_current, lat_current, Nlon, Nlat, Nt_forcing, point_numb, username, domain, project_name)
 
     ! Load in physical and mathematical constants
     call Define_Constants(rhoi, R, pi, Ec, Eg, g, Lh)
