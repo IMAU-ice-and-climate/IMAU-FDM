@@ -4,7 +4,7 @@ module initialise_variables
     implicit none
     private
 
-    public :: Define_Constants, Get_All_Command_Line_Arg, Get_Forcing_Dims, Get_Model_Settings, Init_TimeStep_Var, Calc_Output_Freq, Init_Prof_Var, &
+    public :: Define_Constants, Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Init_TimeStep_Var, Calc_Output_Freq, Init_Prof_Var, &
         Init_Output_Var, Alloc_Forcing_Var
     
 contains
@@ -57,50 +57,50 @@ end subroutine Get_All_Command_Line_Arg
 
 ! *******************************************************
 
+! Decomissioned on 2025-02-06, input_settings values moved to start_model_ccab file and read in in "Get_Model_Settings"
 
-subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
-    !TO DO: CHECK THIS WORKS WITH UPDATED PATH (2 OCT 2024)
+! subroutine Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, domain, username)
 
-    !*** Load dimensions of forcing data from file ***!
+!     !*** Load dimensions of forcing data from file ***!
     
-    ! declare arguments
-    integer, intent(out) :: Nlon, Nlat, Nt_forcing
-    character*255 :: pad
-    character*255, intent(in) :: domain, username
+!     ! declare arguments
+!     integer, intent(out) :: Nlon, Nlat, Nt_forcing
+!     character*255 :: pad
+!     character*255, intent(in) :: domain, username
 
-    !pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
+!     !pad = ""//trim(cwd)//"/../reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
 
-    open(unit=12, file="/ec/res4/perm/"//trim(username)//"code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt")
+!     pad = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/input_settings_"//trim(domain)//".txt"
 
-    print *, "Path to model dimensions file:"
-    print *, trim(pad)
+!     print *, "Path to model dimensions file:"
+!     print *, trim(pad)
     
-    open(unit=12,file=trim(pad))
+!     open(unit=12,file=trim(pad))
 
-    read(12,*)
-    read(12,*)
-    read(12,*) Nlon
-    read(12,*) Nlat
-    read(12,*) Nt_forcing
+!     read(12,*)
+!     read(12,*)
+!     read(12,*) Nlon
+!     read(12,*) Nlat
+!     read(12,*) Nt_forcing
 
-    print *, "Read input settings"
+!     print *, "Read input settings"
     
-    close(12)
+!     close(12)
 
-end subroutine Get_Forcing_Dims
+! end subroutine Get_Forcing_Dims
 
 
 ! *******************************************************
 
 
-subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
+subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
     beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-    lon_current, lat_current, point_numb, username, domain, project_name)
+    lon_current, lat_current, Nlon, Nlat, Nt_forcing, point_numb, username, domain, project_name)
     !*** Load model settings from file ***!
     
     ! declare arguments
     integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
-        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers
+        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nt_forcing
     double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
     character*255, intent(in) :: point_numb, username, domain, project_name
 
@@ -114,35 +114,40 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
     print *, " "
 
-    open(unit=11, file=trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt")
+    open(unit=12, file=trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt")
 
-    ! read model settings
-    read (11,*)
-    read (11,*)
-    read (11,*) nyears              ! simulation time [yr]
-    read (11,*) nyearsSU            ! simulation time during the spin up period [yr]
-    read (11,*) dtmodelExp          ! time step in model with explicit T-scheme [s] 
-    read (11,*) dtmodelImp          ! time step in model with implicit T-scheme [s]
-    read (11,*) ImpExp              ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
-    read (11,*) dtobs               ! time step in input data [s]
-    read (11,*) dtSnow              ! duration of running average of variables used in snow parameterisation [s]
-    read (11,*)
-    read (11,*) dzmax               ! vertical model resolution [m]
-    read (11,*) initdepth           ! initial depth of firn profile [m]
-    read (11,*) th                  ! theta (if theta=0.5 , it is a Crank Nicolson scheme) 
-    read (11,*) startasice          ! indicates the initial rho-profile (1=linear, 2=ice)
-    read (11,*) beginT              ! indicates the inital T-profile (0=winter, 1=summer, 2=linear)
-    read (11,*) NoR                 ! number of times the data series is repeated for the initial rho profile is constructed
-    read (11,*) 
-    read (11,*) writeinspeed        ! frequency of writing speed components to file
-    read (11,*) writeinprof         ! frequency of writing of firn profiles to file
-    read (11,*) proflayers          ! number of output layers in the prof file
-    read (11,*) writeindetail       ! frequency of writing to detailed firn profiles to file
-    read (11,*) detlayers           ! number of output layers in the detailed prof file
-    read (11,*) detthick            ! thickness of output layer in the detailed prof file
-    read (11,*)
-    read (11,*) lon_current         ! Lon; indicates the longitude gridpoint
-    read (11,*) lat_current         ! Lat; indicates the latitude gridpoint
+    ! read model settings and forcing dimensions
+    read (12,*)
+    read (12,*)
+    read (12,*) nyears              ! simulation time [yr]
+    read (12,*) nyearsSU            ! simulation time during the spin up period [yr]
+    read (12,*) dtmodelExp          ! time step in model with explicit T-scheme [s] 
+    read (12,*) dtmodelImp          ! time step in model with implicit T-scheme [s]
+    read (12,*) ImpExp              ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
+    read (12,*) dtobs               ! time step in input data [s]
+    read (12,*) dtSnow              ! duration of running average of variables used in snow parameterisation [s]
+    read (12,*)
+    read (12,*) dzmax               ! vertical model resolution [m]
+    read (12,*) initdepth           ! initial depth of firn profile [m]
+    read (12,*) th                  ! theta (if theta=0.5 , it is a Crank Nicolson scheme) 
+    read (12,*) startasice          ! indicates the initial rho-profile (1=linear, 2=ice)
+    read (12,*) beginT              ! indicates the inital T-profile (0=winter, 1=summer, 2=linear)
+    read (12,*) NoR                 ! number of times the data series is repeated for the initial rho profile is constructed
+    read (12,*) 
+    read (12,*) writeinspeed        ! frequency of writing speed components to file
+    read (12,*) writeinprof         ! frequency of writing of firn profiles to file
+    read (12,*) proflayers          ! number of output layers in the prof file
+    read (12,*) writeindetail       ! frequency of writing to detailed firn profiles to file
+    read (12,*) detlayers           ! number of output layers in the detailed prof file
+    read (12,*) detthick            ! thickness of output layer in the detailed prof file
+    read (12,*)
+    read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
+    read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
+    read (12,*)
+    read (12,*) Nlon                 ! Number of longitude points in forcing
+    read (12,*) Nlat                 ! Number of latitude points in forcing
+    read (12,*) Nt_forcing           ! Number of timesteps in forcing
+
 
     ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
 
@@ -151,7 +156,7 @@ subroutine Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, 
     print *, "Loaded model settings"
     print *, " "
 
-end subroutine Get_Model_Settings
+end subroutine Get_Model_Settings_and_Forcing_Dimensions
 
 
 ! *******************************************************
@@ -179,21 +184,11 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     ! Nt_model_spinup = INT( REAL(Nt_model_tot)*(REAL(nyearsSU)*365.25*24.*3600.)/REAL((REAL(Nt_forcing)*REAL(dtobs))) )
     Nt_model_spinup = INT ((REAL(nyearsSU)*365.25*24.*3600.))/REAL(dtmodel)
     
-    print *, 'Nt_model_tot: ', Nt_model_tot
-    print *, 'nyearsSU: ', nyearsSU
-    print *, 'nyearsSU*365.25*24.*3600.: ', nyearsSU*365.25*24.*3600.
-    print *, 'Nt_forcing: ', Nt_forcing
-    print *, 'dtobs: ', dtobs
-    print *, 'real(real(Nt_forcing)*real(dtobs)): ', (REAL(REAL(Nt_forcing)*REAL(dtobs)))
-
     if (Nt_model_spinup > Nt_model_tot) then
         Nt_model_spinup = Nt_model_tot
     elseif (Nt_model_spinup < 0.) then
         Nt_model_spinup = Nt_model_tot
-    else
-        print *, "Nt_model_spinup error. Value is: ", Nt_model_spinup
     endif
-
 
     print *, "dtmodel: ", dtmodel
     print *, 'Nt_model_interpol: ', Nt_model_interpol
