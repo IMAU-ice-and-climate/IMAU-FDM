@@ -9,7 +9,7 @@ Working repository for the IMAU-FDM code. The main branch will always have a wor
 - ehc: elizabeth case current working branch
 - grain-size: based on main, currently being tested
 - documentation: documentation being developed on this branch
-  
+ 
 ## Main branch (2024-07-24)
 
 ![rundir](https://github.com/user-attachments/assets/7733a84f-9a20-484d-8332-ab31489426bb)
