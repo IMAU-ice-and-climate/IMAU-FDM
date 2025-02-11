@@ -6,7 +6,8 @@ OBJ_DIR = objects
 
 # Compiler and flags configuration
 FC = mpifort  # Specify the Fortran compiler
-FFLAGS = -O3 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+#FFLAGS = -O3 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+FFLAGS = -warn all -diag-enable remark -O0 -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
 
 # List of source files
 SRC_FILES = \

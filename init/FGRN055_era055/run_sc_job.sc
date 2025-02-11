@@ -24,9 +24,12 @@ else
 	exit 1
 fi
 
+data_base_dir="$SCRATCH" #where the data should be stored
+scripts_base_dir="$PERM/code" #where IMAU-FDM directory is
+
 project_name="${domain}_${forcing}"
-base_dir="$SCRATCH/${project_name}"
-script_dir="$PERM/IMAU-FDM/init/${domain}_${forcing}"
+base_dir="${data_base_dir}/${project_name}"
+script_dir="${scripts_base_dir}/IMAU-FDM/init/${domain}_${forcing}"
 
 ts_start_year=1939
 ts_end_year=2023
@@ -59,7 +62,7 @@ mkdir -p ${jobfile_dir}
 
 for var in ${vars[@]}; do
 
-initRacmoFile="${jobfile_dir}preprocess-RACMO_job_${jobname}_${var}"
+initRacmoFile="${jobfile_dir}/preprocess-RACMO_job_${jobname}_${var}"
 
 cat <<EOS1 > ${initRacmoFile} 
 #!/bin/ksh -f
@@ -67,7 +70,7 @@ cat <<EOS1 > ${initRacmoFile}
 #SBATCH -q nf
 #SBATCH -J ${jobname}_${var}_preprocess
 #SBATCH --time=48:00:00
-#SBATCH -o ${logfile_dir}${jobname}_${var}_preprocess.log
+#SBATCH -o ${logfile_dir}/${jobname}_${var}_preprocess.log
 #SBATCH --mem-per-cpu=4000mb
 
 module load nco

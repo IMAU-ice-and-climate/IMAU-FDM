@@ -44,7 +44,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     fac_error = 1.E3
 
     ! do at least 3 spin-ups
-    ! never do more than 70 spin-ups. (for Greenland & 200 for Antarctica) 
+    ! never do more than 70 spin-ups for Greenland or 200 for Antarctica
     ! stop when the elevation at the end changes less than 1 cm (for Greenland and 2 cm for Antarctica)
     ! and FAC changes less than 1 cm.
     if (domain .eq. "FGRN055") then
@@ -54,8 +54,9 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
            spinup_bound = 200  !perhaps this one can be reduced 
            error_bound = 0.004 
     else
-            print *, "Incorrect domain for spinup bounds: ", domain
+            print *, "No spinup bounds available for domain: ", domain
     end if 
+
     do while ( ( ( (z_surf_error > error_bound) .or. (fac_error > error_bound) ) .and. (spinup_numb < spinup_bound) ) .or. (spinup_numb < 3) )   
         spinup_numb = spinup_numb + 1
         z_surf_old = h_surf
@@ -66,7 +67,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         TotLwc = 0.
         IceMass = 0.
 
-        print *, 'After spin-up #, spinup_numb, Rho(200), T(200), Year(200), ind_z_surf, h_surf, FirnAir, IceMass'
+        !print *, 'After spin-up #, spinup_numb, Rho(200), T(200), Year(200), ind_z_surf, h_surf, FirnAir, IceMass'
 
         do ind_t = 1, Nt_model_spinup 
         
@@ -125,7 +126,9 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         ! Calculate the firn air content, ice mass and total liquid water content of the firn column
         call Calc_Integrated_Var(ind_z_max, ind_z_surf, rhoi, Rho, Mlwc, M, DZ, FirnAir, TotLwc, IceMass)
         
-        print *, "After spin-up #", spinup_numb, Rho(200), T(200), Year(200), ind_z_surf, h_surf, FirnAir, IceMass
+        print *, "After spin-up #", spinup_numb
+        print *, "Rho(200) = ", Rho(200), "T(200) = ", T(200), "Year(200) = ", Year(200)
+        print *, "Ind_z_surf = ", ind_z_surf, "h_surf = ", h_surf, "FAC = ", FirnAir, "IceMass = ", IceMass
 
         z_surf_error = (h_surf-z_surf_old)*(h_surf-z_surf_old)
         fac_error = (FirnAir-fac_old)*(FirnAir-fac_old)
