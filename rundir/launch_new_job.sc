@@ -4,7 +4,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 forcing="era055"
-export project_name="test-memory"
+export project_name="cores"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
@@ -33,12 +33,21 @@ export usern=$USER
 # likely not to change
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
+<<<<<<< HEAD
 export nnodes_max=1 #8
 export tasks_per_node=64 #64 this is not to be change
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="2Gb"
 export taskfactor="3."   # prior launch at least #taskfactor (3-5) tasks per core must be available    
+=======
+export nnodes_max=2 #8
+export tasks_per_node=64 #64 this is not to be change
+export FDMs_per_node=128 #128 # play around for the optimal performance 
+export EC_hyperthreads=1
+export memory_per_task="999Mb"
+export taskfactor="3." # prior launch at least 3. task per core must be available    
+>>>>>>> ehc
 export EC_ecfs=0      # number of parallel ECFS calls 
 
 # script misc

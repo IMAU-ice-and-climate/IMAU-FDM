@@ -37,7 +37,7 @@ else
   else
     ntasks_real=`echo "${ntodo}/${taskfactor}" | bc`
     ntasks=${ntasks_real%.*}
-    # if the number of tasks is less than ~50, go for ns
+    
     if [[ $ntasks -gt 20 || ${ntodo} -gt 120 ]]; then
       # limit the number of tasks to half of a node.
       let "halfnode=${tasks_per_node}/2"
@@ -46,11 +46,8 @@ else
       fi
       jobtype="nf"
       echo "submit_job: Only ${ntasks} tasks in a nf job needed now."
-      maxFDMs=${ntasks}
     else
       jobtype="nf"
-      echo "submit_job: submit remaining tasks as single-point jobs."
-      maxFDMs=1
     fi  
   fi    	 
 fi
@@ -63,11 +60,7 @@ if [[ "$jobtype" == "np" ]]; then
 elif [[ "$jobtype" == "nf" ]]; then
   # a FDM run for every task, no cool down
   maxFDMs=$ntasks
-  coolFDMs=$ntasks
-else
-  # ns
-  maxFDMs=1
-  coolFDMs=1
+  coolFDMs=0 #$ntasks
 fi    
 
 myname="${jobname_base}${submission_iteration}_${jobtype}"

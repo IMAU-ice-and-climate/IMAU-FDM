@@ -30,8 +30,12 @@
 *.exe
 *.out
 *.app
-*.x 
 
+# IMAU specific files
+*.x
+
+# mac specific
+*.DS_STORE
 
 # Ignore pointlists
 rundir/pointlists/
