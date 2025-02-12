@@ -40,6 +40,9 @@
 # Ignore pointlists
 rundir/pointlists/
 
+# Ignore rundir/launch_new_job.sc
+rundir/launch_new_job.sc
+
 # Ignore reference files -- too big
 reference/
 
