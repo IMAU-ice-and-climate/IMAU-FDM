@@ -4,6 +4,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 # FDM settings # copied from run_make_loadscript
 export domain="FGRN055"
 forcing="era055"
+
 export project_name="cores"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
@@ -37,7 +38,7 @@ export nnodes_max=1 #8
 export tasks_per_node=64 #64 this is not to be change
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
-export memory_per_task="2Gb"
+export memory_per_task="999Gb"
 export taskfactor="3."   # prior launch at least #taskfactor (3-5) tasks per core must be available    
 export EC_ecfs=0      # number of parallel ECFS calls 
 
