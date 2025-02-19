@@ -38,11 +38,11 @@ end subroutine Define_Constants
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, ini_fname)
+subroutine Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, ini_fname, project_name)
     !*** Get all command line arguments ***!
 
     ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, prefix_output, ini_fname
+    character*255, intent(out) :: username, point_numb, domain, prefix_output, ini_fname, project_name
 
     ! 1: ECMWF username (e.g. nmg)
     ! 2: Simulation number, corresponding to the line number in the IN-file.
@@ -54,6 +54,7 @@ subroutine Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output,
     call get_command_argument(3, domain)
     call get_command_argument(4, prefix_output)
     call get_command_argument(5, ini_fname)
+    call get_command_argument(6, project_name)
     
 end subroutine Get_All_Command_Line_Arg
 
@@ -153,7 +154,7 @@ end subroutine Get_Model_Settings
 subroutine Define_Paths(username, prefix_output, point_numb, path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, &
         path_in_restart, path_out_restart, path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, &
         suffix_forcing_averages, prefix_forcing_timeseries, fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet, &
-        Nlat_timeseries, Nlon_timeseries)
+        Nlat_timeseries, Nlon_timeseries, project_name)
     !*** Definition of all paths used to read in or write out files ***!
 
     ! declare arguments
@@ -164,13 +165,13 @@ subroutine Define_Paths(username, prefix_output, point_numb, path_settings, path
         fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet
 
     ! define paths
-    path_settings = "/ec/res4/scratch/"//trim(username)//"/data/ms_files/"
-    path_forcing_dims = "/perm/"//trim(username)//"/code/DATA/"
-    path_forcing_mask = "/ec/res4/scratch/"//trim(username)//"/data/input/era055/mask/"
-    path_forcing_averages = "/ec/res4/scratch/"//trim(username)//"/data/input/era055/averages/"
-    path_forcing_timeseries = "/ec/res4/scratch/"//trim(username)//"/data/input/era055/files/"
-    path_in_restart = "/ec/res4/scratch/"//trim(username)//"/data/input/ini_files/FGRN055/"
-    path_out_restart = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/restart/"
+    path_settings = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
+    path_forcing_dims = "/perm/"//trim(username)//"/IMAU-FDM/reference/FGRN055/"
+    path_forcing_mask = "/perm/"//trim(username)//"/IMAU-FDM/reference/FGRN055/"
+    path_forcing_averages = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/averages/"
+    path_forcing_timeseries = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/timeseries/"
+    path_in_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+    path_out_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
     path_out_ini = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/ini/"
     path_out_1d = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/1d/"
     path_out_2d = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/2d/"

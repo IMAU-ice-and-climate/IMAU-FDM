@@ -26,7 +26,7 @@ program main
     integer :: nyears, nyearsSU
     integer, parameter :: ind_z_max = 20000
     
-    character*255 :: username, point_numb, domain, prefix_output, ini_fname
+    character*255 :: username, point_numb, domain, prefix_output, ini_fname, project_name
     character*255 :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries
     character*255 :: path_in_restart, path_out_restart, path_out_ini, path_out_1d, path_out_2d, path_out_2ddet
     character*255 :: fname_settings, fname_mask, suffix_forcing_averages, prefix_forcing_timeseries, fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet
@@ -52,7 +52,7 @@ program main
     print *, "------------------------------------"
     print *, " "
     
-    call Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, ini_fname)
+    call Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, ini_fname, project_name)
 
     call Define_Paths(username, prefix_output, point_numb, path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, &
         path_in_restart, path_out_restart, path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, &
@@ -62,7 +62,7 @@ program main
     ! Read in the model settings, input settings and constants
     call Get_Model_Settings(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
         beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, DZ_max, initdepth, th, &
-        lon_current, lat_current, path_settings, fname_settings)
+        lon_current, lat_current, path_settings, fname_settings, project_name)
     
     ! Read in resolution of the forcing data
     call Get_Forcing_Dims(Nlon, Nlat, Nt_forcing, path_forcing_dims, fname_forcing_dims)
