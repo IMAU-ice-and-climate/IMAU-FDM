@@ -3,27 +3,26 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
 export domain="Greenland"
-project_name="grainsize"
+export domain_name="FGRN055"
+export project_name="test_grainsize"
 
-export outputname="FGRN055_${myname}" #"FGRN055_noCB_nor"
-export runname="FGRN055_${myname}" #"FGRN055_noCB_nor_run8"
-export p2input="$PERM/code/DATA/IN_ll_FGRN055_paper1_imp.txt" #IN_ll_FGRN055_GrIS_GIC_implicit.txt"
-export p2exe="$PERM/imau-fdm-develop/"
-#export FDM_executable="IMAU-FDM_np_${myname}.x"
+export outputname="${domain_name}_${project_name}" #"FGRN055_noCB_nor"
+export runname="${domain_name}_${project_name}" #"FGRN055_noCB_nor_run8"
+export p2input="$PERM/code/IMAU-FDM/reference/IN_ll_${domain_name}.txt" #IN_ll_FGRN055_GrIS_GIC_implicit.txt"
+export p2exe="$PERM/code/IMAU-FDM/"
+#export FDM_executable="IMAU-FDM_np_${project_name}.x"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$homedir/pointlists/pointlist_paper1.txt" #pointlist_highres_todo.txt"    #pointlist_paper1_imp_newspin_todo.txt"
+gridpointlist="$homedir/pointlists/pointlist_${project_name}.txt" #pointlist_highres_todo.txt"    #pointlist_paper1_imp_newspin_todo.txt"
 export ini_filename=""
 export filename_part1="ECMWF_${outputname}"
 
 # hardcoded FDM input
-expname="era055/${myname}"
-outputdir="$SCRATCH/data/output/$expname/" 
-restartdir="$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export p2ms="$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
+outputdir="$SCRATCH/${project_name}/" 
+restartdir="$SCRATCH/restart/${project_name}"
+export p2ms="$SCRATCH/${project_name}/ms_files/" # hardcoded in IMAU-FDM
 # not hardcoded, FDM output
-export p2logs="$SCRATCH/data/logfile/$expname/$runname"
-# 
+export p2logs="$SCRATCH/${project_name}/logfile/"
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
 export workdir="$SCRATCH/FDMtests/${domain}/${runname}"
@@ -35,7 +34,7 @@ export usern=$USER
 
 # likely not to change
 export account_no="spnlberg"
-export jobname_base="FDM_${myname}_i"
+export jobname_base="FDM_${project_name}_i"
 export nnodes_max=1 #8
 export tasks_per_node=64 #9 #128 # this is not to be changed
 export FDMs_per_node=128 #9 #128 # play around for the optimal performance 
