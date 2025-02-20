@@ -154,35 +154,46 @@ end subroutine Get_Model_Settings
 subroutine Define_Paths(username, prefix_output, point_numb, path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, &
         path_in_restart, path_out_restart, path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, &
         suffix_forcing_averages, prefix_forcing_timeseries, fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet, &
-        Nlat_timeseries, Nlon_timeseries, project_name)
+        Nlat_timeseries, Nlon_timeseries, project_name, domain)
     !*** Definition of all paths used to read in or write out files ***!
 
     ! declare arguments
     integer, intent(out) :: Nlat_timeseries, Nlon_timeseries
-    character*255, intent(in) :: username, prefix_output, point_numb
+    character*255, intent(in) :: username, prefix_output, point_numb, project_name, domain
     character*255, intent(out) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, path_in_restart, path_out_restart, &
         path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages, prefix_forcing_timeseries, &
         fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet
 
+    ! define local variables
+    character*255 :: forcing, domain_name
+
     ! define paths
+
+    if ( trim(domain) == "Greenland" ) then
+        domain_name = "FGRN055"
+    end if
+
+    forcing = "era055"
+
+
     path_settings = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
-    path_forcing_dims = "/perm/"//trim(username)//"/IMAU-FDM/reference/FGRN055/"
-    path_forcing_mask = "/perm/"//trim(username)//"/IMAU-FDM/reference/FGRN055/"
-    path_forcing_averages = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/averages/"
-    path_forcing_timeseries = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/timeseries/"
+    path_forcing_dims = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/FGRN055/"
+    path_forcing_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/FGRN055/"
+    path_forcing_averages = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain_name)//"_"//trim(forcing)//"/input/averages/"
+    path_forcing_timeseries = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain_name)//"_"//trim(forcing)//"/input/timeseries/"
     path_in_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
     path_out_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-    path_out_ini = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/ini/"
-    path_out_1d = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/1d/"
-    path_out_2d = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/2d/"
-    path_out_2ddet = "/ec/res4/scratch/"//trim(username)//"/data/output/era055/grainsize/2ddet/"
+    path_out_ini = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+    path_out_1d = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/1d/"
+    path_out_2d = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/2d/"
+    path_out_2ddet = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/2ddetail/"
 
     ! define filenames
     fname_settings = "model_settings_Greenland_"//trim(point_numb)//".txt"
-    fname_forcing_dims = "input_settings_FGRN055.txt"
-    fname_mask = "FGRN055_Masks.nc"
-    suffix_forcing_averages = "_FGRN055_60-80_ave.nc"
-    prefix_forcing_timeseries = "_FGRN055_57-20_p"
+    fname_forcing_dims = "input_settings_"//trim(domain_name)//".txt"
+    fname_mask = trim(domain_name)//"_Masks.nc"
+    suffix_forcing_averages = "_"//trim(domain_name)//"_1940-1970_ave.nc"
+    prefix_forcing_timeseries = "_"//trim(domain_name)//"_1939-2023_p"
     fname_out_restart = trim(prefix_output)//"_restart_"//trim(point_numb)//".nc"
     fname_out_ini = trim(prefix_output)//"_ini_"//trim(point_numb)//".nc"
     fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"

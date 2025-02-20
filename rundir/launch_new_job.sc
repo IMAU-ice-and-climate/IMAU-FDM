@@ -3,7 +3,8 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
 export domain="Greenland"
-myname="grainsize"
+project_name="grainsize"
+
 export outputname="FGRN055_${myname}" #"FGRN055_noCB_nor"
 export runname="FGRN055_${myname}" #"FGRN055_noCB_nor_run8"
 export p2input="$PERM/code/DATA/IN_ll_FGRN055_paper1_imp.txt" #IN_ll_FGRN055_GrIS_GIC_implicit.txt"
@@ -36,7 +37,7 @@ export usern=$USER
 export account_no="spnlberg"
 export jobname_base="FDM_${myname}_i"
 export nnodes_max=1 #8
-export tasks_per_node=15 #9 #128 # this is not to be changed
+export tasks_per_node=64 #9 #128 # this is not to be changed
 export FDMs_per_node=128 #9 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
