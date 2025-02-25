@@ -153,7 +153,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         status = nf90_open(trim(pad_mask),0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
-        status = nf90_inq_varid(ncid(1),"LSM",ID(1))
+        status = nf90_inq_varid(ncid(1),"LSM_GR",ID(1))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lsm')    
 
         status = nf90_inq_varid(ncid(1),"lat",ID(11))
@@ -161,14 +161,14 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         status = nf90_inq_varid(ncid(1),"lon",ID(12))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lon')
         
-        status  = nf90_get_var(ncid(1),ID(1),Icemask_GR,start=(/1,1/), &
+        status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lsm')
         status  = nf90_get_var(ncid(1),ID(11),Latitude)        
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lat')
         status  = nf90_get_var(ncid(1),ID(12),Longitude)    
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lon')
-
+        
         ! No Ice Shelves in Greenland
         ISM(:,:) = 0
 
