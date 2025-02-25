@@ -32,7 +32,14 @@
 *.app
 
 # IMAU specific files
+
+#no executables
 *.x
+
+#these files change often - need to update if there are big changes to launch_new_job
+rundir/CancelMyJob.sc
+rundir/launch_new_job.sc
+rundir/ecs*
 
 # mac specific
 *.DS_STORE
