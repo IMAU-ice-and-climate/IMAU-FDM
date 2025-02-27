@@ -207,13 +207,18 @@ subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeind
     integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
-
+    integer, parameter :: double_kind = selected_real_kind( p=15, r=200 ) !a bit over the top
+    integer(double_kind) :: spy ! prevents overflow when calculating output writing intervals
+    
+    spy = 3600.*24.*365.
+    
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
-    outputProf = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeinprof))
-    outputSpeed = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeinspeed))
-    outputDetail = INT((REAL(nyears)*3600.*24.*365.) / REAL(writeindetail))
+
+    outputProf = INT((REAL(nyears * spy) / REAL(writeinprof))
+    outputSpeed = INT((REAL(nyears * spy) / REAL(writeinspeed))
+    outputDetail = INT((REAL(nyears * spy) / REAL(writeindetail))
 
     print *, " "
     print *, "Output variables"
