@@ -141,11 +141,11 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     read (12,*) detlayers           ! number of output layers in the detailed prof file
     read (12,*) detthick            ! thickness of output layer in the detailed prof file
     read (12,*)
-    read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
-    read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
+    if (domain .NE. "none") read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
+    if (domain .NE. "none") read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
     read (12,*)
-    read (12,*) Nlon                 ! Number of longitude points in forcing
-    read (12,*) Nlat                 ! Number of latitude points in forcing
+    if (domain .NE. "none") read (12,*) Nlon                 ! Number of longitude points in forcing
+    if (domain .NE. "none") read (12,*) Nlat                 ! Number of latitude points in forcing
     read (12,*) Nt_forcing           ! Number of timesteps in forcing
 
 
@@ -318,7 +318,7 @@ end subroutine Init_Output_Var
 
 subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
     Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-    Nt_forcing, Nt_model_tot, Nlon, Nlat)
+    Nt_forcing, Nt_model_tot, Nlon, Nlat, domain)
     !*** Allocate memory to forcing variables ***!
 
     ! declare arguments
@@ -326,7 +326,8 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     double precision, dimension(:), allocatable, intent(out) :: SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m
     double precision, dimension(:), allocatable, intent(out) :: MeltFM, PsolFM, PliqFM, SublFM, TempFM, DrifFM, Rho0FM
     double precision, dimension(:,:), allocatable, intent(out) :: AveTsurf, LSM, ISM, Latitude, Longitude, AveAcc, AveWind, AveMelt
-
+    character*255 :: domain
+    
     ! Adjust matrices to correct dimensions of the netCDF files
 
     ! Forcing time series variables
@@ -339,6 +340,8 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     allocate(SnowDrif(Nt_forcing))
     allocate(FF10m(Nt_forcing))
     
+    if (domain .NE. "none") then
+
     ! Averaged variables
     allocate(AveTsurf(Nlon,Nlat))
     allocate(LSM(Nlon,Nlat))
@@ -348,6 +351,8 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     allocate(AveAcc(Nlon,Nlat))
     allocate(AveWind(Nlon,Nlat))
     allocate(AveMelt(Nlon,Nlat))
+
+    endif
 
     ! Interpolated forcing time series variables
     allocate(MeltFM(Nt_model_tot))
