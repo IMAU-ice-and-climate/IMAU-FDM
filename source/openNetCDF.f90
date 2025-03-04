@@ -50,6 +50,9 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     elseif (domain == "DMIS055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
         add = "_DMIS055_79-17_ave.nc"
+    elseif (domain == "none") then
+        pad = ''//trim(path_dir)//''//trim(username)//"/idealized/input/averages/"    
+        add = "_idealized_average.nc"
     else
         call Handle_Error(41,'no valid domain') 
      endif
@@ -264,11 +267,15 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         status  = nf90_get_var(ncid(1),ID(2),ISM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
 
+    elseif (domain == 'none') then
+        print *, 'there is no domain'
+
     else
 
          call Handle_Error(42,'no valid domain')
 
     endif 
+
 
     status = nf90_open(trim(pad)//"snowmelt"//trim(add),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open1')
@@ -296,6 +303,29 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     status = nf90_inq_varid(ncid(7),"sndiv",ID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
 
+    if (domain == "none") then
+
+    status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avemelt')
+    status  = nf90_get_var(ncid(2),ID(2),AveAcc,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_aveacc')
+    status  = nf90_get_var(ncid(3),ID(3),AveWind,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavewind')
+    status  = nf90_get_var(ncid(4),ID(4),AveTsurf,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavetsurf')
+    status  = nf90_get_var(ncid(5),ID(5),AveSubl,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesubl')
+    status  = nf90_get_var(ncid(7),ID(7),AveSnowDrif,start=(/1/), &
+        count=(/1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesndiv')
+
+    else 
+
     status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1,1,1/), &
         count=(/Nlon,Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avemelt')
@@ -315,6 +345,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         count=(/Nlon,Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesndiv')
 
+    endif
+
     ! Close all netCDF files    
 
     status = nf90_close(ncid(1))
@@ -330,6 +362,16 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     status = nf90_close(ncid(7))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_close7')
 
+
+    if (domain == "none") then 
+
+    ! Convert units from [mm w.e./s] to [mm w.e./yr]
+    AveAcc = (AveAcc+AveSubl-AveSnowDrif) &
+                * (365.*24.*3600.)
+    AveMelt = AveMelt * (365.*24.*3600.)
+
+    else 
+
     ! Convert units from [mm w.e./s] to [mm w.e./yr]
     do i = 1, Nlon
         do j = 1, Nlat
@@ -338,6 +380,9 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
             AveMelt(i,j) = AveMelt(i,j) * (365.*24.*3600.)
         end do
     end do
+
+    endif
+
     
 end subroutine Load_Ave_Forcing
 
@@ -468,15 +513,25 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/DMIS055_files/"    
         add = "_DMIS055_79-17_p"//trim(fnumb)//".nc"
 
+    elseif (domain == "none") then
+
+        pad = "/ec/res4/scratch/"//trim(username)//"/idealized/input/timeseries/"    
+        add = "_idealized_timeseries.nc"
+
     else
         call Handle_Error(43,'no valid domain') 
     endif
     
+
+    if (domain .NE. "none") then
+
     print *, 'ind_lat, latfile, ind_lon, lonfile, fnumb, Nt_forcing'
     print *, ind_lat, latfile, ind_lon, lonfile, trim(fnumb), Nt_forcing
     print *, 'trim(pad), trim(add)'
     print *, trim(pad), trim(add)
     print *, ' '
+
+    endif
 
     ! Open the snowmelt netCDF file
     status = nf90_open(trim(pad)//"snowmelt"//trim(add),0,ncid(1))
@@ -510,6 +565,42 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     status = nf90_inq_varid(ncid(7),"ff10m",ID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid7')
 
+
+    if (domain == "none") then
+
+    ! Get all variables from the netCDF files
+    status  = nf90_get_var(ncid(1),ID(1),SnowMelt,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var1')
+    print *, "Read snowmelt..."
+    status  = nf90_get_var(ncid(2),ID(2),PreTot,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var2')
+    print *, "Read precipitation..."
+    status  = nf90_get_var(ncid(3),ID(3),PreSol,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var3')
+    print *, "Read snowfall..."
+    status  = nf90_get_var(ncid(4),ID(4),Sublim,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var4')
+    print *, "Read sublimation..."
+    status  = nf90_get_var(ncid(5),ID(5),TempSurf,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var5')
+    print *, "Read skin temperature..."
+    status  = nf90_get_var(ncid(6),ID(6),SnowDrif,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var6')
+    print *, "Read snow drift..."
+    status  = nf90_get_var(ncid(7),ID(7),FF10m,start=(/1/), &
+        count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var7')
+    print *, "Read wind speed..."
+    print *, ' '
+
+    else
+
     ! Get all variables from the netCDF files
     status  = nf90_get_var(ncid(1),ID(1),SnowMelt,start=(/lonfile,latfile,1,1/), &
         count=(/1,1,1,Nt_forcing/))
@@ -540,6 +631,8 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var7')
     print *, "Read wind speed..."
     print *, ' '
+
+    endif
 
     ! Close all netCDF files    
     status = nf90_close(ncid(1))
