@@ -340,7 +340,14 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     allocate(SnowDrif(Nt_forcing))
     allocate(FF10m(Nt_forcing))
     
-    if (domain .NE. "none") then
+    if (domain == "none") then
+
+    allocate(AveTsurf(1,1))
+    allocate(AveAcc(1,1))
+    allocate(AveWind(1,1))
+    allocate(AveMelt(1,1))
+
+    else    
 
     ! Averaged variables
     allocate(AveTsurf(Nlon,Nlat))

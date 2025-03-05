@@ -21,7 +21,6 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     integer :: status,ncid(50),ID(50),Nlat,Nlon,i,j
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude, Icemask_GR
-    
     character*255 :: add,pad,username,domain,path_dir,pad_mask
 
     path_dir = "/ec/res4/scratch/"
@@ -305,23 +304,23 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
 
     if (domain == "none") then
 
-    status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1/), &
-        count=(/1/))
+    status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1/), &
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avemelt')
-    status  = nf90_get_var(ncid(2),ID(2),AveAcc,start=(/1/), &
-        count=(/1/))
+    status  = nf90_get_var(ncid(2),ID(2),AveAcc,start=(/1,1/), &
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_aveacc')
-    status  = nf90_get_var(ncid(3),ID(3),AveWind,start=(/1/), &
-        count=(/1/))
+    status  = nf90_get_var(ncid(3),ID(3),AveWind,start=(/1,1/), &
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavewind')
     status  = nf90_get_var(ncid(4),ID(4),AveTsurf,start=(/1/), &
-        count=(/1/))
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavetsurf')
-    status  = nf90_get_var(ncid(5),ID(5),AveSubl,start=(/1/), &
-        count=(/1/))
+    status  = nf90_get_var(ncid(5),ID(5),AveSubl,start=(/1,1/), &
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesubl')
-    status  = nf90_get_var(ncid(7),ID(7),AveSnowDrif,start=(/1/), &
-        count=(/1/))
+    status  = nf90_get_var(ncid(7),ID(7),AveSnowDrif,start=(/1,1/), &
+        count=(/1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesndiv')
 
     else 
@@ -366,9 +365,10 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     if (domain == "none") then 
 
     ! Convert units from [mm w.e./s] to [mm w.e./yr]
-    AveAcc = (AveAcc+AveSubl-AveSnowDrif) &
+    AveAcc(1,1) = (AveAcc(1,1)+AveSubl(1,1)-AveSnowDrif(1,1)) &
                 * (365.*24.*3600.)
-    AveMelt = AveMelt * (365.*24.*3600.)
+    AveMelt(1,1) = AveMelt(1,1) * (365.*24.*3600.)
+
 
     else 
 

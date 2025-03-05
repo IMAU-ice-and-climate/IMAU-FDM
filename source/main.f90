@@ -72,7 +72,7 @@ program main
     
     call Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
         Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-        Nt_forcing, Nt_model_tot, Nlon, Nlat)
+        Nt_forcing, Nt_model_tot, Nlon, Nlat, domain)
 
     ! Get variables from the NetCDF files
     call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, Nlat, Nlon, Latitude, &
@@ -81,12 +81,18 @@ program main
     print *, "Read all averaged values"
     print *, " "
     
+    if (domain .NE. "none")  then
+
     ! Find corresponding indices of the grid point for a given latitude and longitude
     call Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM, Nlon, Nlat)
 
-    ! Read averages for the current grid point		
-    call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat)
+    endif
 
+    ! Read averages for the current grid point		
+    call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat, domain)
+
+    if (domain .NE. "none")  then
+    
     print *, "------ Point number: ", trim(point_numb), "------"
     print *, " Run for Lon: ", lon_current, " and Lat: ", lat_current
     print *, " Grid indices lon: ", ind_lon, ", lat: ", ind_lat
@@ -95,6 +101,8 @@ program main
     print *, "------------------------------------"
     print *, " "
     
+    endif
+
     call Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol, PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, ind_lon, ind_lat, username, &
         domain, dtobs)
 
