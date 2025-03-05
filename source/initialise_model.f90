@@ -183,7 +183,7 @@ end subroutine Interpol_Forcing
 ! *******************************************************
 
 
-subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat)
+subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat, domain)
     !*** Index the avarage forcing fields for the current run ***! 
 
     ! declare arguments
@@ -191,6 +191,27 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     integer, intent(out) :: IceShelf
     double precision, intent(out) :: tsav, acav, ffav
     double precision, dimension(Nlon,Nlat), intent(in) :: AveTsurf, AveAcc, AveWind, AveMelt, ISM
+    character*255 :: domain
+
+    if (domain == 'none') then
+
+    acav = AveAcc(1,1)
+    if (acav < 0) acav = 0.1
+    ffav = AveWind(1,1)
+    tsav = AveTsurf(1,1)
+    if (tsav > 273.15) tsav = 273.15
+
+
+    print *, "  "
+    print *, "------------------------------------"    
+    write(*,'(A19,1X,F8.3,1X,A1)') " Average Tsurf:     ", tsav, "K"
+    write(*,'(A19,1X,F8.3,1X,A13)') " Average Acc:      ", acav, "mm w.e. yr-1"
+    write(*,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
+    write(*,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(1,1), "mm w.e. yr-1"
+    print *, "------------------------------------"
+    print *, "  "
+
+    else
 
     acav = AveAcc(ind_lon, ind_lat)
     if (acav < 0) acav = 0.1
@@ -208,6 +229,8 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     write(*,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(ind_lon, ind_lat), "mm w.e. yr-1"
     print *, "------------------------------------"
     print *, "  "
+
+    endif
 
 end subroutine Index_Ave_Forcing
 
