@@ -68,8 +68,11 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     ! declare local variables
     integer :: step, a, b, numSnow
     double precision :: part1, part2, TempSnow, ff10Snow
-    double precision, dimension(Nt_model_tot) :: ff10FM
+    !double precision, dimension(Nt_model_tot) :: ff10FM
+    double precision, allocatable, dimension(:) :: ff10FM
 
+    allocate(ff10FM(Nt_model_tot))
+    
     print *, 'Forcing before interpolation:'
     print *, 'TempSurf(1:10)'
     print *, TempSurf(1:10)
@@ -176,6 +179,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     print *, Rho0FM(1:10)
     print *, ' '
 
+    deallocate(ff10FM)
 
 end subroutine Interpol_Forcing
 
