@@ -123,7 +123,6 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
     
 end subroutine To_out_1D
 
-
 ! *******************************************************
 
 
@@ -167,7 +166,6 @@ subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outpu
     DenRho(:) = 0.
     
 end subroutine To_out_2D
-
 
 ! *******************************************************
 
@@ -260,13 +258,13 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
 
 end subroutine To_out_2Ddetail
 
-
 ! *******************************************************
 
 
 subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, project_name)
     !*** Write the 1D output variables to a netcdf file !***
     
+
     ! declare arguments
     integer, intent(in) :: outputSpeed
     double precision, dimension((outputSpeed+50),18), intent(in) :: out_1D
@@ -282,8 +280,11 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     IDs(:,:) = 0
     varID(:,:) = 0
 
+
+
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_1D_"//trim(point_numb)//".nc",0,ncid(32))
+
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(32),"ind_t",outputSpeed+50,IDs(32,1))
@@ -429,9 +430,9 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(32))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_close')
-    
-end subroutine Save_out_1D
 
+
+end subroutine Save_out_1D
 
 ! *******************************************************
 
@@ -458,6 +459,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_2D_"//trim(point_numb)//".nc",0,ncid(31))
+
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(31),"ind_t",outputProf+50,IDs(31,1))
@@ -526,9 +528,9 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(31))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_close')
+
     
 end subroutine Save_out_2D
-
 
 ! *******************************************************
 
@@ -564,6 +566,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad)//trim(fname_p1)//"_2Ddetail_"//trim(point_numb)//".nc",0,ncid(33))    
+
 
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(33),"ind_t",outputDetail+50,IDs(33,1))
@@ -626,7 +629,8 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(33))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_close')
-    
+
+
 end subroutine Save_out_2Ddetail
 
 ! *******************************************************

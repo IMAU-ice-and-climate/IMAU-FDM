@@ -103,6 +103,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
     endif
 
     ! If ice Shelf = on, vbouy has to be calculated
+
     if (IceShelf == 1) then
         macc = Psol + Su + Pliq
         mice = vice * rhoi
