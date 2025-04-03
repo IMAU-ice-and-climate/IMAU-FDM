@@ -25,7 +25,7 @@ program main
     implicit none
     
     integer :: ind_z_surf, ind_lon, ind_lat, Nt_forcing, Nlat, Nlon, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
-    integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs
+    integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs, tempres_conversion
     integer :: writeinprof, writeinspeed, writeindetail
     integer :: numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail
     integer :: proflayers, detlayers, BeginT, startasice, IceShelf
@@ -76,12 +76,12 @@ program main
 
     ! Get variables from the NetCDF files
     call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, Nlat, Nlon, Latitude, &
-        Longitude, ISM, username, domain)
+        Longitude, ISM, username, domain, project_name)
     
     print *, "Read all averaged values"
     print *, " "
     
-    if (domain .NE. "none")  then
+    if (trim(domain) .NE. "sensitivity")  then
 
     ! Find corresponding indices of the grid point for a given latitude and longitude
     call Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM, Nlon, Nlat)
@@ -91,7 +91,7 @@ program main
     ! Read averages for the current grid point		
     call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat, domain)
 
-    if (domain .NE. "none")  then
+    if (trim(domain) .NE. "sensitivity")  then
     
     print *, "------ Point number: ", trim(point_numb), "------"
     print *, " Run for Lon: ", lon_current, " and Lat: ", lat_current
@@ -104,7 +104,7 @@ program main
     endif
 
     call Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol, PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, ind_lon, ind_lat, username, &
-        domain, dtobs)
+        domain, dtobs, tempres_conversion, project_name)
 
     print *, "Got all variables from the NetCDF files"
     print *, " "
@@ -119,6 +119,7 @@ program main
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
         proflayers, detlayers)
     
+
     ! Interpolate the RACMO forcing data to firn model time step
     call Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, TempFM, PsolFM, PliqFM, SublFM, &
         MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtSnow, dtmodel, domain)
@@ -155,6 +156,7 @@ program main
         TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
         fname_p1, username, domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+
 
     ! Write output to netcdf files
     call Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, project_name)
