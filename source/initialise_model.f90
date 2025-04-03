@@ -119,8 +119,9 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ff10FM(step) = FF10m(Nt_forcing)
     end do
 
-    if (trim(domain) == "ANT27") then 
-    	numSnow = 1
+    if (trim(domain) == "ANT27"  .or. trim(domain) == "sensitivity") then 
+    	print *, 'assume numSnow = 1'
+        numSnow = 1
     else
     	numSnow = max(int(dtSnow/dtmodel),1)
     end if 
@@ -169,7 +170,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     end if
 
-    print *, 'TempSnow: ', TempSnow
+    print *, 'TempSnow', TempSnow
     print *, ' '
     print *, 'Snow density (after interpolation):'
     print *, 'Rho0FM(1:10)'
@@ -193,13 +194,14 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     double precision, dimension(Nlon,Nlat), intent(in) :: AveTsurf, AveAcc, AveWind, AveMelt, ISM
     character*255 :: domain
 
-    if (domain == 'none') then
+    if (domain == 'sensitivity') then
 
     acav = AveAcc(1,1)
     if (acav < 0) acav = 0.1
     ffav = AveWind(1,1)
     tsav = AveTsurf(1,1)
     if (tsav > 273.15) tsav = 273.15
+    IceShelf = 1
 
 
     print *, "  "
@@ -209,6 +211,7 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     write(*,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
     write(*,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(1,1), "mm w.e. yr-1"
     print *, "------------------------------------"
+    print *, 'IceShelf =', IceShelf
     print *, "  "
 
     else
