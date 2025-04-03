@@ -50,7 +50,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     if (domain .eq. "FGRN055") then
             spinup_bound = 70
             error_bound = 0.0001
-    elseif (domain .eq. "ANT27") then 
+    elseif ((domain .eq. "ANT27") .or. (domain .eq. "sensitivity")) then 
            spinup_bound = 200  !perhaps this one can be reduced 
            error_bound = 0.004 
     else
