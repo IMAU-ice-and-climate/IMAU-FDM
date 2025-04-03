@@ -141,11 +141,13 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     read (12,*) detlayers           ! number of output layers in the detailed prof file
     read (12,*) detthick            ! thickness of output layer in the detailed prof file
     read (12,*)
-    if (domain .NE. "none") read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
-    if (domain .NE. "none") read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
+    if (domain .NE. "sensitivity") read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
+    if (domain == "sensitivity") read (12,*)
+    if (domain .NE. "sensitivity") read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
+    if (domain == "sensitivity") read (12,*)
     read (12,*)
-    if (domain .NE. "none") read (12,*) Nlon                 ! Number of longitude points in forcing
-    if (domain .NE. "none") read (12,*) Nlat                 ! Number of latitude points in forcing
+    read (12,*) Nlon                 ! Number of longitude points in forcing
+    read (12,*) Nlat                 ! Number of latitude points in forcing
     read (12,*) Nt_forcing           ! Number of timesteps in forcing
 
 
@@ -283,9 +285,10 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
 
     ! This is the missing value for doubles as used in the NCL scripts
     NaN_value = 9.96921e+36
-
+   
     ! allocate memory to variables
     allocate(out_1D((outputSpeed+50), 18))
+  
     allocate(out_2D_dens((outputProf+50), proflayers))
     allocate(out_2D_temp((outputProf+50), proflayers))
     allocate(out_2D_lwc((outputProf+50), proflayers))
@@ -296,7 +299,8 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
     allocate(out_2D_det_temp((outputDetail+50), detlayers))
     allocate(out_2D_det_lwc((outputDetail+50), detlayers))
     allocate(out_2D_det_refreeze((outputDetail+50), detlayers))
-    
+    print*, 'allocation done'
+
     ! Set missing value
     out_1D(:,:) = NaN_value
     out_2D_dens(:,:) = NaN_value
@@ -340,7 +344,7 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     allocate(SnowDrif(Nt_forcing))
     allocate(FF10m(Nt_forcing))
     
-    if (domain == "none") then
+    if (domain == "sensitivity") then
 
     allocate(AveTsurf(1,1))
     allocate(AveAcc(1,1))
