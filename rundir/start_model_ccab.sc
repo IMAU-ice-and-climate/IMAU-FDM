@@ -320,6 +320,42 @@ EOS
 
 fi
 
+if [[ "$domain" == "sensitivity" ]]; then
+
+cat << EOS > $MSscript
+!-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
+!----------------------------------------------------
+43	! nyears; simulation time [yr]
+43	! nyears; simulation time during the spin-up [yr]
+180	! dtmodelExp; timestep in model with explicit T-scheme [s]
+900	! dtmodelImp; timestep in model with implicit T-scheme [s]
+$ImpExp ! ImpExp; implicit or explicit scheme, based on melt or not. (1=Implicit, 2=Explicit)
+86400	! dtobs; timestep in input data [s], 10800 for 3-hourly and 86400 for daily
+31557600  ! dtSnow; duration of the running average used in the snow parameterisation [s]
+
+0.15	! dzmax; vertical model resolution [m]
+1.	! initdepth; initial depth of firn profile [m]
+0.5	! th; theta (if theta=0.5 , it is a Crank Nicolson scheme) 
+1 	! startasice; indicates the initial rho-profile (1=linear, 2=ice)
+3	! begintT; indicates the inital T-profile (1=winter, 2=summer, 3=linear)
+$nor	! numberrepeat; number of times the data series is repeated for the initial rho profile is constructed
+
+86400	! writeinspeed; frequency of writing speed components to file (in seconds) (1 day resolution)
+2592000 ! writeinprof; frequency of writing of firn profiles to file (in seconds) (30 day resolution)
+3000	! proflayers; number of output layer in prof file (needs to be 4000 for MO tuning)
+864000  ! writeindetail; frequency of writing of detailed firn profiles to file (10 day resolution)
+500	! detlayers; number of output layers in detail file
+0.04	! detthick; thickness of the output layer in detail file
+
+$lat    ! beginLon; indicates the begin longitude gridpoint
+$lon    ! beginLat; indicates the begin latitude gridpoint
+
+2		! numLons, number of longitude points
+2 		! numLats, number of latitude points
+15705	! numTimes, number of time points (1981 - 2023 daily: 15705) (3hourly: 125640)
+EOS
+
+fi
 
 # Run the model
 log_fname=${p2logs}/log_IMAU-FDM_${ccab}_${cpoint}.out
