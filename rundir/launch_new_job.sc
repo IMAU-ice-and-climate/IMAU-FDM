@@ -5,7 +5,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 export domain="FGRN055"
 forcing="era055"
 
-export project_name="test"
+export project_name="test-Berend"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"

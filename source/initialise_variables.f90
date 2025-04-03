@@ -218,9 +218,10 @@ subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeind
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
 
-    outputProf = INT((REAL(nyears * spy) / REAL(writeinprof)))
-    outputSpeed = INT((REAL(nyears * spy) / REAL(writeinspeed)))
-    outputDetail = INT((REAL(nyears * spy) / REAL(writeindetail)))
+
+    outputProf = INT(REAL(nyears * spy) / REAL(writeinprof))
+    outputSpeed = INT(REAL(nyears * spy) / REAL(writeinspeed))
+    outputDetail = INT(REAL(nyears * spy) / REAL(writeindetail))
 
     print *, " "
     print *, "Output variables"
