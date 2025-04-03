@@ -16,12 +16,12 @@ contains
 
 
 subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
-    Nlat, Nlon, Latitude, Longitude, ISM, username, domain)
+    Nlat, Nlon, Latitude, Longitude, ISM, username, domain, project_name)
     
     integer :: status,ncid(50),ID(50),Nlat,Nlon,i,j
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude, Icemask_GR
-    character*255 :: add,pad,username,domain,path_dir,pad_mask
+    character*255 :: add,pad,username,domain,path_dir,pad_mask,project_name
 
     path_dir = "/ec/res4/scratch/"
         
@@ -49,9 +49,9 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     elseif (domain == "DMIS055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/DMIS055_averages/"    
         add = "_DMIS055_79-17_ave.nc"
-    elseif (domain == "none") then
+    elseif (domain == "sensitivity") then
         pad = ''//trim(path_dir)//''//trim(username)//"/idealized/input/averages/"    
-        add = "_idealized_average.nc"
+        add = "_" // trim(project_name) // "_average.nc"
     else
         call Handle_Error(41,'no valid domain') 
      endif
@@ -266,8 +266,8 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         status  = nf90_get_var(ncid(1),ID(2),ISM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
 
-    elseif (domain == 'none') then
-        print *, 'there is no domain'
+    elseif (domain == 'sensitivity') then
+        print *, 'there is no domain, sensitivity experiment'
 
     else
 
@@ -275,7 +275,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
 
     endif 
 
-
+    print *, trim(pad)//"snowmelt"//trim(add)
     status = nf90_open(trim(pad)//"snowmelt"//trim(add),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open1')
     status = nf90_open(trim(pad)//"precip"//trim(add),0,ncid(2))
@@ -302,7 +302,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     status = nf90_inq_varid(ncid(7),"sndiv",ID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
 
-    if (domain == "none") then
+    if (domain == "sensitivity") then
 
     status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1/), &
         count=(/1,1/))
@@ -362,7 +362,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     if(status /= nf90_noerr) call Handle_Error(status,'nf_close7')
 
 
-    if (domain == "none") then 
+    if (domain == "sensitivity") then 
 
     ! Convert units from [mm w.e./s] to [mm w.e./yr]
     AveAcc(1,1) = (AveAcc(1,1)+AveSubl(1,1)-AveSnowDrif(1,1)) &
@@ -391,15 +391,15 @@ end subroutine Load_Ave_Forcing
 
 
 subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, &
-    ind_lon, ind_lat, username, domain, dtobs)
+    ind_lon, ind_lat, username, domain, dtobs, tempres_conversion, project_name)
     
-    integer :: status, ind_t, ncid(50), Nt_forcing, ind_lon, ind_lat, ID(50), dtobs
+    integer :: status, ind_t, ncid(50), Nt_forcing, ind_lon, ind_lat, ID(50), dtobs, tempres_conversion
     double precision :: remove_Psol,remove_Pliq,remove_Ptot,remove_Melt
     double precision, dimension(Nt_forcing) :: SnowMelt,PreTot,PreSol,PreLiq,Sublim,TempSurf, &
         SnowDrif,FF10m
 
     integer :: latfile,lonfile,fnumb_i
-    character*255 :: add,pad,fnumb,username,domain
+    character*255 :: add,pad,fnumb,username,domain,project_name
     
     if (domain == "ANT27") then
 
@@ -513,17 +513,17 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         pad = "/ec/res4/scratch/"//trim(username)//"/FM_Data/INPUT/DMIS055_files/"    
         add = "_DMIS055_79-17_p"//trim(fnumb)//".nc"
 
-    elseif (domain == "none") then
+    elseif (domain == "sensitivity") then
 
         pad = "/ec/res4/scratch/"//trim(username)//"/idealized/input/timeseries/"    
-        add = "_idealized_timeseries.nc"
+        add = "_" // trim(project_name) // "_timeseries.nc"
 
     else
         call Handle_Error(43,'no valid domain') 
     endif
     
 
-    if (domain .NE. "none") then
+    if (domain .NE. "sensitivity") then
 
     print *, 'ind_lat, latfile, ind_lon, lonfile, fnumb, Nt_forcing'
     print *, ind_lat, latfile, ind_lon, lonfile, trim(fnumb), Nt_forcing
@@ -566,7 +566,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid7')
 
 
-    if (domain == "none") then
+    if (domain == "sensitivity") then
 
     ! Get all variables from the netCDF files
     status  = nf90_get_var(ncid(1),ID(1),SnowMelt,start=(/1/), &
@@ -664,25 +664,34 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         PreLiq(ind_t) = PreLiq(ind_t) * dtobs
     end do
 
+    !in previous step rates are converted to mass fluxes, so conversion factor for the next step as daily fluxes are larger than 3 hourly fluxes
+    !for 3-hourly input, 1.e-04 threshold. For other temporal resolution, change this threshold using the conversion (e.g. 8 for daily resolution)
+    
+    if (dtobs == 10800) then
+        tempres_conversion = 1
+    elseif (dtobs == 86400) then
+        tempres_conversion = 8
+    endif
+
     do ind_t = 1, Nt_forcing
-        if (SnowMelt(ind_t) <1.e-04) then
+        if (SnowMelt(ind_t) < (1.e-04 * tempres_conversion)) then
             remove_Melt = remove_Melt + SnowMelt(ind_t)
             SnowMelt(ind_t) = 0.     
         endif
         
-        if (PreSol(ind_t) < 1.e-04) then
+        if (PreSol(ind_t) < (1.e-04 * tempres_conversion)) then
             remove_Psol = remove_Psol + PreSol(ind_t)
             PreSol(ind_t) = 0.
         endif
     
-        if (PreTot(ind_t) < 1.e-04) then
+        if (PreTot(ind_t) < (1.e-04 * tempres_conversion)) then
             remove_Ptot = remove_Ptot + PreTot(ind_t)
             PreTot(ind_t) = 0.
         endif
     
         if (TempSurf(ind_t) > 267.) then
             PreLiq(ind_t) = PreTot(ind_t)-PreSol(ind_t)
-            if (PreLiq(ind_t) < 1.e-04) then
+            if (PreLiq(ind_t) < (1.e-04 * tempres_conversion)) then
                 remove_Pliq = remove_Pliq + PreLiq(ind_t)
                 PreLiq(ind_t) = 0.
                 PreSol(ind_t) = PreTot(ind_t)
