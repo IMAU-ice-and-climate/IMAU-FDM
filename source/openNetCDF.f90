@@ -168,7 +168,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lat')
         status  = nf90_get_var(ncid(1),ID(12),Longitude)    
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lon')
-
+        
         ! No Ice Shelves in Greenland
         ISM(:,:) = 0
 
