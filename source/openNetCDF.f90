@@ -20,7 +20,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     
     integer :: status,ncid(50),ID(50),Nlat,Nlon,i,j
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
-        AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude, Icemask_GR
+        AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude
     
     character*255 :: add,pad,username,domain,path_dir,pad_mask
 
@@ -612,16 +612,16 @@ end subroutine Load_TimeSeries_Forcing
 
 
 subroutine Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, &
-                                point_numb, fname_p1, project_name)
+                                point_numb, prefix_output, project_name)
         
     integer :: ind_z_max, ind_z_surf
     integer :: ind_z, status, ncid(50), ID(50), LayerID
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze
     
-    character*255 :: pad, username, point_numb, project_name, fname_p1
+    character*255 :: pad, username, point_numb, project_name, prefix_output
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//"_restart_from_spinup_"//trim(point_numb)//".nc"
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     
     print *, 'pad for restart file:'
     print *, trim(pad)
@@ -680,16 +680,16 @@ end subroutine Restart_From_Spinup
 ! *******************************************************
 
 subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, fname_p1, project_name)
+                                point_numb, prefix_output, project_name)
         
     integer :: ind_z_max, ind_z_surf, prev_nt
     integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
     
-    character*255 :: pad, username, point_numb, project_name, fname_p1
+    character*255 :: pad, username, point_numb, project_name, prefix_output
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//&
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(prefix_output)//&
     "_restart_from_2023_run_"//trim(point_numb)//".nc"
     
     print *, 'pad for restart file:'

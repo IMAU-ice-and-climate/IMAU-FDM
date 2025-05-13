@@ -33,7 +33,7 @@ program main
     integer :: prev_nt
     integer, parameter :: ind_z_max = 20000
     
-    character*255 :: username, point_numb, domain, fname_p1, project_name, restart_type
+    character*255 :: username, point_numb, domain, prefix_output, project_name, restart_type
     
     double precision :: dzmax, initdepth, th, rho0_init, rhoi, R, pi, Ec, Eg, g, Lh, detthick
     double precision :: tsav, acav, ffav, lon_current, lat_current
@@ -57,7 +57,7 @@ program main
 
     ! TKTK RESTART IN PROGRESS
     
-    call Get_All_Command_Line_Arg(username, point_numb, domain, fname_p1, project_name, restart_type)
+    call Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, project_name, restart_type)
     
     ! Read in the model settings, input settings, constants, and forcing dimensions
     call Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
@@ -68,6 +68,7 @@ program main
     call Define_Constants(rhoi, R, pi, Ec, Eg, g, Lh)
 
     ! Determine model time step and amount of model time steps
+    
     call Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
     
     call Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
@@ -117,7 +118,7 @@ program main
     
 
     if ( restart_type == "spinup" ) then
-        call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, point_numb, fname_p1, project_name)
+        call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, point_numb, prefix_output, project_name)
         prev_nt=1
     else if ( restart_type == "none" ) then ! do spinup
         ! Construct an initial firn layer (T-, rho-, dz-, and M-profile)
@@ -129,14 +130,14 @@ program main
         ! Spin up the model to a 'steady state'
         call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, &
             th, dzmax, M, T, DZ, Rho, DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-            IceShelf, ImpExp, nyears, nyearsSU, domain, project_name)
+            IceShelf, ImpExp, nyears, nyearsSU, domain)
 
         ! Write intitial profile to NetCDF-file and prepare output arrays
-        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, fname_p1, username, project_name)
+        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
         prev_nt=1
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
         call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, fname_p1, project_name)
+                                point_numb, prefix_output, project_name)
     else
         print *, "Restart type not recognized: ", restart_type
     endif
@@ -145,17 +146,17 @@ program main
     call Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
         outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, IceShelf, &
         TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
-        fname_p1, username, domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
+        domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
 
     ! Write output to netcdf files
-    call Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, project_name)
+    call Save_out_1D(outputSpeed, point_numb, prefix_output, username, out_1D, project_name)
     call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        point_numb, fname_p1, username, project_name)
+        point_numb, prefix_output, username, project_name)
     call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, &
-        out_2D_det_refreeze, point_numb, fname_p1, username, project_name)
+        out_2D_det_refreeze, point_numb, prefix_output, username, project_name)
     call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, &
-        DenRho, Refreeze, point_numb, fname_p1, username, project_name)
+        DenRho, Refreeze, point_numb, prefix_output, username, project_name)
     
     print *, "Written output data to files"
     

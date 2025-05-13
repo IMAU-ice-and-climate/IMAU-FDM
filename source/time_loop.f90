@@ -6,7 +6,8 @@ module time_loop
     use output, only: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail
 
     implicit none
-    private
+    ! explicitly set array offset
+    integer, private :: array_offset = 150
 
     public :: Time_Loop_SpinUp, Time_Loop_Main
     
@@ -18,7 +19,7 @@ contains
 
 subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax, M, T, DZ, Rho, &
     DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-    ImpExp, nyears, nyearsSU, domain, project_name)
+    ImpExp, nyears, nyearsSU, domain)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
         
     ! declare arguments
@@ -28,13 +29,13 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
-    character*255, intent(in) :: domain, project_name
+    character*255, intent(in) :: domain
 
     ! declare local variables
     integer :: spinup_numb, ind_z, ind_t
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: h_surf, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
-    double precision :: Mrain = 0., Mrunoff = 0., Mrefreeze = 0., Msurfmelt = 0., Msolin = 0., Rho0out = 0.
+    double precision :: Mrain = 0., Mrunoff = 0., Mrefreeze = 0., Msurfmelt = 0., Msolin = 0.
     double precision :: z_surf_old, fac_old, z_surf_error, fac_error, spinup_bound, error_bound
 
     spinup_numb = 0
@@ -148,7 +149,7 @@ end subroutine Time_Loop_SpinUp
 subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
     outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
-    fname_p1, username, domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
+    domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
     out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
     
@@ -160,10 +161,10 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, detthick
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
-    double precision, dimension((outputSpeed+50), 18), intent(inout) :: out_1D
-    double precision, dimension((outputProf+50), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
-    double precision, dimension((outputDetail+50), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
-    character*255, intent(in) :: fname_p1, username, domain, restart_type
+    double precision, dimension((outputSpeed+array_offset), 18), intent(inout) :: out_1D
+    double precision, dimension((outputProf+array_offset), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension((outputDetail+array_offset), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    character*255, intent(in) :: domain, restart_type
     
     ! declare local variables
     integer :: ind_z, ind_t, ind_t_i
@@ -259,7 +260,6 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     ! Finished time loop
     print *, "End of time loop"
     print *, " "
-    print *, fname_p1
         
 end subroutine Time_Loop_Main
 
