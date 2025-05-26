@@ -1,7 +1,19 @@
 name: build
 on:
   push:
+    branches:
+      - main
+    paths-ignore:
+      - 'documentation/**'
+      - 'temp/**'
+      - 'Containerfile'
+      - '.gitignore'
   pull_request:
+    paths-ignore:
+      - 'documentation/**'
+      - 'temp/**'
+      - 'Containerfile'
+      - '.gitignore'
     types: # don't run build for Draft PRs
       - opened
       - reopened
