@@ -2,8 +2,6 @@ name: build
 on:
   push:
   pull_request:
-    branches:
-      - main
     types: # don't run build for Draft PRs
       - opened
       - reopened
