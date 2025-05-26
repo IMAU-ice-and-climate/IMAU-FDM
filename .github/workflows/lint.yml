@@ -1,0 +1,33 @@
+name: build
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'Containerfile'
+      - 'documentation/**'
+      - 'temp/**'
+      - '.gitignore'
+
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'Containerfile'
+      - 'documentation/**'
+      - 'temp/**'
+      - '.gitignore'
+
+jobs:
+  build:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          cache: 'pip' # caching pip dependencies
+      - name: Install fortitude linter
+        run: pip install fortitude-lint # can also be installed (faster) with `uv tool install fortitude-lint@latest`, but uv currently not in the ubuntu-latest image
+      - name: Lint
+        run: fortitude check

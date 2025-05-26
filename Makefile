@@ -1,13 +1,25 @@
+# This script expects two environment variables to be set:
+# NETCDF4_INCLUDE path to netcdf4-fortran include dir
+# NETCDF4_LIB path to netcd4 shared libraries
+
+# the DEBUG environment variable can optionally be set
 
 # Define directory paths for source files, module files, and object files
 SRC_DIR = source
 MOD_DIR = modules
 OBJ_DIR = objects
 
+ifdef DEBUG
+OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
+else
+ifndef OPTIMIZATION_FLAG # default to environment variable
+OPTIMIZATION_FLAG = -O3 # max optimization level
+endif
+endif
+
 # Compiler and flags configuration
 FC = mpifort  # Specify the Fortran compiler
-#FFLAGS = -O3 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
-FFLAGS = -warn all -diag-enable remark -O0 -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 
 # List of source files
 SRC_FILES = \
