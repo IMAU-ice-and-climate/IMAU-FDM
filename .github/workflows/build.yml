@@ -17,7 +17,9 @@ jobs:
       DEBUG: 'true'
       DEBIAN_FRONTEND: noninteractive
       NETCDF_RELEASE: https://api.github.com/repos/Unidata/netcdf-fortran/releases/latest
-      LD_LIBRARY_PATH: /usr/lib/
+      LD_LIBRARY_PATH: /usr/lib/:/usr/local/lib
+      NETCDF4_LIB: -L/usr/local/lib -lnetcdff -lnetcdf -lnetcdf -lm # for some reason the output of nc-config `--flibs on CI is empty`. Workaround: set it manually.
+      NETCDF4_INCLUDE: -I/usr/local/include -I/usr/local/include # for some reason the output of `nc-config --fflags` CI is empty. Workaround: set it manually.
     steps:
       - uses: actions/checkout@v4
       - name: Install libnetcdf
@@ -25,7 +27,7 @@ jobs:
           sudo apt update -y && sudo apt install -y --no-install-recommends \
             hdf5-tools hdf5-helpers libhdf5-dev libhdf5-serial-dev libnetcdf-dev
       - name: Install gfortran and mpifort
-        run: sudo apt install -y --no-install-recommends gfortran mpich libmpich-dev 
+        run: sudo apt install -y --no-install-recommends make gfortran mpich libmpich-dev
       - name: Install netcdf4-fortran
         run: |
           export NETCDF_URL=$(curl "$NETCDF_RELEASE" | jq -r '.tarball_url')
@@ -34,6 +36,10 @@ jobs:
           tar -xf netcdf.tar.gz
           cd Unidata-netcdf*
           ./configure && make && sudo make install
-          nf-config --all
+          sudo ldconfig
+          nc-config --all
       - name: Build
-        run: NETCDF4_LIB=$(nc-config --flibs) NETCDF4_INCLUDE=$(nc-config --fflags) make
+        run: |
+          echo "NETCDF4_LIB: $NETCDF4_LIB"
+          echo "NETCDF4_INCLUDE: $NETCDF4_INCLUDE"
+          make
