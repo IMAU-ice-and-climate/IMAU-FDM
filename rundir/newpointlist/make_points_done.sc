@@ -1,8 +1,10 @@
 #!/bin/bash
 
-outdir="$SCRATCH/data/output/era055/newrun/"
+project_name="FGRN055-era055_1939-2023"
+outdir="$SCRATCH/${project_name}/output/"
+restartdir="$SCRATCH/restart/${project_name}/"
 
-name_ini="$outdir*ini*"
+name_ini="$restartdir*spinup*"
 name_1d="$outdir*1D*"
 name_2d="$outdir*2D_*"
 name_2ddet="$outdir*2Dd*"
