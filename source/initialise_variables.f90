@@ -73,7 +73,7 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
-    character*255 :: pad, cwd
+    character*255 :: pad
     integer :: NoR
 
     ! TODO: add option here for offline (where data/settings are located in a place other than scratch)
