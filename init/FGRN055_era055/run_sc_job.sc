@@ -9,26 +9,40 @@
 domain="FGRN055"
 forcing="era055"
 
+vars=("evap" "ff10m" "precip" "sndiv" "snowfall" "snowmelt" "tskin")
+
 jobname=$1
-scriptname="${2}_${domain}.sc"
-vars=$3
+
+if [ "$jobname" = "years" ]; then
+	scriptname="makeFDMyears_${domain}.sc"
+elif [ "$jobname" = "timeseries" ]; then
+	scriptname="makeFDMtimeseries_${domain}.sc"
+elif [ "$jobname" = "averages" ]; then
+	scriptname="makeFDMaverages_${domain}.sc"
+else
+	echo "Invalid script name: ${jobname}_${domain}.sc"
+	exit 1
+fi
+
+data_base_dir="$SCRATCH" #where the data should be stored
+scripts_base_dir="$PERM/code" #where IMAU-FDM directory is
 
 project_name="${domain}_${forcing}"
-base_dir="$SCRATCH/${project_name}"
-script_dir="$PERM/IMAU-FDM/init/${domain}_${forcing}"
+base_dir="${data_base_dir}/${project_name}"
+script_dir="${scripts_base_dir}/IMAU-FDM/init/${domain}_${forcing}"
 
-ts_start_year=1957
+ts_start_year=1939
 ts_end_year=2023
-ave_start_year=1960
-ave_end_year=1980
-num_long_bands=74
-cell_width=5
+ave_start_year=1940
+ave_end_year=1970
+num_long_bands=73
+cell_width=6
 
-years_dir="${base_dir}/process-RACMO/years-${ts_start_year}/"
-files_dir="${base_dir}/input/timeseries-${ts_start_year}/"
-ave_dir="${base_dir}/input/averages-${ts_start_year}_${ave_start_year}-${ave_end_year}/"
-jobfile_dir="${base_dir}/process-RACMO/jobs/"
-logfile_dir="${base_dir}/logfiles/process-RACMO/"
+years_dir="${base_dir}/process-RACMO/years-${ts_start_year}"
+files_dir="${base_dir}/input/timeseries-${ts_start_year}"
+ave_dir="${base_dir}/input/averages-${ts_start_year}_${ave_start_year}-${ave_end_year}"
+jobfile_dir="${base_dir}/process-RACMO/jobs"
+logfile_dir="${base_dir}/process-RACMO/logs"
 
 mkdir -p ${years_dir}
 mkdir -p ${files_dir}
@@ -46,15 +60,17 @@ mkdir -p ${jobfile_dir}
 ##																		##
 ## -------------------------------------------------------------------	##
 
-initRacmoFile="${jobfile_dir}preprocess-RACMO_job_${jobname}"
+for var in ${vars[@]}; do
+
+initRacmoFile="${jobfile_dir}/preprocess-RACMO_job_${jobname}_${var}"
 
 cat <<EOS1 > ${initRacmoFile} 
 #!/bin/ksh -f
 
 #SBATCH -q nf
-#SBATCH -J ${jobname}_preprocess
+#SBATCH -J ${jobname}_${var}_preprocess
 #SBATCH --time=48:00:00
-#SBATCH -o ${logfile_dir}${jobname}_preprocess.log
+#SBATCH -o ${logfile_dir}/${jobname}_${var}_preprocess.log
 #SBATCH --mem-per-cpu=4000mb
 
 module load nco
@@ -68,9 +84,10 @@ echo "Cell width: " ${cell_width}
 
 cd ${script_dir}
 
-./${scriptname} ${vars} ${project_name} ${base_dir} ${years_dir} ${files_dir} ${ave_dir} ${num_long_bands} ${cell_width} ${ts_start_year} ${ts_end_year} ${ave_start_year} ${ave_end_year}
-
+./${scriptname} ${var} ${project_name} ${base_dir} ${years_dir} ${files_dir} ${ave_dir} ${num_long_bands} ${cell_width} ${ts_start_year} ${ts_end_year} ${ave_start_year} ${ave_end_year}
 
 EOS1
 
 sbatch ${initRacmoFile}
+
+done

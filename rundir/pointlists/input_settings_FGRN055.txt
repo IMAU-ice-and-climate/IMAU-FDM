@@ -1,0 +1,5 @@
+!-	SETTINGS of the RACMO2 DATA of FGRN055
+!-----------------------------------------------------
+438	! numLons, number of longitude points
+566 	! numLats, number of latitude points
+184824	! numTimes, number of time points
