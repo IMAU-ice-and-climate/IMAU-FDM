@@ -6,9 +6,10 @@ project_name="FGRN055-era055_1939-2023"
 #%% MAKE LIST OF COMPLETED POINTS
 
 submission_number="2"
-reference_path = "/ec/res4/scratch/"+username+"/"+project_name+"/pointlist_"+submission_number+".txt"
+project_path =  "/ec/res4/scratch/"+username+"/"+project_name+"/"
+reference_path = project_path+"pointlist_"+submission_number+".txt"
 restart_path = "/ec/res4/scratch/"+username+"/restart/"+project_name+"/"
-output_path = "/ec/res4/scratch/"+username+"/"+project_name+"/output/"
+output_path = project_path+"output/"
 points_path = "/perm/nld4814/code/IMAU-FDM/rundir/newpointlist/"
 
 restart_name = "FGRN055_era055_restart_from_spinup_"
