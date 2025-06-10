@@ -15,10 +15,10 @@ contains
 ! *******************************************************
 
 
-subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, Nt_forcing, &
-    nyears, Latitude, Longitude, ISM, username, domain)
+subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
+    Nlat, Nlon, Latitude, Longitude, ISM, username, domain)
     
-    integer :: status,ncid(50),ID(50),Nlat,Nlon,Nt_forcing,i,j,nyears
+    integer :: status,ncid(50),ID(50),Nlat,Nlon,i,j
     double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt,LSM,ISM,Latitude,Longitude
     
@@ -37,7 +37,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         add = "_FGRN11_60-79_ave.nc"
     elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FGRN055_era055/input/averages/"    
-        add = "_FGRN055-era055_1960-1981_ave.nc"
+        add = "_FGRN055_era055-1939_1940-1970_ave.nc"
     elseif (domain == "PAT055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/PAT055_averages/"    
         add = "_PAT055_79-12_ave.nc"
@@ -146,19 +146,20 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
 
     elseif (domain == "FGRN055" .or. domain == "FGRN055_era055") then
 
-        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//""
+        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/FGRN055_Masks.nc"
         
-        print *, "To do (2 Oct 2024) check if new mask pad works: ", pad_mask
+        print *, "Loading mask from: ", pad_mask
         
-        status = nf90_open(trim(pad_mask)//"/FGRN055_Masks.nc",0,ncid(1))
+        status = nf90_open(trim(pad_mask),0,ncid(1))
         
         if(status /= nf90_noerr) call Handle_Error(status,'mask_open1')
-        !status = nf90_inq_varid(ncid(1),"Icemask_GR",ID(1))
-        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid_lsm')    
+        status = nf90_inq_varid(ncid(1),"LSM_GR",ID(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lsm')    
+
         status = nf90_inq_varid(ncid(1),"lat",ID(11))
-        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid11')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lat')
         status = nf90_inq_varid(ncid(1),"lon",ID(12))
-        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_varid12')
+        if(status /= nf90_noerr) call Handle_Error(status,'mask_inq_var_lon')
         
         status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
@@ -167,7 +168,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM,Nlat, Nlon, 
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lat')
         status  = nf90_get_var(ncid(1),ID(12),Longitude)    
         if(status /= nf90_noerr) call Handle_Error(status,'mask_get_var_lon')
-
+        
         ! No Ice Shelves in Greenland
         ISM(:,:) = 0
 
@@ -413,7 +414,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         latfile = ind_lat
 
         pad = "/ec/res4/scratch/"//trim(username)//"/FGRN055_era055/input/timeseries/"    
-        add = "_FGRN055-era055_1957-2023_p"//trim(fnumb)//".nc"
+        add = "_FGRN055_era055_1939-2023_p"//trim(fnumb)//".nc"
 
     elseif (domain == "PAT055") then
 
@@ -611,16 +612,16 @@ end subroutine Load_TimeSeries_Forcing
 
 
 subroutine Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, &
-                                domain, point_numb, fname_p1, project_name)
+                                point_numb, prefix_output, project_name)
         
     integer :: ind_z_max, ind_z_surf
     integer :: ind_z, status, ncid(50), ID(50), LayerID
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze
     
-    character*255 :: fname, pad, username, domain, ini_fname, point_numb, project_name, fname_p1
+    character*255 :: pad, username, point_numb, project_name, prefix_output
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//"_restart_from_spinup_"//trim(point_numb)//".nc"
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     
     print *, 'pad for restart file:'
     print *, trim(pad)
@@ -679,16 +680,16 @@ end subroutine Restart_From_Spinup
 ! *******************************************************
 
 subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                domain, point_numb, fname_p1, project_name)
+                                point_numb, prefix_output, project_name)
         
     integer :: ind_z_max, ind_z_surf, prev_nt
     integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
     
-    character*255 :: fname, pad, username, domain, ini_fname, point_numb, project_name, fname_p1
+    character*255 :: pad, username, point_numb, project_name, prefix_output
     
-    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(fname_p1)//&
+    pad = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"//trim(prefix_output)//&
     "_restart_from_2023_run_"//trim(point_numb)//".nc"
     
     print *, 'pad for restart file:'

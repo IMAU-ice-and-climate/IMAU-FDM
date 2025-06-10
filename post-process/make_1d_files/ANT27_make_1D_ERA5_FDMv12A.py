@@ -1,3 +1,15 @@
+"""
+This script makes gridded output (3D: lon,lat,time) of 1D  files (time) from IMAU-FDMv12A 
+Can be used for all variables from the 1D output files 
+
+Notes: 
+- Only FirnAir and zs should be detrended over the spin up period 
+- If using with RACMO2.3p2-CESM >> Remove leap years in L56 and L60 by removing .25
+- check attributes at the end of the script
+
+Made by: Sanne Veldhuijsen (nov-2024) 
+"""
+
 # import modules 
 import os
 import glob
@@ -27,6 +39,7 @@ dir4 = "/scratch/rusv/data/output/NCL/ANT27/ERA5/"                   # directory
 pre_fname1 = "ECMWF_ANT27_1979-2023_CB"	  		# file name 1D output files 
 fname1 = dir1 + "IN_ll_ANT27_CB1979-2020_nor_MO.txt"    # pointlist 
 Grid1 = pd.read_csv(fname1,header=None)			# open pointlist 
+nof = len(Grid1) 					# number of files 
 
 # output file name  
 fout = dir4 +"FDMv12A_" + variab + "_1979-2023_ERA5_ANT27_not_detrended.nc"   # include not_detrended, when FirnAir or zs are not detrended
@@ -52,7 +65,7 @@ Matrix_1 = np.empty([ntime,n_lat,n_lon])           # Empty 3D array
 Matrix_1[:,:,:] = np.nan			   # Fill with nan	
 
 # Create gridded data 
-for nn in range(0,18136):					  	# Loop over grid points  
+for nn in range(0,nof):						  	# Loop over grid points  
         numb = nn + 1						  	# This value corresponds to the number of the 1D output file 
         print(numb)						  	# Keep track of the file being processed 
         fname = dir3 + pre_fname1 + "_1D_" + str(numb) + ".nc"    	# 1D output file 
@@ -69,7 +82,7 @@ for nn in range(0,18136):					  	# Loop over grid points
                 if dt == 1:			                  	# Detrending			
                     rc0 = (ds[ts_su]-ds[0])/(ts_su)     	  	# Obtain trend over spin-up period (1979-2020 for Antarctica)
                     for ss in range(0,ts_su):                
-                        Matrix_1[ss,xx,yy] = ds[ss]-rc0*sss       	# Correct for this trend during spin up 
+                        Matrix_1[ss,xx,yy] = ds[ss]-rc0*ss       	# Correct for this trend during spin up 
                     jump = (Matrix_1[ts_su-1,xx,yy]-ds[ts_su-1])  	# Jump for timesteps after the spin up
                     for ss in range(ts_su,nsteps): 
                         Matrix_1[ss,xx,yy] = Matrix_1[ss,xx,yy] + jump 	# add jump 		
