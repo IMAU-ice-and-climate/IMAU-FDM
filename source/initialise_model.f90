@@ -123,9 +123,9 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     end do
 
     if (trim(domain) == "ANT27") then 
-    	numSnow = 1
+        numSnow = 1
     else
-    	numSnow = max(int(dtSnow/dtmodel),1)
+        numSnow = max(int(dtSnow/dtmodel),1)
     end if 
     
     print *, 'numSnow: ', numSnow
