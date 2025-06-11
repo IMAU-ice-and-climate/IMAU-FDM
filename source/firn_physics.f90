@@ -256,8 +256,8 @@ function Thermal_Cond(rhoi, rho, Temp) result(ki)
     kice_ref = 9.828 * exp(-0.0057*270.15)              ! Paterson et al., 1994
     kcal = 0.024 - 1.23E-4*rho + 2.5E-6*rho**2.
     kf = 2.107 + 0.003618*(rho-rhoi)                    ! Calonne (2019)
-    kair = (2.334E-3*Temp**(3/2))/(164.54 + Temp)       ! Reid (1966)
-    kair_ref = (2.334E-3*270.15**(3/2))/(164.54 + 270.15)
+    kair = (2.334E-3*Temp**(3./2.))/(164.54 + Temp)       ! Reid (1966)
+    kair_ref = (2.334E-3*270.15**(3./2.))/(164.54 + 270.15)
     theta = 1./(1.+exp(-0.04*(rho-450.)))
     ki = (1.-theta)*kice/kice_ref*kair/kair_ref*kcal + theta*kice/kice_ref*kf   ! Calonne (2019)
     
