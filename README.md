@@ -47,4 +47,23 @@ These paths can be obtained using the `nc-config` tool. So to compile, the follo
 
 - `NETCDF4_LIB=$(nc-config --flibs) NETCDF4_INCLUDE=$(nc-config --fflags) make`
 
+### Compiling on HPC
+
+On ECMWF, all the prerequisites can be activated by loading the following modules with the `module load` command:
+
+```
+module load prgenv/gnu &>/dev/null
+module load hpcx-openmpi
+module load netcdf4
+module load nco
+module load cdo
+module load ncview
+module load ncl
+module load python3
+```
+
+Also see [the example bashrc file](misc/bashrc_example).
+
+### Running
+
 After compilation succeeds, you can run `./imau-fdm.x`.
