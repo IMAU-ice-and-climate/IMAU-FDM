@@ -31,7 +31,7 @@ else
   nnodes_real=`echo "${ntodo}.0/(${FDMs_per_node}.0*${taskfactor})" | bc`
   # somehow bc provides already a rounded down integer, nevertheless...  
   nnodes=${nnodes_real%.*} 
-  if [[ $nnodes -gt 0 ]]; then
+  if [[ $nnodes -gt 1 ]]; then
     echo "submit_job: Only ${nnodes} node(s) needed now."
     jobtype="np"
   else
@@ -214,10 +214,10 @@ fi
 
 # create a nicer abort script (so that distribute point creates an updated to-do list
 if [[ $submission_iteration == 1 ]]; then
-  if [[ "$jobtype" == "np" || "$jobtype" == "nf" ]]; then
-    echo "Use CancelMyJob.sc to cancel this job nicely, so that you have an updated pointlist"
 
-    let "threadmx=$maxFDMs-1"
+  echo "Use CancelMyJob.sc to cancel this job nicely, so that you have an updated pointlist"
+
+  let "threadmx=$maxFDMs-1"
 
 cat << EOC > $homedir/CancelMyJob.sc
 #!/bin/bash
@@ -234,7 +234,7 @@ echo "Done"
 exit 0
 EOC
   chmod u+x $homedir/CancelMyJob.sc
-  fi
+
 fi
 
 echo "Leave submit_job."
