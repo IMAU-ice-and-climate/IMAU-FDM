@@ -29,21 +29,6 @@ export PMI_NO_FORK=1
 export innerlogdir="$nplogdir/Threads_iter_${submission_iteration}"
 mkdir -p $innerlogdir
 
-# make initial request file
-# define end second 
-# requestfile=${requestdir}"/"`printf "%.5d\n" $rank`
-
-# exittime=600
-# hours=`echo $walltime | awk '{print substr($1,1,2)}'`
-# mins=`echo $walltime | awk '{print substr($1,4,2)}'`
-# secs=`echo $walltime | awk '{print substr($1,7,2)}'`
-# endsec=`echo "($hours*3600)+($mins*60)+$secs-$exittime" | bc`
-# duration=$SECONDS
-
-# let "timeleft=${endsec}-${duration}"
-# echo "provide" > $requestfile
-# echo ${timeleft} >> $requestfile
-
 # start the distributor
 $distributor ${workpointlist}.txt $maxFDMs ${requestdir} -t $p2input & #>& ${workdir}/DP_log.txt &
 
