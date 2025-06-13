@@ -12,14 +12,19 @@ OBJ_DIR = objects
 ifdef DEBUG
 OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
 else
-ifndef OPTIMIZATION_FLAG # default to environment variable
+ifndef OPTIMIZATION_FLAG 
 OPTIMIZATION_FLAG = -O3 # max optimization level
 endif
 endif
 
 # Compiler and flags configuration
-FC = mpifort  # Specify the Fortran compiler
-FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+FC = mpifort # mpifort  # Specify the Fortran compiler
+
+ifeq ($(OMPI_FC),ifort)
+	FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+else #assumes gfortran 
+	FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+endif
 
 # List of source files
 SRC_FILES = \
