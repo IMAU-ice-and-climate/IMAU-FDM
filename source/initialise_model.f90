@@ -123,9 +123,9 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     end do
 
     if (trim(domain) == "ANT27") then 
-    	numSnow = 1
+        numSnow = 1
     else
-    	numSnow = max(int(dtSnow/dtmodel),1)
+        numSnow = max(int(dtSnow/dtmodel),1)
     end if 
     
     print *, 'numSnow: ', numSnow
@@ -299,8 +299,8 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
         kice_ref = 9.828 * exp(-0.0057*270.15)                  ! Paterson et al., 1994
         kcal = 0.024 - 1.23E-4*Rho(ind_z) + 2.5E-6*Rho(ind_z)**2.
         kf = 2.107 + 0.003618*(Rho(ind_z)-rhoi)                     ! Calonne (2019)
-        kair = (2.334E-3*T(ind_z)**(3/2))/(164.54 + T(ind_z))           ! Reid (1966)
-        kair_ref = (2.334E-3*270.15**(3/2))/(164.54 + 270.15)
+        kair = (2.334E-3*T(ind_z)**(3./2.))/(164.54 + T(ind_z))           ! Reid (1966) #updated by ehc on 11/06/25 so no longer integer division (3/2)
+        kair_ref = (2.334E-3*270.15**(3./2.))/(164.54 + 270.15)
         theta = 1./(1.+exp(-0.04*(Rho(ind_z)-450.)))
         ki = (1.-theta)*kice/kice_ref*kair/kair_ref*kcal + theta*kice/kice_ref*kf    ! Calonne (2019)
 
