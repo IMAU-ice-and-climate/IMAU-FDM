@@ -15,7 +15,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="FGRN055-era055_1939-2023" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="example" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
@@ -62,7 +62,7 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 export usern=$USER
 
 # SBATCH options
-export nnodes_max=4 #update to 8 if doing full run, otherwise use 1 for smaller runs
+export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export FDMs_per_node=128 #128 # play around for the optimal performance 
@@ -107,7 +107,7 @@ echo "nplogdir: ${nplogdir}"
 echo "workexe: ${workexe}"
 echo "restart_type=${restart_type}"
 
-echo "Continuing will remove all current files in the workdir!"
+echo "Continuing will submit the job."
 echo
 read -p "Check paths. Want to continue? (y/n)" -n 1 -r
 echo
