@@ -1,6 +1,6 @@
 module initialise_model
     !*** Subroutines for initialising the firn column before the spin-up starts ***!
-
+    use model_settings
     implicit none
     private
 
@@ -68,7 +68,6 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     ! declare local variables
     integer :: step, a, b, numSnow
     double precision :: part1, part2, TempSnow, ff10Snow
-    !double precision, dimension(Nt_model_tot) :: ff10FM
     double precision, allocatable, dimension(:) :: ff10FM
 
     allocate(ff10FM(Nt_model_tot))
@@ -135,7 +134,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ! Use current temperature and wind speed for snow parameterisations
         if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             do step = 1, Nt_model_tot
-                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - 273.15)
+                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt)
             end do
         else
             do step = 1, Nt_model_tot
@@ -149,11 +148,11 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             ! Greenland
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - 273.15)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
             end do
             do step = (numSnow+1), Nt_model_tot
                 TempSnow = sum( TempFM(step-numSnow:step) )/numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - 273.15)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
             end do
         else
             ! Not Greenland
@@ -200,7 +199,7 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     if (acav < 0) acav = 0.1
     ffav = AveWind(ind_lon, ind_lat)
     tsav = AveTsurf(ind_lon, ind_lat)
-    if (tsav > 273.15) tsav = 273.15
+    if (tsav > Tmelt) tsav = Tmelt
 
     IceShelf = int(ISM(ind_lon, ind_lat))
 
@@ -219,21 +218,20 @@ end subroutine Index_Ave_Forcing
 ! *******************************************************
 
 
-subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, rhoi, R, Ec, Eg, g, acav, tsav, DZ, Rho, M, domain)
+subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ, Rho, M)
     !*** Initialise the density profile ***!
         
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf    
-    double precision, intent(in) :: dzmax, rho0, rhoi, R, Ec, Eg, g, acav, tsav
+    double precision, intent(in) :: dzmax, rho0, acav, tsav
     double precision, dimension(ind_z_max), intent(inout) :: DZ, Rho
     double precision, dimension(ind_z_max), intent(out) :: M
-    character*255, intent(in) :: domain
 
     ! declare local variables
     integer :: ind_z
     double precision :: drho, part1, cons
         
-    Rho(ind_z_surf) = rho0
+    Rho(ind_z_surf) = rho0 ! rho0 set by Rho0FM in Interpol_Forcing
     M(ind_z_surf) = Rho(ind_z_surf) * DZ(ind_z_surf)
 
     do ind_z = (ind_z_surf-1), 1, -1
@@ -289,8 +287,7 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
     ampts = 10.
 
     ci = 152.5 + 7.122 * tsav                       ! heat capacity, Paterson (1994)
-    period = 365.*24.*3600.                         ! seconds in 1 yr          
-    om = 2.*pi/period                               ! rads per second
+    om = 2.*pi/seconds_per_year                               ! rads per second
 
     do ind_z = ind_z_surf, 1, -1                               ! temperature - depth loop
 
