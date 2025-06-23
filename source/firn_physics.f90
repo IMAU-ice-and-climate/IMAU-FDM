@@ -2,6 +2,7 @@ module firn_physics
     !*** All subroutines and functions for calculating changes in density and temperature
     
     use water_physics, only: Bucket_Method, LWrefreeze
+    use model_settings
 
     implicit none
     private
@@ -38,7 +39,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
             Mmelt = Me + Pliq
             Msurfmelt = Msurfmelt + Me
             Mrain = Mrain + Pliq
-        elseif (Ts > 273.15) then
+        elseif (Ts > Tmelt) then
             Mmelt = Me + Pliq
             Msurfmelt = Msurfmelt + Me
             Mrain = Mrain + Pliq
@@ -94,7 +95,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
     vmelt = -1 * Me/Rho(ind_z_surf)
 
     ! Vertical (downward) velocity of lowest firn layer in time step
-    vice = acav*dtmodel/(3600.*24.*365.*rhoi)    
+    vice = acav*dtmodel/(seconds_per_year*rhoi)    
 
     ! Calculate the liquid water content
     if (ImpExp == 1) then
@@ -108,7 +109,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
         mice = vice * rhoi
         mrun = Mrunoff
         mdiff = macc - mice - mrun
-        vbouy = -1. * (mdiff/1027.)   ! density water = 1027 kg m-3
+        vbouy = -1. * (mdiff/rho_ocean)   ! density ocean water = 1027 kg m-3
     else
         vbouy = 0.
     endif
@@ -301,7 +302,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
             Krate = 0.03*MO*acav*g*part1
         endif
-        Rho(ind_z) = Rho(ind_z) + dtmodel/(3600.*24.*365.)*Krate*(rhoi-Rho(ind_z))
+        Rho(ind_z) = Rho(ind_z) + dtmodel/(seconds_per_year)*Krate*(rhoi-Rho(ind_z))
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
     enddo
 

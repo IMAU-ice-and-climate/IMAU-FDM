@@ -4,6 +4,7 @@ module time_loop
     use grid_routines, only: Split_Layers, Merge_Layers, Delete_Layers, Add_Layers
     use firn_physics, only: Update_Surface, Densific, Solve_Temp_Imp, Solve_Temp_Exp, Calc_Integrated_Var
     use output, only: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail
+    use model_settings
 
     implicit none
     ! explicitly set array offset
@@ -19,7 +20,7 @@ contains
 
 subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax, M, T, DZ, Rho, &
     DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-    ImpExp, nyears, nyearsSU, domain)
+    ImpExp, nyears, nyearsSU)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
         
     ! declare arguments
@@ -29,7 +30,6 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
-    character*255, intent(in) :: domain
 
     ! declare local variables
     integer :: spinup_numb, ind_z, ind_t

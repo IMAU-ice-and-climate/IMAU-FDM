@@ -28,6 +28,7 @@ endif
 
 # List of source files
 SRC_FILES = \
+    define_paths_and_constants.f90 \
     openNetCDF.f90 \
     output.f90 \
     grid_routines.f90 \
