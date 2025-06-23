@@ -134,6 +134,6 @@ subroutine Define_Settings
 
     ! Model physics
 
-!end subroutine Define_Settings
+end subroutine Define_Settings
 
-end module define_paths_and_constants
+end module model_settings

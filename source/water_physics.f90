@@ -1,7 +1,7 @@
 module water_physics
     !*** All functions and subroutines for calculating vertical water percolation
 
-    use define_paths_and_constants
+    use model_settings
     implicit none
     private
 
