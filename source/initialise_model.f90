@@ -1,6 +1,8 @@
 module initialise_model
     !*** Subroutines for initialising the firn column before the spin-up starts ***!
 
+    use output, only: To_out_1D_interpolation_input
+
     implicit none
     private
 
@@ -56,13 +58,14 @@ end subroutine Find_Grid
 
 subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, &
-    Nt_model_tot, dtSnow, dtmodel, domain)
+    Nt_model_tot, dtSnow, dtmodel, domain, out_1D_input, dtobs)
     !*** Linearly interpolate RACMO forcing to model time step and calculate fresh snow density ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel, dtSnow
+    integer, intent(in) :: Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel, dtSnow, dtobs
     double precision, dimension(Nt_forcing), intent(in) :: TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m
     double precision, dimension(Nt_model_tot), intent(out) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
+    double precision, dimension((Nt_model_tot), 7), intent(inout) :: out_1D_input
     character*255 :: domain
 
     ! declare local variables
@@ -96,6 +99,27 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     print *, FF10m(1:10)
     print *, ' '
 
+
+
+!    if (dtobs == 86400) then
+!    ! No interpolation — repeat constant values within each day
+!    do a = 1, (Nt_forcing-1)
+!        do b = 1, Nt_model_interpol
+!            step = (a-1)*Nt_model_interpol + b
+!
+!            TempFM(step) = TempSurf(a)  ! repeat temperature
+!            PSolFM(step) = PreSol(a)/Nt_model_interpol  ! divide flux by number of substeps
+!            PliqFM(step) = PreLiq(a)/Nt_model_interpol
+!            SublFM(step) = Sublim(a)/Nt_model_interpol
+!            MeltFM(step) = SnowMelt(a)/Nt_model_interpol
+!            DrifFM(step) = SnowDrif(a)/Nt_model_interpol
+!            ff10FM(step) = FF10m(a)
+!
+!            call To_out_1D_interpolation_input(TempFM(step), PSolFM(step), PliqFM(step), SublFM(step), MeltFM(step), DrifFM(step), ff10FM(step), step, out_1D_input, Nt_model_tot)
+!        end do
+!    end do
+!    else
+
     do a = 1, (Nt_forcing-1)
         do  b = 1, Nt_model_interpol
             step = (a-1)*Nt_model_interpol + b
@@ -108,8 +132,10 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             MeltFM(step) = (part2*SnowMelt(a) + part1*SnowMelt(a+1))/Nt_model_interpol
             DrifFM(step) = (part2*SnowDrif(a) + part1*SnowDrif(a+1))/Nt_model_interpol
             ff10FM(step) = part2*FF10m(a) + part1*FF10m(a+1)
+           call To_out_1D_interpolation_input(TempFM(step), PSolFM(step), PliqFM(step), SublFM(step), MeltFM(step), DrifFM(step), ff10FM(step), step, out_1D_input, Nt_model_tot)
         end do
     end do
+!    end if
 
     do b = 1, Nt_model_interpol
         step = (Nt_forcing-1)*Nt_model_interpol + b
@@ -120,9 +146,10 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         MeltFM(step) = SnowMelt(Nt_forcing)/Nt_model_interpol
         DrifFM(step) = SnowDrif(Nt_forcing)/Nt_model_interpol
         ff10FM(step) = FF10m(Nt_forcing)
+        call To_out_1D_interpolation_input(TempFM(step), PSolFM(step), PliqFM(step), SublFM(step), MeltFM(step), DrifFM(step), ff10FM(step), step, out_1D_input, Nt_model_tot)
     end do
 
-    if (trim(domain) == "ANT27"  .or. trim(domain) == "sensitivity") then 
+    if (trim(domain) == "ANT27"  .or. trim(domain) == "sensitivity" .or. trim(domain) == "ANT11_larsenc" .or. trim(domain) == "ANT11_george") then 
     	print *, 'assume numSnow = 1'
         numSnow = 1
     else
@@ -181,6 +208,8 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     print *, ' '
 
     deallocate(ff10FM)
+
+    print *, 'interpolation done, go to next step'
 
 end subroutine Interpol_Forcing
 

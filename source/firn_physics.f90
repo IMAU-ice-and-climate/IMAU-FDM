@@ -167,7 +167,7 @@ end subroutine Solve_Temp_Exp
 ! *******************************************************
 
 
-subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
+subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi, BottomFlux)
     !*** Solve the heat diffusion equation (semi-)implicitly ***!
                
     ! declare arguments
@@ -175,11 +175,13 @@ subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rh
     double precision, intent(in) :: th
     double precision, dimension(ind_z_max), intent(in) :: Rho, DZ
     double precision, dimension(ind_z_max), intent(inout) :: T
-
+    double precision, intent(inout) :: BottomFlux
+    
     ! declare local variables
     integer :: ind_z
     double precision :: ci, kip, kin, f, rhoi, Ts, as, an, ap0, Su, Sp
     double precision, dimension(ind_z_max) :: alpha, beta, D, C, A, CC
+    
 
     ! see book An Introduction To Computational Fluid Dynamics by Versteeg and
     ! Malalasekera chapter 8.1 to 8.3 for implicit scheme and chapter 7.2 to 7.5
@@ -215,6 +217,7 @@ subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rh
     ci = 152.5 + 7.122*T(ind_z_surf)
     kip = kin
     as = an
+    BottomFlux = as
     ap0 = Rho(ind_z_surf)*ci*DZ(ind_z_surf)/dtmodel
     Su = 2.*kip*Ts/DZ(ind_z_surf)
     Sp = -2.*kip/DZ(ind_z_surf)
@@ -290,6 +293,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
                 MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
             endif
             if (MO < 0.25) MO = 0.25
+            !print *, 'T(1) lower than 550'
+            !print *, T(1)
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
             Krate = 0.07*MO*acav*g*part1 
         else
@@ -299,6 +304,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
                 MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
             endif
             if (MO < 0.25) MO = 0.25
+            !print *, 'T(1) higher than 550'
+            !print *, T(1)
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
             Krate = 0.03*MO*acav*g*part1
         endif

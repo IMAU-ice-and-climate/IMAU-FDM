@@ -26,7 +26,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     path_dir = "/ec/res4/scratch/"
         
     if (domain == "ANT27") then    
-        pad = ''//trim(path_dir)//''//trim(username)//"/backup_HPC/data/input/ant27_era_files/averages/"    
+        pad = ''//trim(path_dir)//''//trim(username)//"/ANT27_era05_daily/input/averages/"    
         add = "_ANT27_79-20_ave.nc"
     elseif (domain == "XPEN055") then
         pad = ''//trim(path_dir)//''//trim(username)//"/FM_Data/INPUT/XPEN055_averages/"    
@@ -51,6 +51,12 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         add = "_DMIS055_79-17_ave.nc"
     elseif (domain == "sensitivity") then
         pad = ''//trim(path_dir)//''//trim(username)//"/idealized/input/averages/"    
+        add = "_" // trim(project_name) // "_average.nc"
+    elseif (domain == "ANT11_larsenc") then
+        pad = ''//trim(path_dir)//''//trim(username)//"/ANT11_era05_larsenc/input/averages/"    
+        add = "_" // trim(project_name) // "_average.nc"
+    elseif (domain == "ANT11_george") then
+        pad = ''//trim(path_dir)//''//trim(username)//"/ANT11_era05_george/input/averages/"    
         add = "_" // trim(project_name) // "_average.nc"
     else
         call Handle_Error(41,'no valid domain') 
@@ -266,6 +272,66 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
         status  = nf90_get_var(ncid(1),ID(2),ISM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
 
+
+    elseif (domain == "ANT11_larsenc") then
+
+        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/PXANT11_masks_larsenc.nc"
+        
+        print *, "Loading mask from: ", pad_mask
+        status = nf90_open(trim(pad_mask),0,ncid(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
+        status = nf90_inq_varid(ncid(1),"LSM",ID(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')    
+        status = nf90_inq_varid(ncid(1),"lat",ID(11))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid11')
+        status = nf90_inq_varid(ncid(1),"lon",ID(12))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid12')
+        
+        status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1/), &
+            count=(/Nlon,Nlat/))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lsm')
+        status  = nf90_get_var(ncid(1),ID(11),Latitude)        
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lat')
+        status  = nf90_get_var(ncid(1),ID(12),Longitude)    
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lon')
+
+
+    elseif (domain == "ANT11_george") then
+
+        pad_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain)//"/PXANT11_masks_george.nc"
+        
+        print *, "Loading mask from: ", pad_mask
+        status = nf90_open(trim(pad_mask),0,ncid(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_open1')
+        status = nf90_inq_varid(ncid(1),"LSM",ID(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')    
+        status = nf90_inq_varid(ncid(1),"lat",ID(11))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid11')
+        status = nf90_inq_varid(ncid(1),"lon",ID(12))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid12')
+        
+        status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1/), &
+            count=(/Nlon,Nlat/))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lsm')
+        status  = nf90_get_var(ncid(1),ID(11),Latitude)        
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lat')
+        status  = nf90_get_var(ncid(1),ID(12),Longitude)    
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lon')
+
+        ! Open Ice Shelf Mask
+
+        status = nf90_open(trim(pad_mask),0,ncid(6))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_open6')
+        status = nf90_inq_varid(ncid(6),"IceShelf",ID(6))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_varid')
+        status  = nf90_get_var(ncid(6),ID(6),ISM,start=(/1,1/), &
+            count=(/Nlon,Nlat/))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_ism')
+        status = nf90_close(ncid(1))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_close1')
+        status = nf90_close(ncid(6))
+        if(status /= nf90_noerr) call Handle_Error(status,'nf_close6')   
+
     elseif (domain == 'sensitivity') then
         print *, 'there is no domain, sensitivity experiment'
 
@@ -302,7 +368,7 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     status = nf90_inq_varid(ncid(7),"sndiv",ID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_varid')
 
-    if (domain == "sensitivity") then
+    if (domain == "sensitivity" ) then
 
     status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1/), &
         count=(/1,1/))
@@ -321,6 +387,28 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, LSM, &
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesubl')
     status  = nf90_get_var(ncid(7),ID(7),AveSnowDrif,start=(/1,1/), &
         count=(/1,1/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesndiv')
+
+
+    elseif (trim(domain) == "ANT11_larsenc" .or. trim(domain) == "ANT11_george") then
+
+    status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avemelt')
+    status  = nf90_get_var(ncid(2),ID(2),AveAcc,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_aveacc')
+    status  = nf90_get_var(ncid(3),ID(3),AveWind,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavewind')
+    status  = nf90_get_var(ncid(4),ID(4),AveTsurf,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavetsurf')
+    status  = nf90_get_var(ncid(5),ID(5),AveSubl,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesubl')
+    status  = nf90_get_var(ncid(7),ID(7),AveSnowDrif,start=(/1,1/), &
+        count=(/Nlon,Nlat/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_varavesndiv')
 
     else 
@@ -419,7 +507,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
 
         latfile = ind_lat
 
-        pad = "/ec/res4/scratch/"//trim(username)//"/backup_HPC/data/input/ant27_era_files/files_2023/"    
+        pad = "/ec/res4/scratch/"//trim(username)//"/ANT27_era05_daily/input/timeseries/"    
         add = "_ANT27_79-23_p"//trim(fnumb)//".nc"
 
     elseif (domain == "XPEN055") then
@@ -518,6 +606,18 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         pad = "/ec/res4/scratch/"//trim(username)//"/idealized/input/timeseries/"    
         add = "_" // trim(project_name) // "_timeseries.nc"
 
+    elseif (domain .eq. "ANT11_larsenc") then
+        lonfile = ind_lon
+        latfile = ind_lat
+        pad = "/ec/res4/scratch/"//trim(username)//"/ANT11_era05_larsenc/input/timeseries/"  
+        add = "_" // trim(project_name) // "_timeseries.nc"
+
+    elseif (domain .eq. "ANT11_george") then
+        lonfile = ind_lon
+        latfile = ind_lat
+        pad = "/ec/res4/scratch/"//trim(username)//"/ANT11_era05_george/input/timeseries/"  
+        add = "_" // trim(project_name) // "_timeseries.nc"
+
     else
         call Handle_Error(43,'no valid domain') 
     endif
@@ -525,8 +625,13 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
 
     if (domain .NE. "sensitivity") then
 
-    print *, 'ind_lat, latfile, ind_lon, lonfile, fnumb, Nt_forcing'
-    print *, ind_lat, latfile, ind_lon, lonfile, trim(fnumb), Nt_forcing
+    if (trim(domain) == 'ANT11_larsenc' .or. trim(domain) == 'ANT11_george') then
+        print *, 'ind_lat, latfile, ind_lon, lonfile, Nt_forcing'
+        print *, ind_lat, latfile, ind_lon, lonfile, Nt_forcing
+    else
+        print *, 'ind_lat, latfile, ind_lon, lonfile, fnumb, Nt_forcing'
+        print *, ind_lat, latfile, ind_lon, lonfile, trim(fnumb), Nt_forcing
+    endif    
     print *, 'trim(pad), trim(add)'
     print *, trim(pad), trim(add)
     print *, ' '
@@ -595,6 +700,39 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     print *, "Read snow drift..."
     status  = nf90_get_var(ncid(7),ID(7),FF10m,start=(/1/), &
         count=(/Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var7')
+    print *, "Read wind speed..."
+    print *, ' '
+
+    elseif (domain == "ANT11_larsenc" .or. domain == "ANT11_george") then
+
+    ! Get all variables from the netCDF files
+    status  = nf90_get_var(ncid(1),ID(1),SnowMelt,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var1')
+    print *, "Read snowmelt..."
+    status  = nf90_get_var(ncid(2),ID(2),PreTot,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var2')
+    print *, "Read precipitation..."
+    status  = nf90_get_var(ncid(3),ID(3),PreSol,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var3')
+    print *, "Read snowfall..."
+    status  = nf90_get_var(ncid(4),ID(4),Sublim,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var4')
+    print *, "Read sublimation..."
+    status  = nf90_get_var(ncid(5),ID(5),TempSurf,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var5')
+    print *, "Read skin temperature..."
+    status  = nf90_get_var(ncid(6),ID(6),SnowDrif,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
+    if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var6')
+    print *, "Read snow drift..."
+    status  = nf90_get_var(ncid(7),ID(7),FF10m,start=(/lonfile,latfile,1/), &
+        count=(/1,1,Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var7')
     print *, "Read wind speed..."
     print *, ' '

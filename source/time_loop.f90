@@ -33,7 +33,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     ! declare local variables
     integer :: spinup_numb, ind_z, ind_t
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
-    double precision :: h_surf, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
+    double precision :: h_surf, vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass, BottomFlux
     double precision :: Mrain = 0., Mrunoff = 0., Mrefreeze = 0., Msurfmelt = 0., Msolin = 0., Rho0out = 0.
     double precision :: z_surf_old, fac_old, z_surf_error, fac_error, spinup_bound, error_bound
 
@@ -50,7 +50,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     if (domain .eq. "FGRN055") then
             spinup_bound = 70
             error_bound = 0.0001
-    elseif ((domain .eq. "ANT27") .or. (domain .eq. "sensitivity")) then 
+    elseif ((domain .eq. "ANT27") .or. (domain .eq. "sensitivity") .or. (domain .eq. "ANT11_larsenc") .or. (domain .eq. "ANT11_george")) then 
            spinup_bound = 200  !perhaps this one can be reduced 
            error_bound = 0.004 
     else
@@ -84,7 +84,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
             
             ! Re-calculate the Temp-profile (explicit or implicit)		  
-            if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
+            if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi, BottomFlux)
             if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
 
             ! Re-caluclate DZ/M-values according to new Rho-/T-values
@@ -160,15 +160,15 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, detthick
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
-    double precision, dimension((outputSpeed+50), 18), intent(inout) :: out_1D
-    double precision, dimension((outputProf+50), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
-    double precision, dimension((outputDetail+50), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension((outputSpeed), 19), intent(inout) :: out_1D
+    double precision, dimension((outputProf), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension((outputDetail), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
     character*255, intent(in) :: fname_p1, username, domain, restart_type
     
     ! declare local variables
     integer :: ind_z, ind_t, ind_t_i
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
-    double precision :: vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
+    double precision :: vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass, BottomFlux
     double precision :: h_surf = 0., Totvice = 0., Totvfc = 0., Totvacc = 0., Totvsub = 0., Totvsnd = 0., Totvmelt = 0., Totvbouy = 0.
     double precision :: Mrunoff = 0., TotRunoff = 0., Mrefreeze = 0., TotRefreeze = 0.
     double precision :: Mrain = 0., TotRain = 0., Msurfmelt = 0., TotSurfmelt = 0., Msolin = 0., TotSolIn = 0., Rho0out = 0.
@@ -198,7 +198,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
         
         ! Calculate the temperature profile (explicit or implicit)         
-        if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
+        if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi, BottomFlux)
         if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
                 
         ! Add/remove mass from the surface layer and the update the layer thickness
@@ -206,7 +206,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
             vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
             ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
         
-        if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf
+        if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf, T(1)
         
         ! Check if the vertical grid is still valid
         if (DZ(ind_z_surf) > dzMAX) then
@@ -240,7 +240,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         if (mod(ind_t, numOutputSpeed) == 0) then
             call To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, &
                 Totvbouy, TotRunoff, FirnAir, TotLwc, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out, &
-                out_1D, outputSpeed)
+                BottomFlux, out_1D, outputSpeed)
         endif
         
         if (mod(ind_t, numOutputProf) == 0.) then

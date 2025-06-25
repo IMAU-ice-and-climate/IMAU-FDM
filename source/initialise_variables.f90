@@ -201,27 +201,25 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
 end subroutine Init_TimeStep_Var
 
 
-subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, Nt_forcing, dtobs, writeinprof, writeinspeed, writeindetail, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail
+    integer, intent(in) :: dtmodel, Nt_forcing, dtobs, writeinprof, writeinspeed, writeindetail
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
     integer, parameter :: double_kind = selected_real_kind( p=15, r=200 ) !a bit over the top
-    integer(double_kind) :: spy ! prevents overflow when calculating output writing intervals
-    
-    spy = 3600.*24.*365.
+
     
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
 
 
-    outputProf = INT(REAL(nyears * spy) / REAL(writeinprof))
-    outputSpeed = INT(REAL(nyears * spy) / REAL(writeinspeed))
-    outputDetail = INT(REAL(nyears * spy) / REAL(writeindetail))
+    outputProf = INT(REAL(Nt_forcing * dtobs) / REAL(writeinprof))
+    outputSpeed = INT(REAL(Nt_forcing * dtobs) / REAL(writeinspeed))
+    outputDetail = INT(REAL(Nt_forcing * dtobs) / REAL(writeindetail))
 
     print *, " "
     print *, "Output variables"
@@ -273,12 +271,12 @@ end subroutine Init_Prof_Var
 
 subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, &
     out_2D_dRho, out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, &
-    out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, proflayers, detlayers)
+    out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, proflayers, detlayers, Nt_model_tot, out_1D_input)
     !*** Initialise output variables with NaNs ***!
 
     ! declare arguments
-    integer, intent(in) :: outputSpeed, outputProf, outputDetail, proflayers, detlayers
-    double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, &
+    integer, intent(in) :: outputSpeed, outputProf, outputDetail, proflayers, detlayers, Nt_model_tot
+    double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_1D_input, out_2D_dens, out_2D_temp, out_2D_lwc, &
         out_2D_depth, out_2D_dRho, out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local variables
@@ -288,22 +286,22 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
     NaN_value = 9.96921e+36
    
     ! allocate memory to variables
-    allocate(out_1D((outputSpeed+50), 18))
-  
-    allocate(out_2D_dens((outputProf+50), proflayers))
-    allocate(out_2D_temp((outputProf+50), proflayers))
-    allocate(out_2D_lwc((outputProf+50), proflayers))
-    allocate(out_2D_depth((outputProf+50), proflayers))
-    allocate(out_2D_dRho((outputProf+50), proflayers))
-    allocate(out_2D_year((outputProf+50), proflayers))
-    allocate(out_2D_det_dens((outputDetail+50), detlayers))
-    allocate(out_2D_det_temp((outputDetail+50), detlayers))
-    allocate(out_2D_det_lwc((outputDetail+50), detlayers))
-    allocate(out_2D_det_refreeze((outputDetail+50), detlayers))
-    print*, 'allocation done'
+    allocate(out_1D((outputSpeed), 19))
+    allocate(out_1D_input((Nt_model_tot), 7))
+    allocate(out_2D_dens((outputProf), proflayers))
+    allocate(out_2D_temp((outputProf), proflayers))
+    allocate(out_2D_lwc((outputProf), proflayers))
+    allocate(out_2D_depth((outputProf), proflayers))
+    allocate(out_2D_dRho((outputProf), proflayers))
+    allocate(out_2D_year((outputProf), proflayers))
+    allocate(out_2D_det_dens((outputDetail), detlayers))
+    allocate(out_2D_det_temp((outputDetail), detlayers))
+    allocate(out_2D_det_lwc((outputDetail), detlayers))
+    allocate(out_2D_det_refreeze((outputDetail), detlayers))
 
     ! Set missing value
     out_1D(:,:) = NaN_value
+    out_1D_input(:,:) = NaN_value
     out_2D_dens(:,:) = NaN_value
     out_2D_temp(:,:) = NaN_value
     out_2D_lwc(:,:) = NaN_value

@@ -16,7 +16,7 @@
 program main
 
     use openNetCDF, only: Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
-    use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
+    use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run, Save_out_1D_interpolation_input
     use initialise_variables, only: Define_Constants, Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, &
     Init_Output_Var, Alloc_Forcing_Var
     use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
@@ -45,7 +45,7 @@ program main
     double precision, dimension(:,:), allocatable :: AveTsurf, AveAcc, AveWind, AveMelt
     double precision, dimension(:,:), allocatable :: ISM, LSM, Latitude, Longitude
 
-    double precision, dimension(:,:), allocatable :: out_1D
+    double precision, dimension(:,:), allocatable :: out_1D, out_1D_input
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
     
@@ -112,18 +112,21 @@ program main
     call Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, dzmax)
 
     ! Get variables needed for outputting data
-    call Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, numOutputProf, &
+    call Calc_Output_Freq(dtmodel, Nt_forcing, dtobs, writeinprof, writeinspeed, writeindetail, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
-        proflayers, detlayers)
+        proflayers, detlayers, Nt_model_tot, out_1D_input)
     
 
     ! Interpolate the RACMO forcing data to firn model time step
     call Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, TempFM, PsolFM, PliqFM, SublFM, &
-        MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtSnow, dtmodel, domain)
+        MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtSnow, dtmodel, domain, out_1D_input, dtobs)
     
+    print *, "interpol done"
+
+    call Save_out_1D_interpolation_input(Nt_model_tot, point_numb, username, out_1D_input, project_name)
 
     if ( restart_type == "spinup" ) then
         call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, username, point_numb, fname_p1, project_name)

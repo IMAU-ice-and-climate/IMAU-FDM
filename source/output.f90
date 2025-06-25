@@ -8,7 +8,7 @@ module output
     implicit none
     private
 
-    public :: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
+    public :: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail, Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run, To_out_1D_interpolation_input, Save_out_1D_interpolation_input
     
 contains
 
@@ -58,15 +58,15 @@ end subroutine Accumulate_Output
 
 subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, &
     Totvbouy, TotRunoff, FirnAir, TotLwc, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out, &
-    out_1D, outputSpeed)
+    BottomFlux, out_1D, outputSpeed)
     !*** Write the 1D output variables to the variable that will be converted into a netcdf file after the time loop ***!
 
     ! declare arguments
     integer, intent(in) :: ind_t, numOutputSpeed, outputSpeed
-    double precision, intent(in) :: h_surf, FirnAir, TotLwc
+    double precision, intent(in) :: h_surf, FirnAir, TotLwc, BottomFlux
     double precision, intent(inout) :: Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, Totvbouy
     double precision, intent(inout) :: TotRunoff, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out
-    double precision, dimension((outputSpeed+50),18), intent(out) :: out_1D
+    double precision, dimension((outputSpeed),19), intent(out) :: out_1D
 
     ! declare local variables
     integer :: ind_t_out
@@ -105,6 +105,7 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
     out_1D(ind_t_out,16) = REAL(TotSolIn)
     out_1D(ind_t_out,17) = REAL(IceMass)
     out_1D(ind_t_out,18) = REAL(Rho0out)
+    out_1D(ind_t_out,19) = REAL(BottomFlux)
     
     Totvice = 0.
     Totvacc = 0.
@@ -135,7 +136,7 @@ subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outpu
     integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
     double precision, dimension(ind_z_max), intent(inout) :: DenRho
-    double precision, dimension(outputProf+50,proflayers), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
+    double precision, dimension(outputProf,proflayers), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
         out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local variables
@@ -179,7 +180,7 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     double precision, intent(in) :: detthick
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, DZ
     double precision, dimension(ind_z_max), intent(inout) :: Refreeze
-    double precision, dimension(outputDetail+50,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(outputDetail,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local arguments
     integer :: ind_t_out, ind_orig, ind_int
@@ -267,7 +268,7 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
 
     ! declare arguments
     integer, intent(in) :: outputSpeed
-    double precision, dimension((outputSpeed+50),18), intent(in) :: out_1D
+    double precision, dimension((outputSpeed),19), intent(in) :: out_1D
     character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
     ! declare local arguments
@@ -287,7 +288,7 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
 
 
     ! DEFINE DIMENSIONS
-    status = nf90_def_dim(ncid(32),"ind_t",outputSpeed+50,IDs(32,1))
+    status = nf90_def_dim(ncid(32),"ind_t",outputSpeed,IDs(32,1))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_dim1')
     
     ! DEFINE VARIABLES
@@ -327,7 +328,9 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var17') 
     status = nf90_def_var(ncid(32),"Rho0",nf90_real,(/IDs(32,1)/),varID(32,18))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var18')
-    
+    status = nf90_def_var(ncid(32),"BottomFlux",nf90_real,(/IDs(32,1)/),varID(32,19))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var19')
+
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1')
@@ -365,6 +368,8 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
     status = nf90_put_att(ncid(32),varID(32,18),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
+    status = nf90_put_att(ncid(32),varID(32,19),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_19')
     
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(32))
@@ -372,60 +377,62 @@ subroutine Save_out_1D(outputSpeed, point_numb, fname_p1, username, out_1D, proj
 
     ! SAVE DATA
     status = nf90_put_var(ncid(32),varID(32,1),out_1D(:,1), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed1')    
     status = nf90_put_var(ncid(32),varID(32,2),out_1D(:,2), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var2')
     status = nf90_put_var(ncid(32),varID(32,3),out_1D(:,3), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed3')
     status = nf90_put_var(ncid(32),varID(32,4),out_1D(:,4), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed4')
     status = nf90_put_var(ncid(32),varID(32,5),out_1D(:,5), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed5')
     status = nf90_put_var(ncid(32),varID(32,6),out_1D(:,6), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed6')
     status = nf90_put_var(ncid(32),varID(32,7),out_1D(:,7), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed7')
     status = nf90_put_var(ncid(32),varID(32,8),out_1D(:,8), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed8')
     status = nf90_put_var(ncid(32),varID(32,9),out_1D(:,9), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed9')
     status = nf90_put_var(ncid(32),varID(32,10),out_1D(:,10), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed10')
     status = nf90_put_var(ncid(32),varID(32,11),out_1D(:,11), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed11')
     status = nf90_put_var(ncid(32),varID(32,12),out_1D(:,12), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed12')
     status = nf90_put_var(ncid(32),varID(32,13),out_1D(:,13), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed13')
     status = nf90_put_var(ncid(32),varID(32,14),out_1D(:,14), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed14')
     status = nf90_put_var(ncid(32),varID(32,15),out_1D(:,15), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed15')
     status = nf90_put_var(ncid(32),varID(32,16),out_1D(:,16), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed16')
     status = nf90_put_var(ncid(32),varID(32,17),out_1D(:,17), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed17')
     status = nf90_put_var(ncid(32),varID(32,18),out_1D(:,18), &
-    start=(/1/),count=(/(outputSpeed+50)/))
+    start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed18')
-
+    status = nf90_put_var(ncid(32),varID(32,19),out_1D(:,19), &
+    start=(/1/),count=(/(outputSpeed)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed19')
     
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(32))
@@ -443,7 +450,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
     ! declare arguments
     integer, intent(in) :: outputProf, proflayers
-    double precision, dimension((outputProf+50),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
+    double precision, dimension((outputProf),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
         out_2D_depth, out_2D_dRho, out_2D_year
     character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
@@ -462,7 +469,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
 
     ! DEFINE DIMENSIONS
-    status = nf90_def_dim(ncid(31),"ind_t",outputProf+50,IDs(31,1))
+    status = nf90_def_dim(ncid(31),"ind_t",outputProf,IDs(31,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim2')    
     status = nf90_def_dim(ncid(31),"layer",proflayers,IDs(31,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim3')
@@ -507,22 +514,22 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
     ! SAVE DATA
     status = nf90_put_var(ncid(31),varID(31,1),out_2D_dens,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid1')    
     status = nf90_put_var(ncid(31),varID(31,2),out_2D_temp,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid2')
     status = nf90_put_var(ncid(31),varID(31,3),out_2D_year,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid3')
     status = nf90_put_var(ncid(31),varID(31,4),out_2D_lwc,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid4')
     status = nf90_put_var(ncid(31),varID(31,5),out_2D_depth,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid5')
     status = nf90_put_var(ncid(31),varID(31,6),out_2D_dRho,start=(/1,1/), &
-        count=(/(outputProf+50),proflayers/))
+        count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid6')
     
     ! CLOSE NETCDF-FILE
@@ -543,7 +550,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     integer, intent(in) :: outputDetail, detlayers
     double precision, intent(in) :: detthick
     double precision, dimension(detlayers) :: DetDepth, DetDZ
-    double precision, dimension((outputDetail+50),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
+    double precision, dimension((outputDetail),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
         out_2D_det_lwc, out_2D_det_refreeze
     character*255, intent(in) :: point_numb, fname_p1, username, project_name
 
@@ -569,7 +576,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
 
 
     ! DEFINE DIMENSIONS
-    status = nf90_def_dim(ncid(33),"ind_t",outputDetail+50,IDs(33,1))
+    status = nf90_def_dim(ncid(33),"ind_t",outputDetail,IDs(33,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim4')    
     status = nf90_def_dim(ncid(33),"layer",detlayers,IDs(33,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim5')
@@ -614,16 +621,16 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     
     ! SAVE DATA
     status = nf90_put_var(ncid(33),varID(33,1),out_2D_det_dens, &
-        start=(/1,1/),count=(/(outputDetail+50),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail1')    
     status = nf90_put_var(ncid(33),varID(33,2),out_2D_det_temp, &
-        start=(/1,1/),count=(/(outputDetail+50),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail2')
     status = nf90_put_var(ncid(33),varID(33,3),out_2D_det_lwc, &
-        start=(/1,1/),count=(/(outputDetail+50),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail3')
     status = nf90_put_var(ncid(33),varID(33,6),out_2D_det_refreeze, &
-        start=(/1,1/),count=(/(outputDetail+50),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail6')
 
     ! CLOSE NETCDF-FILE
@@ -767,5 +774,148 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_close')
     
 end subroutine Save_out_run
+
+
+
+! *******************************************************
+
+subroutine To_out_1D_interpolation_input(TempFM, PSolFM, PliqFM, SublFM, MeltFM, DrifFM, FF10m, step, out_1D_input, Nt_model_tot)
+    !*** Write the 1D output variables to the variable that will be converted into a netcdf file after the time loop ***!
+
+    ! declare arguments
+    integer, intent(in) :: step, Nt_model_tot
+    double precision, intent(in) :: TempFM, PSolFM, PliqFM, SublFM, MeltFM, DrifFM, FF10m
+    double precision, dimension(Nt_model_tot,7), intent(inout) :: out_1D_input
+
+
+    if (size(out_1D_input, 1) < step .or. size(out_1D_input, 2) < 7) then
+        print *, "ERROR: out_1D_input not properly sized!"
+        stop
+    end if
+
+    out_1D_input(step,1) = TempFM
+    out_1D_input(step,2) = PSolFM
+    out_1D_input(step,3) = PLiqFM
+    out_1D_input(step,4) = SublFM
+    out_1D_input(step,5) = MeltFM
+    out_1D_input(step,6) = DrifFM
+    out_1D_input(step,7) = FF10m
+
+    
+end subroutine To_out_1D_interpolation_input
+
+! *******************************************************
+
+
+subroutine Save_out_1D_interpolation_input(Nt_model_tot, point_numb, username, out_1D_input, project_name)
+    !*** Write the 1D output variables to a netcdf file !***
+    
+
+    ! declare arguments
+    integer, intent(in) :: Nt_model_tot
+    double precision, dimension((Nt_model_tot),7), intent(in) :: out_1D_input
+    character*255, intent(in) :: point_numb, username, project_name
+
+    ! declare local arguments
+    integer :: status, ncid(50), IDs(50,5), varID(50,20)
+    character*255 :: pad
+
+    print *, "start of save subroutine"
+
+
+    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
+    
+
+
+    ncid(:) = 0
+    IDs(:,:) = 0
+    varID(:,:) = 0
+
+
+
+    ! CREATE NETCDF FILES
+    status = nf90_create(trim(pad)//"input_interpolation_1D_"//trim(point_numb)//".nc",0,ncid(34))
+
+    print *, "define dimensions"
+
+    ! DEFINE DIMENSIONS
+    status = nf90_def_dim(ncid(34),"timestep",Nt_model_tot,IDs(34,1))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_dim1')
+    
+    print *, "define variables"
+
+    ! DEFINE VARIABLES
+    status = nf90_def_var(ncid(34),"TempFM",nf90_real,(/IDs(34,1)/),varID(34,1))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var1')
+    status = nf90_def_var(ncid(34),"PSolFM",nf90_real,(/IDs(34,1)/),varID(34,2))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var2')
+    status = nf90_def_var(ncid(34),"PLiqFM",nf90_real,(/IDs(34,1)/),varID(34,3))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var3')
+    status = nf90_def_var(ncid(34),"SublFM",nf90_real,(/IDs(34,1)/),varID(34,4))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var4')
+    status = nf90_def_var(ncid(34),"MeltFM",nf90_real,(/IDs(34,1)/),varID(34,5))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var5')
+    status = nf90_def_var(ncid(34),"DrifFM",nf90_real,(/IDs(34,1)/),varID(34,6))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var6')
+    status = nf90_def_var(ncid(34),"FF10m",nf90_real,(/IDs(34,1)/),varID(34,7))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var7')
+
+    print *, "define attributes"
+
+    ! DEFINE ATTRIBUTES (unit could also be defined here)
+    status = nf90_put_att(ncid(34),varID(34,1),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1')
+    status = nf90_put_att(ncid(34),varID(34,2),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2')
+    status = nf90_put_att(ncid(34),varID(34,3),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3')
+    status = nf90_put_att(ncid(34),varID(34,4),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
+    status = nf90_put_att(ncid(34),varID(34,5),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_5')
+    status = nf90_put_att(ncid(34),varID(34,6),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_6')
+    status = nf90_put_att(ncid(34),varID(34,7),"missing_value",9.96921e+36)
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_7')
+
+    print *, "end of defining files"
+
+    ! END OF DEFINING FILES
+    status = nf90_enddef(ncid(34))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_enddef')
+
+    print *, "save data"
+
+    ! SAVE DATA
+    status = nf90_put_var(ncid(34),varID(34,1),out_1D_input(:,1), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed1')    
+    status = nf90_put_var(ncid(34),varID(34,2),out_1D_input(:,2), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var2')
+    status = nf90_put_var(ncid(34),varID(34,3),out_1D_input(:,3), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed3')
+    status = nf90_put_var(ncid(34),varID(34,4),out_1D_input(:,4), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed4')
+    status = nf90_put_var(ncid(34),varID(34,5),out_1D_input(:,5), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed5')
+    status = nf90_put_var(ncid(34),varID(34,6),out_1D_input(:,6), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed6')
+    status = nf90_put_var(ncid(34),varID(34,7),out_1D_input(:,7), &
+    start=(/1/),count=(/(Nt_model_tot)/))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed7')
+    
+    
+    ! CLOSE NETCDF-FILE
+    status = nf90_close(ncid(34))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_close')
+
+
+end subroutine Save_out_1D_interpolation_input
+
 
 end module output
