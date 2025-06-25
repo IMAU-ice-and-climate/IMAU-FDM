@@ -13,19 +13,19 @@ begin
 ; read in data
 ;************************************************
 
-;variab = "zs" ;"FirnAir"  ;"zs"   ;"FirnAir"
+;variab = "FirnAir" ;"FirnAir"  ;"zs"   ;"FirnAir"
 ;dt = 0      ;(0=no detrending, 1=detrending)
 ;atzero = 1  ;(0=don't start at 0, 1=force variab start at 0)
 
-project_name="run-1957-2023-FGRN055-era055"
+project_name="3hourly"
 
-dir_pointlist = "$SCRATCH/FGRN055_era055/reference/"
-dir_mask =  "$SCRATCH/FGRN055_era055/mask/"
-dir_out = "$SCRATCH/run-1957-2023-FGRN055-era055/"
-fname_out = "_FGRN055_1957-2023_GrIS_GIC"
+dir_pointlist = "$PERM/code/IMAU-FDM/reference/FGRN055/"
+dir_mask =  "$PERM/code/IMAU-FDM/reference/FGRN055/"
+dir_out = "$SCRATCH/3hourly/output/"
+fname_out = "FGRN055_era055_1D"
 
 ; variables concerning files run
-name_pointlist1 = dir_pointlist + "IN_ll_FGRN055_GrIS_GIC_implicit.txt"
+name_pointlist1 = dir_pointlist + "IN_ll_FGRN055.txt"
 dir_in1 = "$SCRATCH/"+project_name+"/output/"
 name_input1 = "FGRN055_era055"
 ncols1 = numAsciiCol(name_pointlist1)
@@ -41,7 +41,7 @@ print(numpoints1+0)
 
 fname_lsm = dir_mask + "FGRN055_Masks.nc"
 model_lsm = addfile(fname_lsm,"r")
-LSM = model_lsm->IceMask
+LSM = model_lsm->LSM_GR ;used to be IceMask, just to check
 Lat = model_lsm->lat
 Lon = model_lsm->lon
 dimsize_lsm = dimsizes(LSM)
@@ -53,7 +53,7 @@ n_lon = dimsize_lsm(1)
 ;****************************************
 
 ; load one file to extract the dimensions from
-fname = dir_in1 + name_input1 + "_1D_1.nc"
+fname = dir_in1 + name_input1 + "_1D_10000.nc"
 forT = addfile(fname,"r")
 Time_zs = forT->$variab$
 
@@ -72,13 +72,13 @@ Matrix_055 = -999.
 Matrix_055@_FillValue = -999.
 
 ; calculate time of each time step
-year = 1957.
-month = 10.
+year = 1940.
+month = 1.
 day = 1.
 TimeY = new((/ntime/),float)
 do ttt = 0, ntime-1
- ;TimeY(ttt) = 1957. + ((month-1.)/12.) + ((day-1.)/365.25) + (ttt/ntime*(62.+3./12.))
- TimeY(ttt) = 1957. + ((month-1.)/12.) + ((day-1.)/365.25) + (ttt/ntime*(66.+3./12.))
+ ;TimeY(ttt) = 1940. + ((month-1.)/12.) + ((day-1.)/365.25) + (ttt/ntime*(62.+3./12.))
+ TimeY(ttt) = 1940. + ((month-1.)/12.) + ((day-1.)/365.25) + (ttt/ntime*(66.+3./12.))
 end do 
 print(TimeY(ntime-1)+0)
 print(" ")

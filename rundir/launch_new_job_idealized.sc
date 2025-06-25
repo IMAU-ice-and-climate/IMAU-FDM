@@ -2,17 +2,16 @@
 shopt -s expand_aliases  # Enables alias expansion.
 
 # FDM settings # copied from run_make_loadscript
-export domain="ANT27"
-forcing="ANT27_era05_3hourly"
-export project_name="ANT27_3hourly"  #"run-1979-2023-ANT27-era027_test4"
+export domain="sensitivity"
+forcing="idealized"
+
+export project_name="RACMO24_snowmelt_RACMO23_daily_point401"
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}" 
-#export p2input="$HPCPERM/${domain}_${forcing}/reference/IN_ll_FGRN055_GrIS_GIC_implicit.txt"
-#export p2input="$HPCPERM/IMAU_FDM/code/reference/IN_ll_ANT27_evaluation.txt"
 export p2exe="$PERM/code/IMAU-FDM"
-export p2input="${p2exe}/reference/${domain}/IN_ll_ANT27_CB1979-2020_nor.txt"
+export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
 gridpointlist="$homedir/pointlists/pointlist_${project_name}.txt"
@@ -27,7 +26,7 @@ export filename_part1="${outputname}"
 export walltime="48:00:00"   # (hms) walltime of the job 
 export cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
 export hostname="cca"
-export relaunch="no"        # with "no", no new iteration will be launched
+export relaunch="yes"        # with "no", no new iteration will be launched
 
 # other FDM input
 export usern=$USER
@@ -35,12 +34,12 @@ export usern=$USER
 # likely not to change
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
-export nnodes_max=8 #8
-export tasks_per_node=64 #64 this is not to be changed
-export FDMs_per_node=60 #128 # play around for the optimal performance 
+export nnodes_max=1 #8
+export tasks_per_node=64 #64 this is not to be change
+export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
-export taskfactor="1."                  # prior launch at least 5. task per core must be available    
+export taskfactor="1."   # prior launch at least #taskfactor (3-5) tasks per core must be available, change to 1 if just running test point
 export EC_ecfs=0      # number of parallel ECFS calls 
 
 # script misc
@@ -84,7 +83,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   echo "Start cleaning working directory"
   # prepare launch
   mkdir -p $workdir
-  rm -rf $workdir/*
+#  rm -rf $workdir/*
   mkdir -p $nplogdir
   mkdir -p $workexe
   mkdir -p $requestdir

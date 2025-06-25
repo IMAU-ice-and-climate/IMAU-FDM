@@ -27,38 +27,40 @@ os.chdir('/perm/nld3562/code/IMAU-FDM/post-process/make_1d_files/')
 variab = "FirnAir"           # FirnAir (can be any output from 1D files)
 dt = 1  		# 0=no detrending, 1=detrending --> Should be done for "FirnAir" and "zs" (include in file name if not)
 atzero = 1  		# 0=start at zero,1=do not start at zero --> (Actually I realized I do not use this anymore, because first output is after 10 days...) But could be used for "zs".)
-nyears = 45 		# amount of years 
-ts_su = 15705 		# timestep spin up: 1533 for Antarctica 1979-2020 - check Greenland 
+nyears = 84 		# amount of years 
+ts_su = 10950 		# timestep spin up: 1533 for Antarctica 1979-2020 - check Greenland 
 
 # directories and files  
-dir1 = "/perm/nld3562/code/IMAU-FDM/reference/ANT27/"                 # directory for input pointlist  
-dir2 = "/perm/nld3562/code/IMAU-FDM/reference/ANT27/"          # directory for mask 
-dir3 = "/ec/res4/scratch/nld3562/ANT27_interpolation_daily/output/"  # directory for 1D output files 
-dir4 = "/ec/res4/scratch/nld3562/ANT27_interpolation_daily/output/"                   # directory save gridded file  
+dir1 = "/perm/nld3562/code/IMAU-FDM/reference/FGRN055/"                 # directory for input pointlist  
+dir2 = "/perm/nld3562/code/IMAU-FDM/reference/FGRN055/"          # directory for mask 
+dir3 = "/ec/res4/scratch/nld3562/daily/output/"  # directory for 1D output files 
+dir4 = "/ec/res4/scratch/nld3562/daily/output/"                   # directory save gridded file  
 
-pre_fname1 = "ANT27_era055"	  		# file name 1D output files 
-fname1 = dir1 + "IN_ll_ANT27.txt"    # pointlist 
+pre_fname1 = "FGRN055_era055"	  		# file name 1D output files 
+fname1 = dir1 + "IN_ll_FGRN055.txt"    # pointlist 
 Grid1 = pd.read_csv(fname1,header=None)			# open pointlist 
 nof = len(Grid1) 					# number of files 
 
 # output file name  
-fout = dir4 +"FDMv12A_" + variab + "_1979-2023_ERA5_ANT27_detrended.nc"   # include not_detrended, when FirnAir or zs are not detrended
+fout = dir4 +"FDMv12A_" + variab + "_1939-2023_ERA5_FGRN055_detrended2.nc"   # include not_detrended, when FirnAir or zs are not detrended
 
 # open mask 
-fname_lsm = dir2 + "ANT27_Masks_ice_and_shelves.nc"                     # Antarctica mask
+fname_lsm = dir2 + "FGRN055_Masks.nc"                     # Antarctica mask
 model_lsm = xr.open_dataset(fname_lsm)			# open mask
-model_IceMask = model_lsm['IceMask']			# IceMask variable
+model_IceMask = model_lsm['LSM_GR']			# IceMask variable
 model_Lat = model_lsm['lat']				# Latitude variable
 model_Lon = model_lsm['lon']				# Longitude variable
 n_lat = len(model_IceMask)				# Dimension length latitudes
 n_lon = len(model_IceMask[0])				# Dimension length longitudes 
 
-# create timestep dimension
-ntime = np.int32(nyears*365.25)			# Define amount of timesteps
-TimeY = np.empty([ntime])		                # Empty time array 		
+full_nt = np.int32(nyears * 365.25 + 1)   # Full number of time steps (daily)
+step = 10                                 # Take every 10th timestep
+ntime = full_nt // step                   # Reduced number of time steps
+TimeY = np.empty([ntime])
 
 for t in range(0, ntime):
-        TimeY[t] = 1979.02738 + (t)             # Fill with fractional years (including leap years)
+    #TimeY[t] = 1939.02738 + ((t * step) / 36.5250) 
+    TimeY[t] = 1939.02738 + ((t * step)) 
 
 # Create matrix for gridded output 
 Matrix_1 = np.empty([ntime,n_lat,n_lon])           # Empty 3D array  
@@ -68,12 +70,12 @@ Matrix_1[:,:,:] = np.nan			   # Fill with nan
 for nn in range(0,nof):						  	# Loop over grid points  
         numb = nn + 1						  	# This value corresponds to the number of the 1D output file 
         print(numb)						  	# Keep track of the file being processed 
-        fname = dir3 + pre_fname1 + "_1D_" + str(numb) + ".nc"    	# 1D output file ''
-        print(fname)
+        fname = dir3 + pre_fname1 + "_1D_" + str(numb) + ".nc"    	# 1D output file 
        
         if os.path.exists(fname):				  	# If this path exists, then open the file 	
                 ec_out = xr.open_dataset(fname)				
-                ds = np.array(ec_out[variab][:ntime])		  	# Obtain variable
+                ds_full = np.array(ec_out[variab][:full_nt])  # Load full timeseries
+                ds = ds_full[::step]          
                 xx = Grid1.iloc[nn,5].astype(int)		  	# Obtain x location		
                 yy = Grid1.iloc[nn,6].astype(int)		  	# Obtain y location 	
                 print(xx)
@@ -81,12 +83,13 @@ for nn in range(0,nof):						  	# Loop over grid points
                 if atzero == 0:					  	# Start at zero
                     ds[:] = ds[:] - ds[0]
                 if dt == 1:			                  	# Detrending			
-                    rc0 = (ds[ts_su]-ds[0])/(ts_su)     	  	# Obtain trend over spin-up period (1979-2020 for Antarctica)
-                    for ss in range(0,ts_su):                
-                        Matrix_1[ss,xx,yy] = ds[ss]-rc0*ss       	# Correct for this trend during spin up 
-                    jump = (Matrix_1[ts_su-1,xx,yy]-ds[ts_su-1])  	# Jump for timesteps after the spin up
-                    for ss in range(ts_su,ntime): 
-                        Matrix_1[ss,xx,yy] = Matrix_1[ss,xx,yy] + jump 	# add jump 		
+                    ts_su_ds = ts_su // step
+                    rc0 = (ds[ts_su_ds]-ds[0]) / ts_su
+                    for ss in range(0, ts_su_ds):
+                        Matrix_1[ss, xx, yy] = ds[ss] - rc0 * (ss * step)       	# Correct for this trend during spin up 
+                    jump = (Matrix_1[ts_su_ds-1,xx,yy]-ds[ts_su_ds-1])
+                    for ss in range(ts_su_ds, ntime): 
+                        Matrix_1[ss,xx,yy] = Matrix_1[ss,xx,yy] + jump
                 else:
                     Matrix_1[:,xx,yy] = ds[:]				# no detrending
  

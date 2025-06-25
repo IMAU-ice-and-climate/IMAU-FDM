@@ -11,4 +11,4 @@
 module load python3
 
 ## Execute the python script
-srun python3 ANT27_make_2Ddetail_ERA5_FDMv12A.py 
+srun python3 FGR055_make_2Ddetail_ERA5_FDMv12A.py

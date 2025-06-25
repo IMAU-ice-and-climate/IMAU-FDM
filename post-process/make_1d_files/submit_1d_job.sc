@@ -4,7 +4,7 @@
 #can also be submitted through run_submit_1d_jobs to submit multiple
 
 
-dir="/perm/nld4814/code/IMAU-FDM/post-process/"
+dir="/perm/nld3562/code/IMAU-FDM/post-process/"
 
 jobname=$1
 variab=$2
@@ -28,7 +28,7 @@ cat <<EOFp > ${loadscript}
 #SBATCH --cpus-per-task=1
 #SBATCH --time=48:00:00
 
-ncl 'variab="${variab}"' dt=${detrend} atzero=${startzero} ${homedir}/FGRN055_make_one_1d_file.ncl
+ncl 'variab="${variab}"' dt=${detrend} atzero=${startzero} ${homedir}/FGRN055_nld3561_1d.ncl
 
 exit 0
 EOFp
