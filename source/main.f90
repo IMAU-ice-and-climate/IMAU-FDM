@@ -16,7 +16,7 @@ program main
     use model_settings
     use openNetCDF, only: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
     use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
-    use initialise_variables, only: Define_Paths, Define_Constants, Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, &
+    use initialise_variables, only:Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, &
     Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
     use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main

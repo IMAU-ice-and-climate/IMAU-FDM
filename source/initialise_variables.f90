@@ -7,7 +7,7 @@ module initialise_variables
 
     private
 
-    public :: Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Define_Paths, Init_TimeStep_Var, Calc_Output_Freq, &
+    public :: Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Init_TimeStep_Var, Calc_Output_Freq, &
         Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
     
 contains
