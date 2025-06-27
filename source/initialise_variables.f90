@@ -148,20 +148,22 @@ subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeind
     integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
-    integer, parameter :: double_kind = selected_real_kind( p=15, r=200 )
+ !   integer, parameter :: double_kind = selected_real_kind( p=15, r=200 )
 
-    integer(double_kind) :: outputProf2, outputProf2_num
+ !   integer(double_kind) :: outputProf2, outputProf2_num
 
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
     
-    outputProf = INT(REAL(Nt_forcing * dtobs) / REAL(writeinprof))
-    outputSpeed = INT(REAL(Nt_forcing * dtobs) / REAL(writeinspeed))
-    outputDetail = INT(REAL(Nt_forcing * dtobs) / REAL(writeindetail))
+    outputProf = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeinprof) )
+    outputSpeed = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeinspeed) )
+    outputDetail = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeindetail) )
     
-    outputProf2_num = nyears * seconds_per_year
-    outputProf2 = outputProf2_num / writeinprof
+
+
+  !  outputProf2_num = nyears * seconds_per_year
+  !  outputProf2 = outputProf2_num / writeinprof
 
     print *, " "
     print *, "Output variables"
