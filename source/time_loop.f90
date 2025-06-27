@@ -7,8 +7,7 @@ module time_loop
     use model_settings
 
     implicit none
-    ! explicitly set array offset
-    integer, private :: array_offset = 150
+
 
     public :: Time_Loop_SpinUp, Time_Loop_Main
     
@@ -161,9 +160,9 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, detthick
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
-    double precision, dimension((outputSpeed+array_offset), 18), intent(inout) :: out_1D
-    double precision, dimension((outputProf+array_offset), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
-    double precision, dimension((outputDetail+array_offset), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension((outputSpeed), 18), intent(inout) :: out_1D
+    double precision, dimension((outputProf), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension((outputDetail), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
     character*255, intent(in) :: domain, restart_type
     
     ! declare local variables

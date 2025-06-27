@@ -109,7 +109,7 @@ program main
     call Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, dzmax)
 
     ! Get variables needed for outputting data
-    call Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, numOutputProf, &
+    call Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
