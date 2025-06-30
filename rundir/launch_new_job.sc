@@ -15,7 +15,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="example" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="example2" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
