@@ -148,22 +148,34 @@ subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeind
     integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
- !   integer, parameter :: double_kind = selected_real_kind( p=15, r=200 )
 
- !   integer(double_kind) :: outputProf2, outputProf2_num
+    ! Declare 64-bit integers locally for calculations
+    integer(kind=8) :: Nt_forcing_64, dtobs_64, writeinspeed_64, writeinprof_64, writeindetail_64
+    integer(kind=8) :: tempOutputProf, tempOutputSpeed, tempOutputDetail
 
+    ! Convert inputs to 64-bit 
+    ! if integers are larger than 2147483647 (32-bit integer), 64-bit integers are needed which can go up to 9223372036854775807
+    ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
+    Nt_forcing_64 = int(Nt_forcing, kind=8)
+    dtobs_64 = int(dtobs, kind=8)
+    writeinspeed_64 = int(writeinspeed, kind=8)
+    writeinprof_64 = int(writeinprof, kind=8)
+    writeindetail_64 = int(writeindetail, kind=8)
+
+    ! Calculate at what timestep output is produced
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
-    
-    outputProf = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeinprof) )
-    outputSpeed = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeinspeed) )
-    outputDetail = INT( (REAL(Nt_forcing) * REAL(dtobs)) / REAL(writeindetail) )
-    
 
+    ! Calculate outputs using 64-bit integers
+    tempOutputProf = (Nt_forcing_64 * dtobs_64) / writeinprof_64
+    tempOutputSpeed = (Nt_forcing_64 * dtobs_64) / writeinspeed_64
+    tempOutputDetail = (Nt_forcing_64 * dtobs_64) / writeindetail_64
 
-  !  outputProf2_num = nyears * seconds_per_year
-  !  outputProf2 = outputProf2_num / writeinprof
+    ! Assign back to 32-bit outputs (assuming values fit)
+    outputProf = int(tempOutputProf)
+    outputSpeed = int(tempOutputSpeed)
+    outputDetail = int(tempOutputDetail)
 
     print *, " "
     print *, "Output variables"
