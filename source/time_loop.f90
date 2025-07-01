@@ -67,8 +67,6 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         TotLwc = 0.
         IceMass = 0.
 
-        !print *, 'After spin-up #, spinup_numb, Rho(200), T(200), Year(200), ind_z_surf, h_surf, FirnAir, IceMass'
-
         do ind_t = 1, Nt_model_spinup 
         
             ! Index the forcing at the current time step

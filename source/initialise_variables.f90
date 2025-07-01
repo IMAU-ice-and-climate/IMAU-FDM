@@ -7,37 +7,10 @@ module initialise_variables
 
     private
 
-    public :: Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Init_TimeStep_Var, Calc_Output_Freq, &
+    public :: Get_Model_Settings_and_Forcing_Dimensions, Init_TimeStep_Var, Calc_Output_Freq, &
         Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
     
 contains
-
-
-! *******************************************************
-
-
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain_name, prefix_output, project_name, restart_type)
-    !*** Get all command line arguments ***!
-
-    ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain_name, prefix_output, project_name, restart_type
-
-    ! 1: ECMWF username 
-    ! 2: Simulation number, corresponding to the line number in the IN-file.
-    ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27) - set to global in define_paths_and_constants
-    ! 4: General part of output filename
-    ! 5: Project name, for defining file paths
-    ! 6: Restart type, where none= do spinup; spinup = restart from spinup
-
-    call get_command_argument(1, username)
-    call get_command_argument(2, point_numb)
-    call get_command_argument(3, domain_name)
-    call get_command_argument(4, prefix_output)
-    call get_command_argument(5, project_name)
-    call get_command_argument(6, restart_type)
-    
-end subroutine Get_All_Command_Line_Arg
-
 
 
 !*** TKTKTK: move this to model_settings and make all variables global ***!
@@ -92,7 +65,7 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     read (12,*)
     read (12,*) Nlon                 ! Number of longitude points in forcing
     read (12,*) Nlat                 ! Number of latitude points in forcing
-    read (12,*) Nlon_timeseries           ! num of longitude bands (set during input pre-processing)
+    read (12,*) Nlon_timeseries      ! num of longitude bands (set during input pre-processing)
     read (12,*) Nt_forcing           ! Number of timesteps in forcing
 
 

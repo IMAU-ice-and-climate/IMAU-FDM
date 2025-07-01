@@ -16,7 +16,7 @@ program main
     use model_settings
     use openNetCDF, only: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
     use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
-    use initialise_variables, only:Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, &
+    use initialise_variables, only: Get_Model_Settings_and_Forcing_Dimensions, &
     Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
     use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main
@@ -32,7 +32,6 @@ program main
     integer :: prev_nt
     integer, parameter :: ind_z_max = 20000
     
-    character*255 :: username, point_numb, domain_name, prefix_output, project_name, restart_type
     double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, lon_current, lat_current, detthick
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
@@ -45,7 +44,7 @@ program main
     double precision, dimension(:,:), allocatable :: out_1D
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
-    
+
     print *, " "
     print *, "------------------------------------"
     print *, "----- FIRN DENSIFICATION MODEL -----"
@@ -53,16 +52,16 @@ program main
     print *, " "
     
     ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
-    call Get_All_Command_Line_Arg(username, point_numb, domain_name, prefix_output, project_name, restart_type)
+    call Get_All_Command_Line_Arg()
 
+    ! Define model settings and physics, runs first because decides whether or not to run as an example point
+    call Define_Settings() 
+    
     ! Defines paths - edit if not using ecmwf or if changing file structure of input, output, restart, or code
-    call Define_Paths(username, prefix_output, point_numb, project_name, domain_name)
+    call Define_Paths()
 
     ! Defines constants used throughout the model
     call Define_Constants()
-
-    ! Defines settings (physics, error bounds, etc) used throughout the model
-    call Define_Settings()
     
     ! Read in the model settings, input settings, constants, and forcing dimensions
     call Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
