@@ -158,26 +158,33 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     integer :: latfile, lonfile, fnumb_i
     character*255 :: add, fnumb
 
-    lonfile = mod(ind_lon,Nlon_timeseries)
-    if (lonfile==0) lonfile = Nlon_timeseries
-    fnumb_i = floor((real(ind_lon)-0.001)/real(Nlon_timeseries))+1
-    if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
-    if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
+    if ( trim(project_name) == "example" ) then
 
-    latfile = ind_lat
+        latfile = 1
+        lonfile = 1
+        fnumb = ""
+        
+        add = trim(prefix_forcing_timeseries)//trim(suffix_forcing_timeseries)
+        
+    else !running point
 
-    add = trim(prefix_forcing_timeseries)//trim(fnumb)//".nc"
+        latfile = ind_lat
+        lonfile = mod(ind_lon,Nlon_timeseries)
+
+        if (lonfile==0) lonfile = Nlon_timeseries
+        fnumb_i = floor((real(ind_lon)-0.001)/real(Nlon_timeseries))+1
+        if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
+        if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
+
+        add = trim(prefix_forcing_timeseries)//trim(fnumb)//trim(suffix_forcing_timeseries)
+     
+
+    end if
     
-    print *, "ind_lat: ", ind_lat
-    print *, "latfile: ", latfile
-    print *, "ind_lon: ", ind_lon
-    print *, "lonfile: ", lonfile
-    print *, "fnumb: ", fnumb
-    print *, "Nt_forcing: ", Nt_forcing
+
     print *, "Looking for timeseries at: "
     print *, trim(path_forcing_timeseries)//"VAR"//trim(add)
-    print *, " "
-
+    
     ! Open the snowmelt netCDF file
     status = nf90_open(trim(path_forcing_timeseries)//"snowmelt"//trim(add),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open1')
