@@ -140,12 +140,12 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
 end subroutine Init_TimeStep_Var
 
 
-subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
+    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
