@@ -2,7 +2,7 @@ module output
     !*** functions and subroutines for writing data to netcdf files
 
     use netcdf, only: nf90_create, nf90_def_dim, nf90_def_var, nf90_real, nf90_int, nf90_noerr, &
-        nf90_enddef, nf90_put_var, nf90_close, nf90_unlimited, nf90_put_att
+        nf90_enddef, nf90_put_var, nf90_close, nf90_unlimited, nf90_put_att, nf90_global
     use model_settings
     use openNetCDF, only: Handle_Error
 
@@ -264,22 +264,27 @@ end subroutine To_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_1D(outputSpeed, out_1D)
+subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
     !*** Write the 1D output variables to a netcdf file !***
     
     ! declare arguments
+
     integer, intent(in) :: outputSpeed
     double precision, dimension((outputSpeed),18), intent(in) :: out_1D
 
+
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
-    character*255 :: pad
+    character*255 :: pad, writeinspeed_str
+    character*24 :: current_datetime
 
     pad = trim(path_out_1d)//trim(fname_out_1d)
     
     ncid(:) = 0
     IDs(:,:) = 0
     varID(:,:) = 0
+
+    call fdate(current_datetime)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid(32))
@@ -326,13 +331,22 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     status = nf90_def_var(ncid(32),"Rho0",nf90_real,(/IDs(32,1)/),varID(32,18))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var18')
     
+
     ! DEFINE ATTRIBUTES (unit could also be defined here)
+
     status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1a')
+    status = nf90_put_att(ncid(32),varID(32,1),"name","Surface height")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1b')
+    
     status = nf90_put_att(ncid(32),varID(32,2),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2a')
+    status = nf90_put_att(ncid(32),varID(32,2),"name","Ice velocity at the model base")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2b')
+    
     status = nf90_put_att(ncid(32),varID(32,3),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3a')
+    
     status = nf90_put_att(ncid(32),varID(32,4),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
     status = nf90_put_att(ncid(32),varID(32,5),"missing_value",9.96921e+36)
@@ -347,8 +361,14 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_9')
     status = nf90_put_att(ncid(32),varID(32,10),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_10')
+    
     status = nf90_put_att(ncid(32),varID(32,11),"missing_value",9.96921e+36)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11')
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11a')
+    status = nf90_put_att(ncid(32),varID(32,11),"name","Firn Air Content")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11b')
+    status = nf90_put_att(ncid(32),varID(32,11),"units","m")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11c')
+    
     status = nf90_put_att(ncid(32),varID(32,12),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_12')
     status = nf90_put_att(ncid(32),varID(32,13),"missing_value",9.96921e+36)
@@ -363,7 +383,33 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
     status = nf90_put_att(ncid(32),varID(32,18),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
+
+    ! DEFINE GLOBAL ATTRIBUTES
+    status = nf90_put_att(ncid(32),nf90_global,"title","IMAU-FDM 1D output file")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
+    status = nf90_put_att(ncid(32),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
+    status = nf90_put_att(ncid(32),nf90_global,"source","IMAU-FDM version 1.2+")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
+    status = nf90_put_att(ncid(32),nf90_global,"history", "Created on: "//trim(current_datetime))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
+    status = nf90_put_att(ncid(32),nf90_global,"model_start_datetime", trim(model_first_timestep))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
+    status = nf90_put_att(ncid(32),nf90_global,"model_end_datetime", trim(model_last_timestep))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
+    status = nf90_put_att(ncid(32),nf90_global,"domain", trim(domain))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
+    status = nf90_put_att(ncid(32),nf90_global,"forcing", trim(forcing))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')
     
+    status = nf90_put_att(ncid(32),nf90_global,"name_of_dimension","Number of timesteps")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_1')
+    write(writeinspeed_str, '(I0)') writeinspeed  ! Convert integer to string
+    status = nf90_put_att(ncid(32),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeinspeed_str))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_2')
+    status = nf90_put_att(ncid(32),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_3')
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(32))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_enddef')
@@ -423,7 +469,6 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     status = nf90_put_var(ncid(32),varID(32,18),out_1D(:,18), &
     start=(/1/),count=(/(outputSpeed)/))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_put_var_speed18')
-
     
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(32))
@@ -634,6 +679,9 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad, point_numb, prefix_output, username, project_name
+    character*24 :: current_datetime
+
+    call fdate(current_datetime)
     
     pad = trim(path_restart)//trim(fname_restart_from_spinup)
 
@@ -650,6 +698,7 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     if(status /= nf90_noerr) call Handle_Error(status,'restart_def_dim1')
     
     ! DEFINE VARIABLES
+
     status = nf90_def_var(ncid,"dens",nf90_real,dimID,varID(1))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var1')
     status = nf90_def_var(ncid,"temp",nf90_real,dimID,varID(2))
@@ -661,13 +710,46 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     status = nf90_def_var(ncid,"lwc",nf90_real,dimID,varID(5))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var5')
     status = nf90_def_var(ncid,"year",nf90_real,dimID,varID(6))
-    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var6')    
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_def_var6')
+
+    ! DEFINE ATTRIBUTES
+
+    status = nf90_put_att(ncid,varID(1),"long_name","Density")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name1')
+    status = nf90_put_att(ncid,varID(2),"long_name","Temperature")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name2')
+    status = nf90_put_att(ncid,varID(3),"long_name","Mass")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name3')
+    status = nf90_put_att(ncid,varID(4),"long_name","Depth")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name4')
+    status = nf90_put_att(ncid,varID(5),"long_name","Liquid Water Content")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name5')
+    status = nf90_put_att(ncid,varID(6),"long_name","Year")
+    if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name6')
+
+    ! DEFINE GLOBAL ATTRIBUTES
+    status = nf90_put_att(ncid,nf90_global,"title","IMAU-FDM spinup output file")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
+    status = nf90_put_att(ncid,nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
+    status = nf90_put_att(ncid,nf90_global,"source","IMAU-FDM version 1.2+")
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
+    status = nf90_put_att(ncid,nf90_global,"history", "Created on: "//trim(current_datetime))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
+    status = nf90_put_att(ncid,nf90_global,"model_start_datetime", trim(model_first_timestep))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
+    status = nf90_put_att(ncid,nf90_global,"model_end_datetime", trim(model_last_timestep))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
+    status = nf90_put_att(ncid,nf90_global,"domain", trim(domain))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
+    status = nf90_put_att(ncid,nf90_global,"forcing", trim(forcing))
+    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')    
     
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_enddef')
     
-    ! PUT VARIABLES
+    ! PUT VARIABLES  
     status = nf90_put_var(ncid,varID(1),Rho(1:ind_z_surf))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var1')    
     status = nf90_put_var(ncid,varID(2),T(1:ind_z_surf))
@@ -678,7 +760,6 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var4')
     status = nf90_put_var(ncid,varID(5),Mlwc(1:ind_z_surf))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var5')
-        
     status = nf90_put_var(ncid,varID(6),Year(1:ind_z_surf))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_put_var6')
     

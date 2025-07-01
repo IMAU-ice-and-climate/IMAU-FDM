@@ -17,6 +17,8 @@ module model_settings
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
     public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
+    public :: save_output
+    public :: model_first_timestep, model_last_timestep
 
     ! Declare the module variables
 
@@ -27,6 +29,8 @@ module model_settings
     character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
     character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var
+    character(len=255) :: model_first_timestep, model_last_timestep
+    integer :: save_output
     double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
 
 contains
@@ -35,19 +39,11 @@ subroutine Define_Settings()
     !*** Under construction ***!
     !*** Define model settings and physics ***!
 
-    if (trim(project_name) == "example") then
-
-        print *, "Running example point 1 from sample data"
-
-    else
-        print *, "Running user defined point"
-        ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
-    
-    end if
-
     ! Model settings
     ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
     det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
+
+    save_output = 10 ! save output every 10 years
 
     ! Model physics
 
@@ -75,6 +71,16 @@ subroutine Get_All_Command_Line_Arg()
     call get_command_argument(4, prefix_output)
     call get_command_argument(5, project_name)
     call get_command_argument(6, restart_type)
+
+    if (trim(project_name) == "example") then
+
+        print *, "Running example point 1 from sample data"
+
+    else
+        print *, "Running user defined point"
+        ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
+    
+    end if
     
 end subroutine Get_All_Command_Line_Arg
 
@@ -94,6 +100,9 @@ subroutine Define_Paths()
     end_ts_year = "2023"
     start_ave_year = "1940"
     end_ave_year = "1970"
+
+    model_first_timestep = "1939-09-01T00:00:00"
+    model_last_timestep = "2023-12-31T21:00:00"
 
     if (trim(project_name) == "example") then 
 
