@@ -33,7 +33,7 @@ alias perm='cd $PERM'
 ##################################
 #### MODULES TO LOAD ON LOGIN ####
 ##################################
-module load prgenv/intel &>/dev/null
+module load prgenv/gnu &>/dev/null
 module load hpcx-openmpi
 module load netcdf4
 module load nco
