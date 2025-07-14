@@ -7,7 +7,7 @@ The file structure looks like:
 - example
     - input
         - timeseries
-        _timeseries output for just one point (point 1 for FGRN055), created `example/pre-process/extract\_single\_point.py`_
+        _timeseries output for just one point (points 1-10 for FGRN055), created `example/pre-process/extract\_single\_point.py`_
         - averages
         _averages for all vars at all points between timesteps in filename_
     -LocalCode
