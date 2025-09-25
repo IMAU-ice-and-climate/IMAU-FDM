@@ -1,6 +1,7 @@
 module water_physics
     !*** All functions and subroutines for calculating vertical water percolation
 
+    use model_settings
     implicit none
     private
 
@@ -25,7 +26,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
     integer :: ind_z
     double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch
 
-    cp0 = 152.5 + 7.122*273.15
+    cp0 = 152.5 + 7.122*Tmelt
 
     M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
     DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
@@ -34,7 +35,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
 
         if (Rho(ind_z) < rhoi) then
             cp = 152.5 + 7.122*T(ind_z)
-            Efreeze = (273.15-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
+            Efreeze = (Tmelt-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
             Mfreeze = Efreeze / Lh          !the mass that can be frozen with that energy
             
             Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
@@ -50,8 +51,8 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                 Refreeze(ind_z) = Refreeze(ind_z) + Madd
                 Rho(ind_z) = M(ind_z) / DZ(ind_z)
             ! if NO, check which of the two is the (most) limiting factor.
-            ! If it is the available energy, the refreezable part is refrozen. T == 273.15
-            ! If it is the available pore space, the pore space is filled. But T .ne. 273.15
+            ! If it is the available energy, the refreezable part is refrozen. T == Tmelt
+            ! If it is the available pore space, the pore space is filled. But T .ne. Tmelt
             ! The remainder of the meltwater will percolate further
             else
                 if (Mfreeze > Mavail) then
@@ -67,7 +68,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                     Mrefreeze = Mrefreeze + Madd
                     Refreeze(ind_z) = Refreeze(ind_z) + Madd
                     Rho(ind_z) = M(ind_z) / DZ(ind_z)
-                    T(ind_z) = 273.15
+                    T(ind_z) = Tmelt
                 endif
                 Mmelt = Mmelt - Madd
                 ! Some liquid water may remain in the layer as irreducible water content
@@ -149,12 +150,12 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
     integer :: ind_z
     double precision :: cp, cp0, Mfreeze
 
-    cp0 = 152.5 + 7.122*273.15
+    cp0 = 152.5 + 7.122*Tmelt
 
     do ind_z = 1, ind_z_surf   ! loop over all layers
-        if (Mlwc(ind_z)>0 .and. T(ind_z).ne.273.15) then
+        if (Mlwc(ind_z)>0 .and. T(ind_z).ne.Tmelt) then
             cp = 152.5 + 7.122*T(ind_z)
-            Mfreeze = ((273.15-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
+            Mfreeze = ((Tmelt-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
             if (Mfreeze >= Mlwc(ind_z)) then
                 M(ind_z) = M(ind_z) + Mlwc(ind_z)                   ! Enough energy: all LWC is refrozen
                 Mrefreeze = Mrefreeze + Mlwc(ind_z)
@@ -167,7 +168,7 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
                 Mrefreeze = Mrefreeze + Mfreeze
                 Refreeze(ind_z) = Refreeze(ind_z) + Mfreeze
                 Rho(ind_z) = M(ind_z) / DZ(ind_z)
-                T(ind_z) = 273.15
+                T(ind_z) = Tmelt
                 Mlwc(ind_z) = Mlwc(ind_z) - Mfreeze
             endif
         endif

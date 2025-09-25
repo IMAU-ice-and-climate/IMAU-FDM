@@ -1,90 +1,41 @@
 module initialise_variables
     !*** Subroutines for allocating memory and assigning initial values to variables ***!
 
+     use model_settings
+
     implicit none
 
     private
 
-    public :: Define_Constants, Get_All_Command_Line_Arg, Get_Model_Settings_and_Forcing_Dimensions, Define_Paths, Init_TimeStep_Var, Calc_Output_Freq, &
+    public :: Get_Model_Settings_and_Forcing_Dimensions, Init_TimeStep_Var, Calc_Output_Freq, &
         Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
-
     
 contains
 
 
-! *******************************************************
-
-subroutine Define_Constants(rhoi, R, pi, Ec, Eg, g, Lh)
-    !*** Define physical constants ***!
-    
-    double precision, intent(out) :: rhoi, R, pi, Ec, Eg, g, Lh
-    
-    pi = asin(1.)*2         ! pi = 3.1415
-    R = 8.3145              ! gas constant [J mole-1 K-1]
-    g = 9.81                ! gravitational acceleration [m s-2]
-    rhoi = 917.             ! density of ice [kg m-3]
-    ! Tmelt = 273.15          ! melting point of ice [K]
-    Ec = 60000.             ! activation energy for creep [J mole-1]
-    !Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
-    Eg = 42400.             ! activation energy for grain growth [J mole-1]
-    Lh = 333500.            ! latent heat of fusion [J kg-1]
-    ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
-    ! seconds_per_year = 3600.*24.*365.25   ! seconds per year [s]
-    ! NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-    ! rgrain_refreeze = 1.E-3    ! grain size refrozen ice [m]
-    ! Nlat_timeseries = 566           ! size of forcing "strips", equal to Nlat and Nlon if not cut up
-    ! Nlon_timeseries = 6
-end subroutine Define_Constants
+!*** TKTKTK: move this to model_settings and make all variables global ***!
 
 
-! *******************************************************
+subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
+    ind_z_surf, startasice, beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, &
+    initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
 
-
-subroutine Get_All_Command_Line_Arg(username, point_numb, domain, prefix_output, project_name, restart_type)
-    !*** Get all command line arguments ***!
-
-    ! declare arguments
-    character*255, intent(out) :: username, point_numb, domain, prefix_output, project_name, restart_type
-
-    ! 1: ECMWF username (e.g. nmg)
-    ! 2: Simulation number, corresponding to the line number in the IN-file.
-    ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27)
-    ! 4: General part of output filename
-    ! 5: Optional, name of the initialization file
-    call get_command_argument(1, username)
-    call get_command_argument(2, point_numb)
-    call get_command_argument(3, domain)
-    call get_command_argument(4, prefix_output)
-    call get_command_argument(5, project_name)
-    call get_command_argument(6, restart_type)
-    
-end subroutine Get_All_Command_Line_Arg
-
-subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, &
-
-    beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, initdepth, th, &
-    lon_current, lat_current, Nlon, Nlat, Nt_forcing, point_numb, username, domain, project_name)
     !*** Load model settings from file ***!
     
     ! declare arguments
     integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
-        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nt_forcing
+        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nlon_timeseries, &
+        Nt_forcing
     double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
-    character*255, intent(in) :: point_numb, username, domain, project_name
 
     ! declare local variables
-    character*255 :: pad
     integer :: NoR
 
-    ! TODO: add option here for offline (where data/settings are located in a place other than scratch)
-    ! TODO: instead, maybe path to data should be set in launch new job and used as input for FDM?
-    pad = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"ms_files/"
-    
     print *, "Path to input settings file:"
-    print *, trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
+    print *, trim(path_settings)//trim(fname_settings)
     print *, " "
 
-    open(unit=12, file=trim(pad)//"model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt")
+    open(unit=12, file=trim(path_settings)//trim(fname_settings))
 
     ! read model settings and forcing dimensions
     read (12,*)
@@ -116,6 +67,7 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     read (12,*)
     read (12,*) Nlon                 ! Number of longitude points in forcing
     read (12,*) Nlat                 ! Number of latitude points in forcing
+    read (12,*) Nlon_timeseries      ! num of longitude bands (set during input pre-processing)
     read (12,*) Nt_forcing           ! Number of timesteps in forcing
 
 
@@ -127,65 +79,6 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     print *, " "
 
 end subroutine Get_Model_Settings_and_Forcing_Dimensions
-
-
-! *******************************************************
-
-
-subroutine Define_Paths(username, prefix_output, point_numb, path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, &
-        path_in_restart, path_out_restart, path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, &
-        suffix_forcing_averages, prefix_forcing_timeseries, fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet, &
-        Nlat_timeseries, Nlon_timeseries, project_name, domain)
-    
-    !*** Definition of all paths used to read in or write out files ***!
-
-    ! declare arguments
-    integer, intent(out) :: Nlat_timeseries, Nlon_timeseries
-    character*255, intent(in) :: username, prefix_output, point_numb, project_name, domain
-    character*255, intent(out) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages, path_forcing_timeseries, path_in_restart, path_out_restart, &
-        path_out_ini, path_out_1d, path_out_2d, path_out_2ddet, fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages, prefix_forcing_timeseries, &
-        fname_out_restart, fname_out_ini, fname_out_1d, fname_out_2d, fname_out_2ddet
-
-    ! define local variables
-    character*255 :: forcing, domain_name
-
-    ! define paths
-
-    if ( trim(domain) == "Greenland" ) then
-        domain_name = "FGRN055"
-    end if
-
-    forcing = "era055"
-
-    print *, "project name: ", project_name
-    
-    path_settings = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/ms_files/"
-    path_forcing_dims = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain_name)//"/"
-    path_forcing_mask = "/perm/"//trim(username)//"/code/IMAU-FDM/reference/"//trim(domain_name)//"/"
-    path_forcing_averages = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain_name)//"_"//trim(forcing)//"/input/averages/"
-    path_forcing_timeseries = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain_name)//"_"//trim(forcing)//"/input/timeseries/"
-    path_in_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-    path_out_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-    path_out_ini = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-    path_out_1d = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
-    path_out_2d = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
-    path_out_2ddet = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/output/"
-
-    ! define filenames
-    fname_settings = "model_settings_Greenland_"//trim(point_numb)//".txt"
-    fname_forcing_dims = "input_settings_"//trim(domain_name)//".txt"
-    fname_mask = trim(domain_name)//"_Masks.nc"
-    suffix_forcing_averages = "_"//trim(domain_name)//"_"//trim(forcing)//"-1939_1940-1970_ave.nc"
-    prefix_forcing_timeseries = "_"//trim(domain_name)//"_"//trim(forcing)//"_1939-2023_p"
-    fname_out_restart = trim(prefix_output)//"_restart_"//trim(point_numb)//".nc"
-    fname_out_ini = trim(prefix_output)//"_ini_"//trim(point_numb)//".nc"
-    fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"
-    fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
-    fname_out_2ddet = trim(prefix_output)//"_2Ddetail_"//trim(point_numb)//".nc"
-    Nlat_timeseries = 566           ! size of forcing "strips", equal to Nlat and Nlon if not cut up
-    Nlon_timeseries = 6
-
-end subroutine Define_Paths
 
 
 ! *******************************************************
@@ -210,8 +103,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     ! Total number of IMAU-FDM time steps
     Nt_model_tot = Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
-    ! Nt_model_spinup = INT( REAL(Nt_model_tot)*(REAL(nyearsSU)*365.25*24.*3600.)/(REAL(Nt_forcing*dtobs)) )
-    Nt_model_spinup = INT( (REAL(nyearsSU)*365.25*24.*3600.)/(REAL(dtmodel)) )
+    Nt_model_spinup = INT( (REAL(nyearsSU)*seconds_per_year)/(REAL(dtmodel)) )
     if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
 
     print *, "dtmodel: ", dtmodel
@@ -223,30 +115,42 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
 end subroutine Init_TimeStep_Var
 
 
-subroutine Calc_Output_Freq(dtmodel, nyears, writeinprof, writeinspeed, writeindetail, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, nyears, writeinprof, writeinspeed, writeindetail
+    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
-    integer, parameter :: double_kind = selected_real_kind( p=15, r=200 )
 
-    integer(double_kind) :: spy, outputProf2, outputProf2_num
+    ! Declare 64-bit integers locally for calculations
+    integer(kind=8) :: Nt_forcing_64, dtobs_64, writeinspeed_64, writeinprof_64, writeindetail_64
+    integer(kind=8) :: tempOutputProf, tempOutputSpeed, tempOutputDetail
 
+    ! Convert inputs to 64-bit 
+    ! if integers are larger than 2147483647 (32-bit integer), 64-bit integers are needed which can go up to 9223372036854775807
+    ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
+    Nt_forcing_64 = int(Nt_forcing, kind=8)
+    dtobs_64 = int(dtobs, kind=8)
+    writeinspeed_64 = int(writeinspeed, kind=8)
+    writeinprof_64 = int(writeinprof, kind=8)
+    writeindetail_64 = int(writeindetail, kind=8)
+
+    ! Calculate at what timestep output is produced
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
     numOutputDetail = writeindetail / dtmodel
-    spy = 3600.*24.*365.
-    print *, "spy: ", spy
-    
-    outputProf = INT( REAL(nyears * spy) / REAL(writeinprof))
-    outputSpeed = INT( REAL(nyears * spy) / REAL(writeinspeed))
-    outputDetail = INT( REAL(nyears * spy) / REAL(writeindetail))
-    
-    outputProf2_num = nyears * spy
-    outputProf2 = outputProf2_num / writeinprof
+
+    ! Calculate outputs using 64-bit integers
+    tempOutputProf = (Nt_forcing_64 * dtobs_64) / writeinprof_64
+    tempOutputSpeed = (Nt_forcing_64 * dtobs_64) / writeinspeed_64
+    tempOutputDetail = (Nt_forcing_64 * dtobs_64) / writeindetail_64
+
+    ! Assign back to 32-bit outputs (assuming values fit)
+    outputProf = int(tempOutputProf)
+    outputSpeed = int(tempOutputSpeed)
+    outputDetail = int(tempOutputDetail)
 
     print *, " "
     print *, "Output variables"
@@ -307,24 +211,18 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
     double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
-    ! declare local variables
-    double precision :: NaN_value
-
-    ! This is the missing value for doubles as used in the NCL scripts
-    NaN_value = 9.96921e+36
-
     ! allocate memory to variables
-    allocate(out_1D((outputSpeed+150), 18))
-    allocate(out_2D_dens((outputProf+150), proflayers))
-    allocate(out_2D_temp((outputProf+150), proflayers))
-    allocate(out_2D_lwc((outputProf+150), proflayers))
-    allocate(out_2D_depth((outputProf+150), proflayers))
-    allocate(out_2D_dRho((outputProf+150), proflayers))
-    allocate(out_2D_year((outputProf+150), proflayers))
-    allocate(out_2D_det_dens((outputDetail+150), detlayers))
-    allocate(out_2D_det_temp((outputDetail+150), detlayers))
-    allocate(out_2D_det_lwc((outputDetail+150), detlayers))
-    allocate(out_2D_det_refreeze((outputDetail+150), detlayers))
+    allocate(out_1D((outputSpeed), 18))
+    allocate(out_2D_dens((outputProf), proflayers))
+    allocate(out_2D_temp((outputProf), proflayers))
+    allocate(out_2D_lwc((outputProf), proflayers))
+    allocate(out_2D_depth((outputProf), proflayers))
+    allocate(out_2D_dRho((outputProf), proflayers))
+    allocate(out_2D_year((outputProf), proflayers))
+    allocate(out_2D_det_dens((outputDetail), detlayers))
+    allocate(out_2D_det_temp((outputDetail), detlayers))
+    allocate(out_2D_det_lwc((outputDetail), detlayers))
+    allocate(out_2D_det_refreeze((outputDetail), detlayers))
     
     ! Set missing value
     out_1D(:,:) = NaN_value

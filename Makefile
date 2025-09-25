@@ -13,12 +13,11 @@ LDFLAGS = -L/opt/homebrew/lib -lnetcdff
 OFFLINE = 1
 DEBUG = 1
 
-# Compiler and flags configuration
 ifdef DEBUG
-    OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
+OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
 else
-ifndef DEBUG 
-    OPTIMIZATION_FLAG = -O3 # max optimization level
+ifndef OPTIMIZATION_FLAG 
+OPTIMIZATION_FLAG = -O3 # max optimization level
 endif
 endif
 
@@ -29,16 +28,20 @@ ifdef OFFLINE
 else
 ifndef OFFLINE 
     FC =  mpifort # use mpifort on ecmwf
-ifdef DEBUG
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -warn all -diag-enable remark -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+ifdef ifeq ($(OMPI_FC),ifort)
+    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -warn all -diag-enable remark -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+    FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
 else
 ifndef DEBUG
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
+    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 endif
+
 endif
 
 # List of source files
 SRC_FILES = \
+    model_settings.f90 \
     openNetCDF.f90 \
     output.f90 \
     grid_routines.f90 \

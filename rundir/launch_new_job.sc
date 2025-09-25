@@ -1,26 +1,55 @@
 #!/bin/bash
 shopt -s expand_aliases  # Enables alias expansion.
 
-# FDM settings # copied from run_make_loadscript
-export domain="FGRN055"
-forcing="era055"
+##### SETS PATHS AND SBATCH OPTIONS FOR FDM ####
+##### 
+##### project_name = unique name for run; must match pointlist
+##### run_location = paths set to defautl for ECMWF, otherwise need to specify
+##### domain = FGRN055 for greenland, ANT27 for antarcitca, or custom
+##### forcing = era055 for greenalnd, era027 for antarctica, or custom
+##### restart_type = none, spinup, run
+##### 
+##### nnodes = 1 if only running a few points; 8 if doing a continent-sized run
+##### taskfactor set automatically depending on nnodes
+#####
+##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
-export project_name="test-main-grid"
+export project_name="does-example-break-fdm" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+
+if [[ -z "$project_name" ]]; then
+  echo "project_name is empty; set before continuing"
+  exit 1
+fi
+
+# set domain and forcing
+export domain="FGRN055" #or ANT27
+
+if [[ "${domain}" == "FGRN055" ]]; then
+  forcing="era055"
+elif [[ "${domain}" == "ANT27" ]]; then
+  forcing="era027"
+else
+  echo "must specify forcing for unrecognized domain"
+  exit 1
+fi
+
 export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
-export runname="${domain}_${project_name}" 
-export p2exe="$PERM/code/IMAU-FDM"
+export runname="${domain}_${project_name}"
+
+export p2exe="${PERM}/code/IMAU-FDM"
+export workdir="${SCRATCH}/${project_name}"
+export restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/" 
+
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$homedir/pointlists/pointlist_${project_name}.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
 
-export workdir="${SCRATCH}/${project_name}"
-export outputdir="${SCRATCH}/${project_name}/output" #"$SCRATCH/data/output/$expname/" 
-export restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export p2ms="${SCRATCH}/${project_name}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
-export p2logs="${SCRATCH}/${project_name}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
+export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
+export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
 export filename_part1="${outputname}"
 # 
 export walltime="48:00:00"   # (hms) walltime of the job 
@@ -31,22 +60,27 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 # other FDM input
 export usern=$USER
 
-# likely not to change
+# SBATCH options
+export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
-export nnodes_max=1 #8
-export tasks_per_node=64 #64 this is not to be change
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
-export taskfactor="3."   # prior launch at least #taskfactor (3-5) tasks per core must be available, change to 1 if just running test point
 export EC_ecfs=0      # number of parallel ECFS calls 
+if [[ nnodes_max -gt 1 ]]; then
+  export taskfactor="5."   # prior launch at least #taskfactor (3-5) tasks per core must be available, change to 1 if just running test point
+  export tasks_per_node=128
+else
+  export tasks_per_node=64
+  export taskfactor="1."
+fi
 
 # script misc
 export workpointlist="$workdir/pointlist"
 export readydir_base="$workdir/readypoints"
-export readpointexe="$homedir/readpointlist/readpointlist.x"
-export distributor="$homedir/readpointlist/distribute_points.x"
+export readpointexe="$p2exe/rundir/readpointlist/readpointlist.x"
+export distributor="$p2exe/rundir/readpointlist/distribute_points.x"
 export requestdir="$workdir/requests"
 export nplogdir="$workdir/nplogs"
 export workexe="$workdir/LocalCode"
@@ -72,7 +106,7 @@ echo "nplogdir: ${nplogdir}"
 echo "workexe: ${workexe}"
 echo "restart_type=${restart_type}"
 
-echo "Continuing will remove all current files in the workdir!"
+echo "Continuing will submit the job."
 echo
 read -p "Check paths. Want to continue? (y/n)" -n 1 -r
 echo
@@ -92,6 +126,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   mkdir -p $outputdir
   mkdir -p $restartdir
   mkdir -p $p2logs
+
+  cp "$p2exe/$FDM_executable" "$workexe/$FDM_executable"
 
   if [[ ! -r $gridpointlist ]]; then
     echo "The grid point list is missing!"
