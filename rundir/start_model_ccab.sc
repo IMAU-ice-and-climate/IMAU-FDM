@@ -50,8 +50,9 @@ $nor	! numberrepeat; number of times the data series is repeated for the initial
 $lat    ! beginLon; indicates the begin longitude gridpoint
 $lon    ! beginLat; indicates the begin latitude gridpoint
 
-262	! numLons, number of longitude points
+262     ! numLons, number of longitude points
 240 	! numLats, number of latitude points
+15      ! num of longitude bands (set during input pre-processing)
 131488 	! numTimes, number of time points 122728 122696 128568
 EOS
 
@@ -89,6 +90,7 @@ $lon    ! beginLat; indicates the begin latitude gridpoint
 
 438		! numLons, number of longitude points
 566 	! numLats, number of latitude points
+6       ! num of longitude bands (set during input pre-processing)
 246424	! numTimes, number of time points (1957-2023=193584)
 
 EOS
@@ -100,8 +102,8 @@ fi
 log_fname=${p2logs}/log_IMAU-FDM_${ccab}_${cpoint}.out
 echo "$(date +%c) ${EC_FARM_ID}: We launch the model for ${cpoint} with:"
 
-echo "$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname}" # TKTK RESTART IN PROGRESS 
-$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname} # TKTK RESTART IN PROGRESS 
+echo "$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname}"
+$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname} 
 
 echo "$(date +%c) ${EC_FARM_ID}: Model run complete, report back..."
 # report back that we are ready

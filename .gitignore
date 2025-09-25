@@ -40,6 +40,7 @@
 rundir/CancelMyJob.sc
 rundir/launch_new_job.sc
 rundir/ecs*
+rundir/newpointlist/*.txt
 
 # mac specific
 *.DS_STORE
