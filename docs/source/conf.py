@@ -7,8 +7,8 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'IMAU-FDM'
-copyright = '2025, Elizabeth Case'
-author = 'Elizabeth Case'
+copyright = 'MIT License'
+author = 'Elizabeth Case, Tesse van den Aker, Sanne Veldhuijsen'
 release = '1.2.1'
 
 # -- General configuration ---------------------------------------------------
