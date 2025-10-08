@@ -281,29 +281,53 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
     ! declare local variables
     integer :: ind_z
     double precision :: MO, part1, Krate
-
+    
     do ind_z = 1, ind_z_surf
-        if (Rho(ind_z) <= 550.) then
-            if ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+
+        ! low density 
+        if (Rho(ind_z) <= 550.) then 
+            
+            if do_MO_fit then
+                MO = 1.0 ! makes doing MO fits easier - set in model_settings.f90
+            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
                 MO = 0.6688 + 0.0048*log(acav)      ! fit after debugging heat eq.
+            elseif (trim(domain)=="ANT27") then
+                MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
             else
+                print *, "Domain not recognized for MO fit, using ANT27 fit"
                 MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
             endif
+
             if (MO < 0.25) MO = 0.25
+            
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
             Krate = 0.07*MO*acav*g*part1 
+        
+        ! high density
         else
-            if ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
-                MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq.
+
+            if do_MO_fit then
+                MO = 1 ! makes doing MO fits easier - set in model_settings.f90
+            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+                MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 
+            elseif (trim(domain)=="ANT27") then
+                MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
             else
+                print *, "Domain not recognized for MO fit, using ANT27 fit"
                 MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
             endif
+
             if (MO < 0.25) MO = 0.25
+            
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
             Krate = 0.03*MO*acav*g*part1
+        
         endif
+        
         Rho(ind_z) = Rho(ind_z) + dtmodel/(seconds_per_year)*Krate*(rhoi-Rho(ind_z))
+        
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
+        
     enddo
 
 end subroutine Densific
