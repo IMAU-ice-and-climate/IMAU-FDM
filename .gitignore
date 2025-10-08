@@ -1,3 +1,6 @@
+# no IPYNB checkpoints
+*.ipynb_checkpoints
+
 # Prerequisites
 *.d
 
