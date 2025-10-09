@@ -1,6 +1,9 @@
 # no IPYNB checkpoints
 *.ipynb_checkpoints
 
+# don't track changes to netcdf files
+*.nc
+
 # Prerequisites
 *.d
 
