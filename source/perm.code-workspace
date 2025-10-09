@@ -1,0 +1,12 @@
+{
+    "folders": [
+        {
+            "name": "IMAU-FDM",
+            "path": ".."
+        },
+        {
+            "name": "scratch",
+            "path": "../../../../scratch"
+        }
+    ]
+}

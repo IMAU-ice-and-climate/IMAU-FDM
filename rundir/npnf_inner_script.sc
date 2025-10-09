@@ -132,9 +132,10 @@ while [[ "$action" != "stop" ]]; do
  
   if [[ "$action" == "run" ]]; then  
     # make local copy
-    localexe="$workexe/IMAU-FDM_np_gp_${gridpoint}.x"
+    #localexe="$workexe/IMAU-FDM_np_gp_${gridpoint}.x"
+    localexe="$workexe/$FDM_executable"
     localscp="$workexe/${gridpoint}_start_model.sc"
-    cp $workexe/$FDM_executable $localexe #now imau-fdm.x is copied into $workexe at `launch_new_job.sc` and then copied for each point --> eventually move away from copying for each point, since execuatble doesn't change
+    #cp $workexe/$FDM_executable $localexe #now imau-fdm.x is copied into $workexe at `launch_new_job.sc` and then copied for each point --> eventually move away from copying for each point, since execuatble doesn't change
     cp $homedir/start_model_ccab.sc $localscp
     # launch new task
     $localscp $hostname $localexe $gridpoint >> $logfile 2>> $logfile &

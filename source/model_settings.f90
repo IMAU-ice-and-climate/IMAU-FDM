@@ -35,7 +35,7 @@ module model_settings
     character(len=255) :: model_first_timestep, model_last_timestep
     logical :: do_MO_fit
     integer :: save_output
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
+    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
 
 contains
 
@@ -51,7 +51,7 @@ subroutine Define_Settings()
 
     ! Model physics
 
-    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    do_MO_fit = .true. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
 
 end subroutine Define_Settings
 
@@ -188,8 +188,8 @@ subroutine Define_Constants()
     Ec = 60000.             ! activation energy for creep [J mole-1]
     Eg = 42400.             ! activation energy for grain growth [J mole-1]
     Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365     ! days per year [days]
-    seconds_per_year = 3600.*24.*days_per_year.   ! seconds per year [s]
+    days_per_year = 365    ! days per year [days]
+    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
     NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
     
 !    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
