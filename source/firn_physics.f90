@@ -287,7 +287,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
         ! low density 
         if (Rho(ind_z) <= 550.) then 
             
-            if do_MO_fit then
+            if (do_MO_fit) then
                 MO = 1.0 ! makes doing MO fits easier - set in model_settings.f90
             elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
                 MO = 0.6688 + 0.0048*log(acav)      ! fit after debugging heat eq.
@@ -306,7 +306,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
         ! high density
         else
 
-            if do_MO_fit then
+            if (do_MO_fit) then
                 MO = 1 ! makes doing MO fits easier - set in model_settings.f90
             elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
                 MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 

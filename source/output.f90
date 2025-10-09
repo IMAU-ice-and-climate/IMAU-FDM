@@ -269,7 +269,7 @@ subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
     
     ! declare arguments
 
-    integer, intent(in) :: outputSpeed
+    integer, intent(in) :: outputSpeed, writeinspeed
     double precision, dimension((outputSpeed),18), intent(in) :: out_1D
 
 
