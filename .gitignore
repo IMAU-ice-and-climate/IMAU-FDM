@@ -60,9 +60,6 @@ rundir/launch_new_job.sc
 # Ignore reference files -- too big
 reference/
 
-# Ignore ecsbatch files
-ecsbatch*
-
 # Ignore modules and objects
 modules/
 objects/

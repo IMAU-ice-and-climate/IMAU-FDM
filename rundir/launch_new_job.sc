@@ -14,12 +14,8 @@ shopt -s expand_aliases  # Enables alias expansion.
 #####
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
-<<<<<<< HEAD
-export project_name="does-example-break-fdm" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
-=======
 
-export project_name="test-attr" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
->>>>>>> 023e064 (tested attribute output in spinup and 1d file; need to add to rest)
+export project_name="test-no-copy-uniqueExe" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
@@ -51,7 +47,8 @@ export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/"
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
+#gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_test-attr.txt"
 
 export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
