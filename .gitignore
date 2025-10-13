@@ -4,6 +4,9 @@
 # don't track changes to netcdf files
 *.nc
 
+# don't track changes to core data
+cores/data/*
+
 # Prerequisites
 *.d
 

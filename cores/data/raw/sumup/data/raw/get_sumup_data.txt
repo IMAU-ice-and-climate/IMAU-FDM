@@ -1,0 +1,8 @@
+The SUMup data is too large to be hosted on github. The 2024 SUMup database can be downloaded from:
+https://arcticdata.io/catalog/view/doi:10.18739/A2M61BR5M
+
+Download SUMup_2024_density_csv.zip and extract:
+- SUMup_2024_density_greenland.csv
+- SUMup_2024_density_antarctica.csv  
+- SUMup_2024_density_profile_names.tsv
+- SUMup_2024_density_references.tsv
