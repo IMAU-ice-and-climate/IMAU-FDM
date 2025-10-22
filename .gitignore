@@ -1,6 +1,17 @@
 # no IPYNB checkpoints
 *.ipynb_checkpoints
 
+**/*/.dirstamp
+
+Makefile
+Makefile.in
+depcomp
+configure~
+config.status
+config.log
+aclocal.m4
+autom4te.cache/
+
 # don't track changes to netcdf files
 *.nc
 
@@ -41,6 +52,7 @@
 
 #no executables
 *.x
+fdm
 
 #these files change often - need to update if there are big changes to launch_new_job
 rundir/CancelMyJob.sc

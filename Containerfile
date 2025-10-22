@@ -17,5 +17,6 @@ RUN export NETCDF_URL=$(curl https://api.github.com/repos/Unidata/netcdf-fortran
     cd .. && rm -rf Unidata-netcdf* && \
     nf-config --all
 # Make imau-fdm
-RUN DEBUG=true NETCDF4_LIB=$(nc-config --flibs) NETCDF4_INCLUDE=$(nc-config --fflags) make && rm -rf objects/** modules/**
-CMD ./imau-fdm.x
+ENV DEBUG="true"
+RUN ./configure && make && rm -rf source/*.o modules
+CMD ./fdm

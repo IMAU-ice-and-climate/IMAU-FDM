@@ -30,8 +30,6 @@ jobs:
       DEBIAN_FRONTEND: noninteractive
       NETCDF_RELEASE: https://api.github.com/repos/Unidata/netcdf-fortran/releases/latest
       LD_LIBRARY_PATH: /usr/lib/:/usr/local/lib
-      NETCDF4_LIB: -L/usr/local/lib -lnetcdff -lnetcdf -lnetcdf -lm # for some reason the output of nc-config `--flibs on CI is empty`. Workaround: set it manually.
-      NETCDF4_INCLUDE: -I/usr/local/include -I/usr/local/include # for some reason the output of `nc-config --fflags` CI is empty. Workaround: set it manually.
     steps:
       - uses: actions/checkout@v4
       - name: Install libnetcdf
@@ -52,6 +50,5 @@ jobs:
           nc-config --all
       - name: Build
         run: |
-          echo "NETCDF4_LIB: $NETCDF4_LIB"
-          echo "NETCDF4_INCLUDE: $NETCDF4_INCLUDE"
+          ./configure
           make
