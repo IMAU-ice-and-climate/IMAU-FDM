@@ -1,0 +1,7 @@
+name: imau-fdm
+channels:
+  - conda-forge
+dependencies:
+  - fpm>=0.12
+  - netcdf-fortran
+  - openmpi
