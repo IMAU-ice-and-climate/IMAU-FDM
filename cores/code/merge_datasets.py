@@ -33,23 +33,23 @@ def identify_duplicates(std_df, sumup_df, location_tolerance=0.1, year_tolerance
     
     duplicates = []
 
-    std_cores_no_dupes = std_df.copy(deep=True) # default to drop dupes from std dataset and keep sumup dataset, since sumup is more recent/more complete
+    sumup_cores_no_dupes = sumup_df.copy(deep=True) # default to drop dupes from sumup dataset and keep sumup dataset, since std was handpicked
         
-    for row_i, new_core in std_df.iterrows():
+    for row_i, new_core in sumup_df.iterrows():
         
         # Check for name matches
-        name_matches = sumup_df[sumup_df['core_name'].str.lower() == new_core['core_name'].lower()]
+        name_matches = std_df[std_df['core_name'].str.lower() == str(new_core['core_name']).lower()]
         
         if name_matches.empty:
             # Check for location matches
             if not pd.isna(new_core['latitude']) and not pd.isna(new_core['longitude']):
-                lat_diff = abs(sumup_df['latitude'] - new_core['latitude'])
-                lon_diff = abs(sumup_df['longitude'] - new_core['longitude'])
-                location_matches = sumup_df[(lat_diff <= location_tolerance) & (lon_diff <= location_tolerance)]
+                lat_diff = abs(std_df['latitude'] - new_core['latitude'])
+                lon_diff = abs(std_df['longitude'] - new_core['longitude'])
+                location_matches = std_df[(lat_diff <= location_tolerance) & (lon_diff <= location_tolerance)]
                 
                 # Further filter by year if available
                 if not pd.isna(new_core['year']):
-                    year_diff = abs(sumup_df['year'] - new_core['year'])
+                    year_diff = abs(location_matches['year'] - new_core['year'])
                     location_matches = location_matches[
                         pd.isna(year_diff) | (year_diff <= year_tolerance)
                     ]
@@ -79,26 +79,27 @@ def identify_duplicates(std_df, sumup_df, location_tolerance=0.1, year_tolerance
                 }
                 duplicates.append(duplicate_info)
 
-            std_cores_no_dupes = std_cores_no_dupes.drop(index=row_i) # drops duplicates from the standardized core set, since the sumup dataset is more recent/complete
+            sumup_cores_no_dupes = sumup_cores_no_dupes.drop(index=row_i) # drops duplicates from the sumup core set
 
     duplicates_df = pd.DataFrame(duplicates)
     print(f"Found {len(duplicates_df)} potential duplicate pairs")
 
     
-    return duplicates_df, std_cores_no_dupes
+    return duplicates_df, sumup_cores_no_dupes
 
 def create_merged_dataset(std_df, sumup_df):
     """Create final combined dataset in SUMUP format"""
     print(f"\nCreating final dataset...")
     
     # Ensure both datasets have the same columns as SUMUP format
-    sumup_columns = ['core_name', 'latitude', 'longitude', 'elevation', 'year', 'depth_to_550', 'depth_to_830', 'source', 'citation', 'region']
+    column_names = ['core_name', 'latitude', 'longitude', 'elevation', 'year', 'depth_to_550', 'depth_to_830', 'r2_550', 'r2_830', 'failed_550','failed_830','source', 'citation', 'region']
     
     # Select and reorder columns
-    std_final = std_df[sumup_columns].copy(deep=True)
+    std_final = std_df[column_names].copy(deep=True)
+    std_final['r2'] = np.nan  # Placeholder for r2 in standardized data
     
     # Prepare SUMUP data
-    sumup_final = sumup_df[sumup_columns].copy()
+    sumup_final = sumup_df[column_names].copy(deep=True)
     
     # Combine datasets
     final_df = pd.concat([std_final, sumup_final], ignore_index=True)
@@ -116,7 +117,7 @@ def create_merged_dataset(std_df, sumup_df):
     
     return final_df
 
-def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, drop_duplicates=True, return_df=True):
+def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, drop_duplicates=True, return_df=True, data_dir="../data/"):
 
     """
         Merges the sumup and standardized datasets; more can be added as long as core file structure stays the same.
@@ -132,14 +133,11 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
     
     region = "greenland"
     current_year = str(datetime.now().year)
-    core_dir = "/home/nld4814/perm/cores/"
 
-    sumup_file = f"{core_dir}sumup/data/processed/sumup_550_830_density_depths_{region}.csv"
-    std_file = f"{core_dir}PKM/processed/PKM_550_830_density_depths_{region}.csv"
+    sumup_file = f"{data_dir}sumup/processed/sumup_550_830_density_depths_{region}.csv"
+    std_file = f"{data_dir}PKM/processed/PKM_550_830_density_depths_{region}.csv"
     
-    merged_file = f"{core_dir}MERGED_CORE_LIST_{region}_{current_year}.csv"
-
-
+    merged_file = f"{data_dir}merged/MERGED_CORE_LIST_{region}_{current_year}.csv"
 
     #re-run processing if needed
 
@@ -167,6 +165,7 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
             
     if os.path.exists(sumup_file):
         try:
+            print(f"Loading sumup data from file... {sumup_file}")
             sumup_df = load_sumup_dataset(sumup_file)
         except Exception as e:
             print(f"Error loading SUMUP data: {e}")
@@ -174,13 +173,14 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
         
     if os.path.exists(std_file):
         try:
+            print(f"Loading sumup data from file... {std_file}")
             std_df = load_standardized_dataset(std_file)
         except Exception as e:
             print(f"Error loading standardized data: {e}")
             return
         
     # Identify duplicates
-    _, std_cores_no_dupes = identify_duplicates(std_df, sumup_df)
+    duplicates_df, std_cores_no_dupes = identify_duplicates(std_df, sumup_df)
 
     if drop_duplicates:
         final_df = create_merged_dataset(std_cores_no_dupes, sumup_df)
@@ -198,7 +198,7 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
         print(f"Error saving final merged dataset: {e}")
 
     if return_df:
-        return final_df
-    
-    if __name__ == "__main__":
-        merge_datasets()
+        return final_df, duplicates_df, sumup_df, std_df
+
+if __name__ == "__main__":
+    merge_datasets()

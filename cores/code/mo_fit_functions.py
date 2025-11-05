@@ -2,6 +2,8 @@ import pandas as pd
 import string
 import glob
 from datetime import datetime, timedelta
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 def create_datetime(start_date, end_date, ndays_timestep,resample_t=None):
@@ -36,7 +38,7 @@ def create_datetime(start_date, end_date, ndays_timestep,resample_t=None):
 
     return date_list
 
-def set_fdm_df_time_coordinates(df, ID_num, rlat_i, rlon_i, ndays_timestep, start_date=datetime(1939,9,1), end_date=datetime(2023,12,31)):
+def set_fdm_df_time_coordinates(df, ID_num, ndays_timestep, start_date=datetime(1939,9,1), end_date=datetime(2023,12,31)):
 
     """
 
@@ -70,7 +72,6 @@ def set_fdm_df_time_coordinates(df, ID_num, rlat_i, rlon_i, ndays_timestep, star
 
     return df
 
-
 def read_model_settings(dir_project, specific_point=False):
 
     """
@@ -95,7 +96,7 @@ def read_model_settings(dir_project, specific_point=False):
     model_settings = {}
 
 
-    if isinstance(specific_point, int):
+    if not isinstance(specific_point, bool):
         
         file_list = [f for f in glob.glob(dir_project + "ms_files/" + "*_"+str(specific_point)+".txt")]
             
@@ -155,3 +156,56 @@ def read_model_settings(dir_project, specific_point=False):
                     model_settings[var_name] = value
     
     return model_settings
+
+def match_fdm_points_to_cores(core_locations, fdm_pointlist_df, save_pointlist=False, output_dir="../data/merged/", do_plot=False):
+
+    xs = []; distances = []  # distance between the pair of points
+    
+    for point in core_locations:
+
+        assert len(point) == 2, "``points`` should be a tuple or list of tuples (lat, lon)"
+
+        p_lat, p_lon = point
+        # Find absolute difference between requested point and the grid coordinates.
+        abslat = np.abs(fdm_pointlist_df.latitude - p_lat)
+        abslon = np.abs(fdm_pointlist_df.longitude - p_lon)
+
+        # Create grid of the maximum values of the two absolute grids
+        c = np.maximum(abslon, abslat)
+
+        # Find location where lat/lon minimum absolute value intersects
+        x = np.where(c == np.min(c))[0][0]
+        xs.append(x)
+
+        # Matched Grid lat/lon
+        g_lat = fdm_pointlist_df.iloc[x,:].latitude
+        g_lon = fdm_pointlist_df.iloc[x,:].longitude
+
+        R = 6373.0  # approximate radius of earth in km
+
+        lat1 = np.deg2rad(p_lat); lon1 = np.deg2rad(p_lon)
+        lat2 = np.deg2rad(g_lat); lon2 = np.deg2rad(g_lon)
+        dlon = lon2 - lon1; dlat = lat2 - lat1
+
+        a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+        c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+
+        distance = R * c
+        distances.append(distance)
+
+    #pointlist_df.loc[xs].plot.scatter(x='longitude', y='latitude', title='FDM points nearest to cores', xlabel='Longitude', ylabel='Latitude',figsize=(4,5))
+
+    if save_pointlist:
+        output_path = f"{output_dir}pointlist_from_cores.csv"
+        pointlist_near_cores = fdm_pointlist_df.loc[xs].index.values
+        np.savetxt(output_path, pointlist_near_cores, fmt='%d')
+
+    if do_plot:
+        
+        fig, ax = plt.subplots()
+
+        ax.scatter(core_locations[:,1], core_locations[:,0], label='Cores')
+        fdm_pointlist_df.loc[xs].plot.scatter(x='longitude', y='latitude', color='red', marker='x', alpha=0.7, title='FDM points nearest to cores', xlabel='Longitude', ylabel='Latitude',ax=ax, label='FDM points')
+        plt.legend()
+
+    return xs

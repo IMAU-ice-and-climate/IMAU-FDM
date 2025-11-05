@@ -1,8 +1,13 @@
 import pandas as pd
 import numpy as np
-from scipy.interpolate import interp1d
 import os
 import warnings
+
+import matplotlib.pyplot as plt
+
+from scipy.optimize import curve_fit
+from scipy.optimize import brentq
+
 warnings.filterwarnings('ignore')
 
 """
@@ -103,26 +108,62 @@ def load_sumup_data(data_path,region='Greenland'):
     
     return density_df, profile_names_df, references_df
 
-def interpolate_depth_to_density(depth_values, density_values, target_density):
+def def_models():
+        
+    def logarithmic(x, a, b, c):
+        return a * np.log(x + 1) + b * x + c
+
+    def log_minimization(x, a, b, c, target):
+        return a * np.log(x + 1) + b * x + c - target
+
+    def power_law(x, a, b, c):
+        return a * x**b + c
+
+    def power_law_minimization(x, a, b, c, target):
+        return a * x**b + c - target
+
+
+    models = [
+        (power_law, "Power law", "a*x^b + c", 'blue', power_law_minimization),
+        (logarithmic, "Logarithmic", "a*log(x+1) + b*x + c", 'green', log_minimization)
+    ]
+    
+    return models
+
+def interpolate_depth_to_density_sumup(depth, density, target_density, name, do_plot=False):
     """
     Interpolate to find depth at target density
     
     Parameters:
-    depth_values (array): Depth measurements (should be midpoint values)
-    density_values (array): Corresponding density measurements
+    depth (array): Depth measurements (should be midpoint values)
+    density (array): Corresponding density measurements
     target_density (float): Target density to find depth for (kg/m³)
     
     Returns:
-    float or NaN: Depth at target density, or NaN if interpolation not possible
-    """
+    depth_at_rho: float or NaN: Depth at target density, or NaN if interpolation not possible
     
+
+    """
+
+    models=def_models()
+
+    failed = 0
+    depth_at_rho=np.nan
+
+    best_r2 = -np.inf
+    best_model = None
+
+
     # Remove NaN values
-    valid_mask = ~(np.isnan(depth_values) | np.isnan(density_values))
+    valid_mask = ~(np.isnan(depth) | np.isnan(density))
+
     if valid_mask.sum() < 2:
-        return np.nan
-        
-    depth_clean = depth_values[valid_mask]
-    density_clean = density_values[valid_mask]
+        depth_at_rho = np.nan
+        failed = 1
+        return depth_at_rho, failed, best_r2
+            
+    depth_clean = depth[valid_mask]
+    density_clean = density[valid_mask]
     
     # Sort by depth for interpolation
     sort_idx = np.argsort(depth_clean)
@@ -132,37 +173,90 @@ def interpolate_depth_to_density(depth_values, density_values, target_density):
     # Check if target density is within the range of measured densities
     min_density = density_sorted.min()
     max_density = density_sorted.max()
-    
-    if target_density < min_density or target_density > max_density:
-        return np.nan
-    
-    # Check if densities are monotonically increasing with depth
-    # (required for meaningful interpolation)
-    if not np.all(np.diff(density_sorted) >= 0):
-        # Try to handle non-monotonic data by using only the deepest measurement
-        # for each density (common in firn cores)
-        unique_densities = []
-        unique_depths = []
-        for i, dens in enumerate(density_sorted):
-            if dens not in unique_densities:
-                unique_densities.append(dens)
-                unique_depths.append(depth_sorted[i])
-        
-        if len(unique_densities) < 2:
-            return np.nan
-            
-        density_sorted = np.array(unique_densities)
-        depth_sorted = np.array(unique_depths)
-    
-    try:
-        # Linear interpolation
-        f = interp1d(density_sorted, depth_sorted, kind='linear', 
-                    bounds_error=False, fill_value=np.nan)
-        return float(f(target_density))
-    except:
-        return np.nan
 
-def process_cores(density_df, profile_names_df, references_df):
+    if target_density < min_density or target_density > max_density or len(depth_sorted)<=10:
+        
+        #print("  - Target density out of range")
+        failed = 1
+        return depth_at_rho, failed, best_r2
+
+        
+    # Try fit to a logarithmic or power law curve.
+
+    for idx, (func, name, expression, color, func_min) in enumerate(models):
+
+        try: 
+
+            # Fit the model
+            popt, pcov = curve_fit(func, depth_sorted, density_sorted)
+
+            # Calculate fitted values
+            depth_smooth = np.linspace(depth_sorted.min(), depth_sorted.max(), 200)
+            density_fit = func(depth_sorted, *popt)
+            density_smooth = func(depth_smooth, *popt)
+
+            # Calculate R²
+            residuals = density_sorted - density_fit
+            ss_res = np.sum(residuals**2)
+            ss_tot = np.sum((density_sorted - np.mean(density_sorted))**2)
+            r2 = 1 - (ss_res / ss_tot)
+
+            failed = 0
+            
+            if r2 > best_r2:
+                
+                best_r2 = r2
+                best_model = (func, popt, name, expression, round(best_r2,3), func_min)                
+        
+        except Exception as e:
+            pass
+            #print(f"Model fitting failed for {name}: {e}")
+            
+
+    if best_r2 < 0.85:
+        failed = 1
+        #print(f"  R² ({best_r2:.3f}) too low.")
+        return depth_at_rho, failed, round(best_r2, 2)
+        
+    
+    # try to find the depth at target density using the best model
+    try:
+        depth_at_rho = brentq(
+            best_model[5],
+            depth_sorted.min(),
+            depth_sorted.max(),
+            args=(*best_model[1], target_density)
+        )
+
+        
+        #print("fit succeeded")
+        
+    except Exception as e:
+        #print(f"  - Root finding failed for best model: {best_model[2]}.")
+        failed = 1
+            
+    if do_plot:
+
+        fig,ax = plt.subplots(figsize=(5,5))
+        ax.plot(density, depth, 'o', label='Core', color='grey')
+        
+        if failed == 0:
+            ax.plot(density_smooth, depth_smooth, '-', label='Log fit', color='blue')
+        
+        ax.plot(target_density, depth_at_rho, 'rx', label=f'Depth at {target_density} kg/m³', markersize=10)
+
+        plt.legend()
+        plt.gca().invert_yaxis()
+        plt.xlabel('Density (kg/m³)')
+        plt.ylabel('Depth (m)')
+        plt.title(f'Depth at {target_density} kg/m³: {depth_at_rho:.2f} m')
+        plt.show()
+        plt.savefig(f"/home/nld4814/perm/cores/sumup/data/processed/figs/{name}_{str(target_density)}.png")
+
+    
+    return round(depth_at_rho, 2), failed, round(best_r2, 2)
+
+def process_cores_sumup(density_df, profile_names_df, references_df, do_plot=False):
     """
     Process all cores to find depths at target densities
     
@@ -227,16 +321,17 @@ def process_cores(density_df, profile_names_df, references_df):
             'latitude': latitude,
             'longitude': longitude,
             'elevation': elevation,
-            'citation': reference_short,
-            'n_measurements': len(group),
-            'max_depth': np.nanmax(depths),
-            'max_density': np.nanmax(densities),
+            'citation': reference_short
         }
         
         # Interpolate to find depths at target densities
         for target_density in target_densities:
-            depth_at_density = interpolate_depth_to_density(depths, densities, target_density)
+
+            depth_at_density, failed, r2 = interpolate_depth_to_density_sumup(depths, densities, target_density, profile_name, do_plot=do_plot)
+
             result_row[f'depth_to_{target_density}'] = depth_at_density
+            result_row[f'failed_fit_{target_density}'] = failed
+            result_row[f'r2_{target_density}'] = r2
         
         results.append(result_row)
     
@@ -250,6 +345,8 @@ def process_cores(density_df, profile_names_df, references_df):
     results_df["year"] = results_df["date"].dt.year
     results_df["source"] = "SUMUP 2024"
     results_df["source_doi"] = "doi:10.18739/A2M61BR5M"
+
+    results_df = results_df[results_df['failed_fit_550'] == 0]
 
     # Add summary statistics
     print("\nSummary:")
@@ -310,16 +407,25 @@ def save_results(results_df, output_path, output_prefix='sumup_density_depths'):
     print(f"\nSample of processed cores:")
     print(filtered_df[display_cols].head().to_string(index=False))
 
-def process_sumup_main():
-    """Main function"""
+def process_sumup_main(data_path = "../data/sumup/source/", output_path = "../data/sumup/processed/", domain='greenland'):
+    """
+    Main function
+    
+    Inputs:
+        - data_path (str): Path to folder containing SUMup CSV files
+        - output_path (str): Path to save output files
+        - domain (str): 'greenland' or 'antarctica'
+
+    Outputs:
+        - (none) saves processed CSV files to output_path
+    """
     
     # ==========================================
     # CONFIGURATION - UPDATE THIS PATH
     # ==========================================
-    data_path = "../data/sumup/raw/"  # Update this to your SUMup data folder
-    output_path = "../data/sumup/processed/"  # Path to save output files (can be same as data_path)
-    output_prefix = "sumup_550_830_density_depths"  # Will create _greenland.csv, _antarctica.csv, and _combined.csv files
-    domain = "greenland"
+    #data_path = "../data/sumup/raw/"  # Update this to your SUMup data folder
+    #output_path = "../data/sumup/processed/"  # Path to save output files (can be same as data_path)
+    output_prefix = "sumup_550_830_density_depths" # Will create _greenland.csv, _antarctica.csv, and _combined.csv files
     
     # Check if data path exists
     if not os.path.exists(data_path):
@@ -332,7 +438,7 @@ def process_sumup_main():
         density_df, profile_names_df, references_df = load_sumup_data(data_path, domain)
         
         # Process cores
-        results_df = process_cores(density_df, profile_names_df, references_df)
+        results_df = process_cores_sumup(density_df, profile_names_df, references_df)
         
         # Save results
         save_results(results_df, output_path, output_prefix)
@@ -343,7 +449,7 @@ def process_sumup_main():
 
         print(f"Error: {e}")
         print("\nMake sure you have downloaded the SUMup data files.")
-        download_data_instructions()
+        download_sumup_data_instructions()
 
 if __name__ == "__main__":
     process_sumup_main()

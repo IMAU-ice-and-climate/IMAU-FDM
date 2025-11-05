@@ -66,3 +66,6 @@ reference/
 # Ignore modules and objects
 modules/
 objects/
+
+# Ignore sumup data
+code/sumup/data/source/*

@@ -290,7 +290,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
             if (do_MO_fit) then
                 MO = 1.0 ! makes doing MO fits easier - set in model_settings.f90
             elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
-                MO = 0.6688 + 0.0048*log(acav)      ! fit after debugging heat eq.
+                !MO = 0.6688 + 0.0048*log(acav) ! old fit from 1.2G
+                MO = 1.9333 + 0.0420*log(acav)  ! testing new fit for era 055
             elseif (trim(domain)=="ANT27") then
                 MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
             else
@@ -309,7 +310,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
             if (do_MO_fit) then
                 MO = 1 ! makes doing MO fits easier - set in model_settings.f90
             elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
-                MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 
+                !MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 
+                MO =  5.4403 + 0.3293*log(acav)      ! testing new fit for era 055
             elseif (trim(domain)=="ANT27") then
                 MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
             else
