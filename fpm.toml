@@ -1,0 +1,24 @@
+name = "imau-fdm"
+version = "0.1"
+license = ""
+author = ""
+maintainer = ""
+copyright = ""
+
+[fortran]
+implicit-external=true
+implicit-typing=true
+
+[library]
+source-dir = "source"
+include-dir = "objects"
+
+[[executable]]
+name = "imau-fdm"
+source-dir = "source"
+main = "main.f90"
+
+[dependencies]
+toml-f = { git = "https://github.com/toml-f/toml-f", tag = "v0.4.2" }
+mpi = "*"
+netcdf = "*"
