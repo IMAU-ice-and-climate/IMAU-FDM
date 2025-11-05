@@ -5,3 +5,5 @@ dependencies:
   - fpm>=0.12
   - netcdf-fortran
   - openmpi
+variables:
+  LIBRARY_PATH: "$LIBRARY_PATH:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" # needed on OS X, LIBRARY_PATH should be unused on other systems
