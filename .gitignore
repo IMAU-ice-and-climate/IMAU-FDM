@@ -60,3 +60,6 @@ ecsbatch*
 # Ignore modules and objects
 modules/
 objects/
+
+# Jupyter
+source/.ipynb_checkpoints/

@@ -25,33 +25,34 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    env:
-      DEBUG: 'true'
-      DEBIAN_FRONTEND: noninteractive
-      NETCDF_RELEASE: https://api.github.com/repos/Unidata/netcdf-fortran/releases/latest
-      LD_LIBRARY_PATH: /usr/lib/:/usr/local/lib
-      NETCDF4_LIB: -L/usr/local/lib -lnetcdff -lnetcdf -lnetcdf -lm # for some reason the output of nc-config `--flibs on CI is empty`. Workaround: set it manually.
-      NETCDF4_INCLUDE: -I/usr/local/include -I/usr/local/include # for some reason the output of `nc-config --fflags` CI is empty. Workaround: set it manually.
     steps:
-      - uses: actions/checkout@v4
-      - name: Install libnetcdf
+      - uses: actions/checkout@v5
+      - name: Cache conda
+        uses: actions/cache@v4
+        env:
+          # Increase this value to reset cache if etc/example-environment.yml has not changed
+          CACHE_NUMBER: 0
+        with:
+          path: ~/conda_pkgs_dir
+          key:
+            ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
+            hashFiles('environment.yml') }}
+      - name: Create conda settings file # workaround to ensure cached packages are used: https://github.com/conda-incubator/setup-miniconda/issues/267#issuecomment-3267265692
         run: |
-          sudo apt update -y && sudo apt install -y --no-install-recommends \
-            hdf5-tools hdf5-helpers libhdf5-dev libhdf5-serial-dev libnetcdf-dev
-      - name: Install gfortran and mpifort
-        run: sudo apt install -y --no-install-recommends make gfortran mpich libmpich-dev
-      - name: Install netcdf4-fortran
+          echo "use_local: True" > condarc.yml
+      - uses: conda-incubator/setup-miniconda@v3.2.0
+        with:
+          activate-environment: imau-fdm
+          auto-activate: false
+          condarc-file: condarc.yml
+          channel-priority: strict
+          environment-file: environment.yml
+          conda-remove-defaults: "true"
+          channels: conda-forge
+      - name: Build with coda
         run: |
-          export NETCDF_URL=$(curl "$NETCDF_RELEASE" | jq -r '.tarball_url')
-          echo "Fetching: $NETCDF_URL"
-          curl -L "$NETCDF_URL" --output netcdf.tar.gz
-          tar -xf netcdf.tar.gz
-          cd Unidata-netcdf*
-          ./configure && make && sudo make install
-          sudo ldconfig
-          nc-config --all
-      - name: Build
-        run: |
-          echo "NETCDF4_LIB: $NETCDF4_LIB"
-          echo "NETCDF4_INCLUDE: $NETCDF4_INCLUDE"
-          make
+          conda env list # debug
+          conda list -n imau-fdm # debug
+          conda run -n imau-fdm nc-config --all # debug
+          pkg-config --variable pc_path pkg-config # debug
+          conda run -n imau-fdm fpm build --profile debug
