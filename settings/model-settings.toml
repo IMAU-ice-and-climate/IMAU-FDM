@@ -1,0 +1,41 @@
+# Defines constants used in the FDM
+
+# define different parameterizations
+
+[melt]
+max_capacity_lwc = ["Coleou1998"]
+
+[thermal_conductivity]
+ice = ["Patterson1994"]
+air = ["Reid1996"]
+firn = ["Calonne2019"]
+
+# Choose values for the MO fit
+# do-MO-fit=MO set to 1 so that fit (due to new core data or new forcing) can be performed
+# 1.2X = values from v1.2G from Brils2022 / 1.2A from Veldhuijsen2023
+# log-log = both low and high densification rates have log relationships with average accumulation
+# log-power = low densification rate has log relationship with average accumulation; high has power law relationship
+MO = ["user"]
+MO_options = ["do-MO-fit", "1.2G", "1.2A", "log-log","log-power"] 
+
+[log-log]
+# MO = a_i + b_i*log(ave_acc)
+MO_low_a = 0.6688
+MO_low_b = 0.0048
+MO_high_a = 1.7465
+MO_high_b = 0.2045
+
+[log-power]
+# MO_low = a + b*log(ave_acc)
+# MO_high = a * ave_acc^(b) + c
+MO_low_a = 1.288
+MO_low_b = -0.117
+M_high_a = 6.387
+M_high_b = -0.477
+M_high_c = 0.195
+
+
+
+# unlikely to change
+cp_a = 152.5 #specific heat capacity is 152.5 + 7.122*T
+cp_b = 7.122 #specific heat capacity is 152.5 + 7.122*T
