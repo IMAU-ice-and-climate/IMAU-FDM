@@ -1,9 +1,21 @@
-# Defines constants used in the FDM
+# Defines choices of physics and model run used in the FDM
+
+# define model settings
+
+[spinup]
+spinup_bound = 70 # 70 for greenland, 200 for antarctica
+error_bound = 0.0001 #.0001 for greenland, .004 for antarctica
+
+[grid-parameters]
+min_layers = 200
+max_layers = 2500
 
 # define different parameterizations
 
 [melt]
+physics=["bucket"]
 max_capacity_lwc = ["Coleou1998"]
+Tmelt_lim = 270.15
 
 [thermal_conductivity]
 ice = ["Patterson1994"]
@@ -34,8 +46,14 @@ M_high_a = 6.387
 M_high_b = -0.477
 M_high_c = 0.195
 
-
-
 # unlikely to change
+rhoi = 917.             #density of ice [kg m-3]
+rho_ocean = 1027.       #density of ocean water [kg m-3]
+Tmelt = 273.15          #melting point of ice [K]
+Ec = 60000.             #activation energy for creep [J mole-1]
+Eg = 42400.             #activation energy for grain growth [J mole-1]
+Lh = 333500.            #latent heat of fusion [J kg-1]
+days_per_year = 365    #days per year [days]
+NaN_value = 9.96921E+36 #missing value for doubles
 cp_a = 152.5 #specific heat capacity is 152.5 + 7.122*T
 cp_b = 7.122 #specific heat capacity is 152.5 + 7.122*T
