@@ -77,9 +77,6 @@ fi
 # combine list of completed tasks into one file
 ls -1 $readydir >> "${readydir_base}/AllCompletedPoints.txt"
 
-# clean work executables
-rm $workexe/*
-
 echo "$(date +%c): npnf_outer_script ended"
 echo "--------------------------------------------------------------------------------"
 exit 0
