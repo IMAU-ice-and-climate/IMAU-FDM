@@ -1,5 +1,6 @@
 # no cache files
-*.ipynb_checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
 __pycache__/
 *.pyc
 *.pyo
