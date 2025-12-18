@@ -1,6 +1,9 @@
 # no cache files
 *.ipynb_checkpoints
-cores/code/__pycache__
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
 # don't track changes to netcdf files
 *.nc
