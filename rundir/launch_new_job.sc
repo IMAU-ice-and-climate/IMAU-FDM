@@ -15,7 +15,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="test-no-copy-uniqueExe" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="FGRN055-era055_1939-2023" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
@@ -48,7 +48,8 @@ export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
 #gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
-gridpointlist="$p2exe/rundir/pointlists/pointlist_test-attr.txt"
+#gridpointlist="$p2exe/rundir/pointlists/pointlist_run_1939-2023_FGRN055-era055.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_FGRN055-era055_1939-2023.txt"
 
 export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
@@ -63,14 +64,14 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 export usern=$USER
 
 # SBATCH options
-export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
+export nnodes_max=16 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export FDMs_per_node=128 #128 # play around for the optimal performance 
 export EC_hyperthreads=1
 export memory_per_task="999Mb"
 export EC_ecfs=0      # number of parallel ECFS calls 
-if [[ nnodes_max -gt 1 ]]; then
+if [[ nnodes_max -gt 2 ]]; then
   export taskfactor="5."   # prior launch at least #taskfactor (3-5) tasks per core must be available, change to 1 if just running test point
   export tasks_per_node=128
 else

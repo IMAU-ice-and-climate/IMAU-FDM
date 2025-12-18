@@ -1,0 +1,15 @@
+# Path settings file for example run
+
+[directories]
+# Base directories - these set the relative directories for the source code, and the input and output data
+
+project_name = "example" #name for each run - run output is directed to data_dir + project_name
+
+code_dir = ""
+data_dir = "" # input, output, and restart data must be in the same base folder
+
+input_dir_relative = "" # relative to data dir
+
+# example_output_dir = "/perm/{username}/code/IMAU-FDM/example/"
+# example_input_dir = "/perm/{username}/code/IMAU-FDM/example/input/"
+# example_restart_dir = "/perm/{usernamslace}/code/IMAU-FDM/example/restart/"

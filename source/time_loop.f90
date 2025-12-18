@@ -17,7 +17,7 @@ contains
 ! *******************************************************
 
 
-subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax, M, T, DZ, Rho, &
+subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax, M, T, DZ, Rho, &
     DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
     ImpExp, nyears, nyearsSU)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
@@ -25,7 +25,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
     ! declare arguments
     integer, intent(in) :: Nt_model_tot, Nt_model_spinup, ind_z_max, dtmodel, nyears, nyearsSU, IceShelf, ImpExp
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: R, Ec, Eg, g, Lh, rhoi, acav, th, dzmax
+    double precision, intent(in) :: R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
@@ -79,7 +79,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             Sd = DrifFM(ind_t)
             
             ! Calculate the densification	  
-            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
+            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
             
             ! Re-calculate the Temp-profile (explicit or implicit)		  
             if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
@@ -144,7 +144,7 @@ end subroutine Time_Loop_SpinUp
 
 
 subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
-    outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, IceShelf, &
+    outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
     domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
     out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
@@ -155,7 +155,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, detthick
+    double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, ffav, detthick
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension((outputSpeed), 18), intent(inout) :: out_1D
@@ -193,7 +193,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         Sd = DrifFM(ind_t)
         
         ! Calculate the density profile      
-        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
+        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
         
         ! Calculate the temperature profile (explicit or implicit)         
         if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)

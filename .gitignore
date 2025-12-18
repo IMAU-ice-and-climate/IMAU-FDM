@@ -68,8 +68,7 @@ reference/
 modules/
 objects/
 
-# Ignore sumup data
-cores/data/sumup/source*
-
-# Ignore figures
-cores/figures/*
+# Ignore a lot of the MO-fit files -- too big
+MO_fit/data/sumup/source/*
+MO_fit/figures/*
+MO_fit/data/PKM/source/*

@@ -134,7 +134,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ! Use current temperature and wind speed for snow parameterisations
         if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             do step = 1, Nt_model_tot
-                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt)
+                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt) ! from Fausto et al. 2018 
             end do
         else
             do step = 1, Nt_model_tot
@@ -237,22 +237,26 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
     do ind_z = (ind_z_surf-1), 1, -1
 
         part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
+
+        ! TKTKTK: cons never called
         if (Rho(ind_z+1) <= 550.) then
             if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 0.6688 + 0.0048*log(acav)        ! fit after debugging heat eq.
+                cons = 0.8147 - 0.0275*log(acav)        ! r2>0.8
             else
                 cons = 1.435 - 0.151*log(acav)
             endif
             drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
         else
             if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 1.7465 - 0.2045*log(acav)        ! fit after debuggin heat eq.
+                cons = 3.9192 * (acav**(-0.2617)) - 0.2781        ! r2>0.8
             else
                 cons = 2.366 - 0.293*log(acav)
             endif
             if (cons < 0.25) cons = 0.25
             drho = 0.03*dzmax*Rho(ind_z+1)*g*part1
         endif
+
+
         Rho(ind_z) = drho + Rho(ind_z+1)
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
 

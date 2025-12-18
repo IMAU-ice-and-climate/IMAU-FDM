@@ -1,0 +1,953 @@
+1;391;snow;0
+2;391;snow;0
+3;391;snow;0
+4;391;snow;0
+5;391;snow;0
+6;391;snow;0
+7;391;snow;0
+8;202;snow;0
+9;202;snow;0
+10;202;snow;0
+11;202;snow;0
+12;202;snow;0
+13;202;snow;0
+14;202;snow;0
+15;375;snow;0
+16;375;snow;0
+17;375;snow;0
+18;375;snow;0
+19;375;snow;0
+20;375;snow;0
+21;375;snow;0
+22;375;snow;0
+23;375;snow;0
+24;375;snow;0
+25;375;snow;0
+26;375;snow;0
+27;375;snow;0
+28;375;snow;0
+29;375;snow;0
+30;375;snow;0
+31;347;snow;0
+32;347;snow;0
+33;347;snow;0
+34;347;snow;0
+35;347;snow;0
+36;347;snow;0
+37;347;snow;0
+38;347;wet snow;0
+39;347;wet snow;0
+40;347;wet snow;0
+41;347;wet snow;0
+42;347;wet snow;0
+43;347;wet snow;0
+44;347;wet snow;0
+45;347;wet snow;0
+46;347;wet snow;0
+47;347;wet snow;0
+48;347;wet snow;0
+49;347;wet snow;0
+50;347;wet snow;0
+51;347;wet snow;0
+52;347;wet snow;0
+53;347;wet snow;0
+54;334;wet snow;0
+55;334;wet snow;0
+56;334;wet snow;0
+57;334;wet snow;0
+58;334;wet snow;0
+59;334;wet snow;0
+60;334;wet snow;0
+61;334;wet snow;0
+62;334;wet snow;0
+63;377;wet snow;0
+64;377;wet snow;0
+65;377;wet snow;0
+66;377;wet snow;0
+67;377;wet snow;0
+68;377;wet snow;0
+69;377;wet snow;0
+70;377;wet snow;0
+71;377;wet snow;0
+72;377;wet snow;0
+73;377;wet snow;0
+74;377;wet snow;0
+75;377;wet snow;0
+76;377;wet snow;0
+77;377;wet snow;0
+78;377;wet snow;0
+79;377;wet snow;0
+80;377;wet snow;0
+81;377;wet snow;0
+82;377;wet snow;0
+83;377;wet snow;0
+84;377;wet snow;0
+85;377;wet snow;0
+86;377;wet snow;0
+87;377;wet snow;0
+88;377;wet snow;0
+89;377;wet snow;0
+90;377;wet snow;0
+91;377;wet snow;0
+92;377;wet snow;0
+93;377;wet snow;0
+94;377;wet snow;0
+95;377;wet snow;0
+96;377;wet snow;0
+97;377;wet snow;0
+98;377;wet snow;0
+99;377;wet snow;0
+100;377;wet snow;0
+101;377;wet snow;0
+102;377;wet snow;0
+103;377;wet snow;0
+104;377;wet snow;0
+105;453;wet snow;0
+106;453;wet snow;0
+107;453;wet snow;0
+108;453;wet snow;0
+109;453;wet snow;0
+110;453;wet snow;0
+111;453;wet snow;0
+112;453;wet snow;0
+113;453;wet snow;0
+114;453;wet snow;0
+115;453;wet snow;0
+116;453;depth hoar;100
+117;453;depth hoar;100
+118;453;wet snow;0
+119;453;wet snow;0
+120;453;wet snow;0
+121;453;wet snow;0
+122;453;wet snow;0
+123;453;wet snow;0
+124;453;wet snow;0
+125;453;wet snow;0
+126;453;wet snow;0
+127;453;wet snow;0
+128;453;wet snow;0
+129;453;wet snow;0
+130;453;wet snow;0
+131;453;wet snow;0
+132;453;wet snow;0
+133;453;wet snow;0
+134;453;wet snow;0
+135;453;wet snow;0
+136;453;wet snow;0
+137;497;wet snow;0
+138;497;depth hoar;100
+139;497;depth hoar;100
+140;497;wet snow;0
+141;497;wet snow;0
+142;497;wet snow;0
+143;497;wet snow;0
+144;497;wet snow;0
+145;497;wet snow;0
+146;497;wet snow;0
+147;497;wet snow;0
+148;497;wet snow;0
+149;497;wet snow;0
+150;497;wet snow;0
+151;497;wet snow;0
+152;497;wet snow;0
+153;497;wet snow;0
+154;497;wet snow;0
+155;497;wet snow;0
+156;514;wet snow;0
+157;514;wet snow;0
+158;514;wet snow;0
+159;514;wet snow;0
+160;514;wet snow;0
+161;514;wet snow;0
+162;514;wet snow;0
+163;514;wet snow;0
+164;514;wet snow;0
+165;514;wet snow;0
+166;514;wet snow;0
+167;514;depth hoar;100
+168;514;depth hoar;100
+169;514;depth hoar;100
+170;514;wetted firn;0
+171;514;wetted firn;0
+172;514;wetted firn;0
+173;514;wetted firn;0
+174;514;wetted firn;0
+175;514;wetted firn;0
+176;514;wetted firn;0
+177;514;wetted firn;0
+178;514;wetted firn;0
+179;514;wetted firn;0
+180;514;wetted firn;0
+181;514;wetted firn;0
+182;514;wetted firn;0
+183;514;wetted firn;0
+184;514;wetted firn;0
+185;514;wetted firn;0
+186;514;wetted firn;0
+187;464;wetted firn;0
+188;464;wetted firn;0
+189;464;wetted firn;0
+190;464;wetted firn;0
+191;464;depth hoar;100
+192;464;depth hoar;100
+193;464;depth hoar;100
+194;464;wetted firn;0
+195;464;wetted firn;0
+196;464;wetted firn;0
+197;464;wetted firn;0
+198;464;wetted firn;0
+199;464;wetted firn;0
+200;464;wetted firn;0
+201;464;wetted firn;0
+202;464;wetted firn;0
+203;464;wetted firn;0
+204;464;wetted firn;0
+205;464;wetted firn;0
+206;464;wetted firn;0
+207;464;wetted firn;0
+208;464;wetted firn;0
+209;464;wetted firn;0
+210;464;wetted firn;0
+211;464;wetted firn;0
+212;464;wetted firn;0
+213;464;wetted firn;0
+214;464;wetted firn;0
+215;464;wetted firn;0
+216;431;wet snow;0
+217;431;wet snow;0
+218;431;wet snow;0
+219;431;wet snow;0
+220;431;wet snow;0
+221;431;wet snow;0
+222;431;wet snow;0
+223;431;wet snow;0
+224;431;wet snow;0
+225;431;wet snow;0
+226;431;wet snow;0
+227;431;wet snow;0
+228;431;wet snow;0
+229;431;wet snow;0
+230;431;wet snow;0
+231;431;wet snow;0
+232;431;wet snow;0
+233;431;wet snow;0
+234;431;wet snow;0
+235;431;wet snow;0
+236;431;wet snow;0
+237;431;wet snow;0
+238;431;wet snow;0
+239;431;wet snow;0
+240;431;wet snow;0
+241;431;wet snow;0
+242;431;wet snow;0
+243;431;wet snow;0
+244;431;wet snow;0
+245;431;wet snow;0
+246;431;wet snow;0
+247;431;wet snow;0
+248;431;wet snow;0
+249;431;wet snow;0
+250;431;wet snow;0
+251;431;wet snow;0
+252;431;wet snow;0
+253;431;wet snow;0
+254;431;wet snow;0
+255;431;wet snow;0
+256;431;wet snow;0
+257;431;wet snow;0
+258;431;wet snow;0
+259;431;wet snow;0
+260;599;wetted firn;0
+261;599;wetted firn;0
+262;599;wetted firn;0
+263;599;depth hoar;100
+264;599;depth hoar;100
+265;599;depth hoar;100
+266;599;depth hoar;100
+267;599;depth hoar;100
+268;599;depth hoar;100
+269;599;depth hoar;100
+270;599;depth hoar;100
+271;599;depth hoar;100
+272;599;depth hoar;100
+273;599;wetted firn;0
+274;599;wetted firn;0
+275;599;wetted firn;0
+276;599;depth hoar;100
+277;599;wetted firn;0
+278;599;wetted firn;0
+279;599;wetted firn;0
+280;599;wetted firn;0
+281;599;wetted firn;0
+282;599;wetted firn;0
+283;599;wetted firn;0
+284;599;wetted firn;0
+285;599;wetted firn;0
+286;599;wetted firn;0
+287;599;wetted firn;0
+288;599;wetted firn;0
+289;599;wetted firn;0
+290;599;wetted firn;0
+291;599;wetted firn;0
+292;651;wetted firn;0
+293;651;depth hoar;100
+294;651;depth hoar;100
+295;651;depth hoar;100
+296;651;depth hoar;100
+297;651;depth hoar;100
+298;651;depth hoar;100
+299;651;depth hoar;100
+300;651;depth hoar;100
+301;651;depth hoar;100
+302;651;depth hoar;100
+303;651;wetted firn;0
+304;651;wetted firn;0
+305;651;wetted firn;0
+306;651;wetted firn;0
+307;607;wetted firn;0
+308;607;wetted firn;0
+309;607;wetted firn;0
+310;607;wetted firn;0
+311;607;wetted firn;0
+312;607;wetted firn;0
+313;607;wetted firn;0
+314;607;wetted firn;0
+315;607;wetted firn;0
+316;607;wetted firn;0
+317;607;wetted firn;0
+318;607;wetted firn;0
+319;607;wetted firn;0
+320;607;wetted firn;0
+321;607;wetted firn;0
+322;607;wetted firn;0
+323;607;wetted firn;0
+324;607;wetted firn;0
+325;607;wetted firn;0
+326;607;wetted firn;0
+327;607;wetted firn;0
+328;607;wetted firn;0
+329;607;wetted firn;0
+330;607;wetted firn;0
+331;607;wetted firn;0
+332;607;wetted firn;0
+333;607;wetted firn;0
+334;607;depth hoar;100
+335;607;depth hoar;100
+336;607;depth hoar;100
+337;607;depth hoar;100
+338;607;depth hoar;100
+339;607;depth hoar;100
+340;607;depth hoar;100
+341;607;depth hoar;100
+342;607;depth hoar;100
+343;607;depth hoar;100
+344;607;depth hoar;100
+345;607;depth hoar;100
+346;607;depth hoar;100
+347;607;depth hoar;100
+348;607;depth hoar;100
+349;607;depth hoar;100
+350;607;depth hoar;100
+351;607;wetted firn;0
+352;607;wetted firn;0
+353;607;wetted firn;0
+354;607;wetted firn;0
+355;607;wetted firn;0
+356;607;wetted firn;0
+357;607;wetted firn;0
+358;607;wetted firn;0
+359;607;wetted firn;0
+360;607;wetted firn;0
+361;607;wetted firn;0
+362;607;wetted firn;0
+363;522;wetted firn;20
+364;522;wetted firn;20
+365;522;wetted firn;20
+366;522;wetted firn;20
+367;522;wetted firn;20
+368;522;wetted firn;20
+369;522;wetted firn;20
+370;522;wetted firn;20
+371;522;wetted firn;20
+372;522;wetted firn;20
+373;522;wetted firn;20
+374;522;wetted firn;20
+375;522;wetted firn;20
+376;522;wetted firn;20
+377;522;wetted firn;20
+378;522;wetted firn;20
+379;522;wetted firn;20
+380;522;wetted firn;20
+381;522;wetted firn;20
+382;522;wetted firn;20
+383;522;wetted firn;20
+384;522;wetted firn;20
+385;522;wetted firn;20
+386;522;wetted firn;20
+387;522;wetted firn;20
+388;522;wetted firn;20
+389;522;wetted firn;20
+390;522;wetted firn;20
+391;522;wetted firn;20
+392;522;wetted firn;20
+393;522;wetted firn;20
+394;522;wetted firn;20
+395;522;wetted firn;20
+396;522;wetted firn;20
+397;522;wetted firn;20
+398;522;wetted firn;20
+399;522;wetted firn;20
+400;522;wetted firn;20
+401;522;wetted firn;20
+402;522;wetted firn;20
+403;522;wetted firn;20
+404;522;wetted firn;20
+405;522;wetted firn;20
+406;522;wetted firn;20
+407;522;wetted firn;20
+408;522;wetted firn;20
+409;522;wetted firn;20
+410;522;wetted firn;20
+411;522;wetted firn;20
+412;522;wetted firn;20
+413;728;ice;100
+414;728;ice;100
+415;728;ice;100
+416;728;ice;100
+417;728;ice;100
+418;728;ice;100
+419;728;ice;100
+420;728;ice;100
+421;728;ice;100
+422;728;ice;100
+423;728;ice;100
+424;728;ice;100
+425;728;ice;100
+426;728;ice;100
+427;728;ice;100
+428;728;ice;100
+429;728;ice;100
+430;728;ice;100
+431;728;ice;100
+432;728;ice;100
+433;728;ice;100
+434;728;ice;100
+435;728;ice;100
+436;728;ice;100
+437;728;ice;100
+438;728;ice;100
+439;728;ice;100
+440;728;ice;100
+441;728;ice;100
+442;728;ice;100
+443;728;ice;100
+444;728;ice;100
+445;728;ice;100
+446;728;ice;100
+447;728;ice;100
+448;728;ice;100
+449;728;ice;100
+450;728;ice;100
+451;728;ice;100
+452;728;ice;100
+453;728;ice;100
+454;728;ice;100
+455;728;ice;100
+456;728;ice;100
+457;728;ice;100
+458;728;ice;100
+459;728;ice;100
+460;728;ice;100
+461;728;ice;100
+462;771;ice;100
+463;771;ice;100
+464;771;ice;100
+465;771;ice;100
+466;771;ice;100
+467;771;ice;100
+468;771;ice;100
+469;771;ice;100
+470;771;ice;100
+471;771;ice;100
+472;771;ice;100
+473;771;ice;100
+474;771;ice;100
+475;771;ice;100
+476;771;ice;100
+477;771;ice;100
+478;771;ice;100
+479;771;ice;100
+480;771;ice;100
+481;771;ice;100
+482;771;ice;100
+483;771;ice;100
+484;771;ice;100
+485;771;ice;100
+486;771;ice;100
+487;771;ice;100
+488;771;ice;100
+489;771;ice;100
+490;771;ice;100
+491;771;ice;100
+492;771;ice;100
+493;771;ice;100
+494;771;ice;100
+495;771;ice;100
+496;771;ice;100
+497;771;ice;100
+498;771;ice;100
+499;771;ice;100
+500;771;ice;100
+501;771;ice;100
+502;771;ice;100
+503;771;ice;100
+504;820;ice;100
+505;820;ice;100
+506;820;ice;100
+507;820;ice;100
+508;820;ice;100
+509;820;ice;100
+510;820;ice;100
+511;820;ice;100
+512;820;ice;100
+513;820;ice;100
+514;820;ice;100
+515;820;ice;100
+516;820;ice;100
+517;820;ice;100
+518;820;ice;100
+519;820;ice;100
+520;820;ice;100
+521;820;ice;100
+522;820;ice;100
+523;820;ice;100
+524;820;ice;100
+525;820;ice;100
+526;820;ice;100
+527;820;ice;100
+528;820;ice;100
+529;820;ice;100
+530;820;ice;100
+531;820;ice;100
+532;820;ice;100
+533;820;ice;100
+534;820;ice;100
+535;820;ice;100
+536;820;ice;100
+537;820;ice;100
+538;820;ice;100
+539;820;ice;100
+540;820;ice;100
+541;820;ice;100
+542;820;ice;100
+543;820;ice;100
+544;820;wetted firn;0
+545;820;wetted firn;0
+546;622;wetted firn;0
+547;622;wetted firn;0
+548;622;wetted firn;0
+549;622;wetted firn;0
+550;622;wetted firn;0
+551;622;wetted firn;0
+552;622;depth hoar;100
+553;622;depth hoar;100
+554;622;depth hoar;100
+555;622;depth hoar;100
+556;622;wetted firn;0
+557;622;wetted firn;0
+558;622;wetted firn;0
+559;622;wetted firn;0
+560;622;wetted firn;0
+561;798;ice;100
+562;798;ice;100
+563;798;ice;100
+564;798;ice;100
+565;798;ice;100
+566;798;ice;100
+567;798;ice;100
+568;798;ice;100
+569;798;ice;100
+570;798;ice;100
+571;798;ice;100
+572;798;ice;100
+573;798;ice;100
+574;798;ice;100
+575;798;ice;100
+576;798;ice;100
+577;798;ice;100
+578;798;ice;100
+579;798;ice;100
+580;798;ice;100
+581;798;ice;100
+582;798;ice;100
+583;798;ice;100
+584;798;ice;100
+585;798;ice;100
+586;798;ice;100
+587;798;ice;100
+588;826;ice;100
+589;826;ice;100
+590;826;ice;100
+591;826;ice;100
+592;826;ice;100
+593;826;ice;100
+594;826;ice;100
+595;826;ice;100
+596;826;ice;100
+597;826;ice;100
+598;826;ice;100
+599;826;ice;100
+600;826;ice;100
+601;826;ice;100
+602;826;ice;100
+603;826;ice;100
+604;826;ice;100
+605;826;ice;100
+606;826;ice;100
+607;826;ice;100
+608;826;ice;100
+609;826;ice;100
+610;826;ice;100
+611;826;ice;100
+612;826;ice;100
+613;826;ice;100
+614;826;ice;100
+615;806;ice;100
+616;806;ice;100
+617;806;ice;100
+618;806;ice;100
+619;806;ice;100
+620;806;ice;100
+621;806;ice;100
+622;806;ice;100
+623;806;ice;100
+624;806;ice;100
+625;806;ice;100
+626;806;ice;100
+627;806;ice;100
+628;806;ice;100
+629;806;ice;100
+630;806;ice;100
+631;806;ice;100
+632;806;ice;100
+633;806;ice;100
+634;806;ice;100
+635;806;ice;100
+636;806;ice;100
+637;806;ice;100
+638;806;ice;100
+639;806;ice;100
+640;806;ice;100
+641;806;ice;100
+642;806;ice;100
+643;806;ice;100
+644;806;ice;100
+645;806;ice;100
+646;806;ice;100
+647;806;ice;100
+648;796;ice;100
+649;796;ice;100
+650;796;ice;100
+651;796;ice;100
+652;796;ice;100
+653;796;ice;100
+654;796;ice;100
+655;796;ice;100
+656;796;ice;100
+657;796;ice;100
+658;796;ice;100
+659;796;ice;100
+660;796;ice;100
+661;796;ice;100
+662;796;ice;100
+663;796;ice;100
+664;796;ice;100
+665;796;ice;100
+666;823;ice;100
+667;823;ice;100
+668;823;ice;100
+669;823;ice;100
+670;823;ice;100
+671;823;ice;100
+672;823;ice;100
+673;823;ice;100
+674;823;ice;100
+675;823;ice;100
+676;823;ice;100
+677;823;ice;100
+678;823;ice;100
+679;823;ice;100
+680;823;ice;100
+681;823;ice;100
+682;823;ice;100
+683;823;ice;100
+684;823;ice;100
+685;823;ice;100
+686;823;ice;100
+687;823;ice;100
+688;823;ice;100
+689;823;ice;100
+690;823;ice;100
+691;823;ice;100
+692;823;ice;100
+693;823;ice;100
+694;823;ice;100
+695;823;ice;100
+696;823;ice;100
+697;823;ice;100
+698;823;ice;100
+699;823;ice;100
+700;823;ice;100
+701;823;ice;100
+702;823;ice;100
+703;823;ice;100
+704;823;ice;100
+705;823;ice;100
+706;823;ice;100
+707;823;ice;100
+708;823;ice;100
+709;823;ice;100
+710;823;ice;100
+711;823;ice;100
+712;823;ice;100
+713;823;ice;100
+714;823;ice;100
+715;823;ice;100
+716;823;ice;100
+717;823;ice;100
+718;823;ice;100
+719;823;ice;100
+720;823;ice;100
+721;812;ice;100
+722;812;ice;100
+723;812;ice;100
+724;812;ice;100
+725;812;ice;100
+726;812;ice;100
+727;812;ice;100
+728;812;ice;100
+729;812;ice;100
+730;812;ice;100
+731;812;ice;100
+732;812;ice;100
+733;812;ice;100
+734;812;ice;100
+735;812;ice;100
+736;812;ice;100
+737;812;ice;100
+738;812;ice;100
+739;812;ice;100
+740;812;ice;100
+741;812;ice;100
+742;812;ice;100
+743;812;ice;100
+744;812;ice;100
+745;812;ice;100
+746;812;wetted firn;20
+747;812;wetted firn;20
+748;759;wetted firn;20
+749;759;wetted firn;20
+750;759;wetted firn;20
+751;759;ice;100
+752;759;ice;100
+753;759;ice;100
+754;759;ice;100
+755;759;ice;100
+756;759;ice;100
+757;759;ice;100
+758;759;ice;100
+759;759;ice;100
+760;759;ice;100
+761;759;ice;100
+762;759;ice;100
+763;759;ice;100
+764;759;ice;100
+765;759;ice;100
+766;759;ice;100
+767;828;ice;100
+768;828;ice;100
+769;828;ice;100
+770;828;ice;100
+771;828;ice;100
+772;828;ice;100
+773;828;ice;100
+774;828;ice;100
+775;828;ice;100
+776;828;ice;100
+777;828;ice;100
+778;828;ice;100
+779;828;ice;100
+780;828;ice;100
+781;828;ice;100
+782;828;ice;100
+783;828;ice;100
+784;828;ice;100
+785;828;ice;100
+786;828;ice;100
+787;828;ice;100
+788;828;ice;100
+789;828;ice;100
+790;828;ice;100
+791;828;ice;100
+792;828;ice;100
+793;828;ice;100
+794;828;ice;100
+795;828;ice;100
+796;828;ice;100
+797;828;ice;100
+798;828;ice;100
+799;828;ice;100
+800;828;ice;100
+801;828;ice;100
+802;828;ice;100
+803;828;ice;100
+804;828;ice;100
+805;828;ice;100
+806;828;ice;100
+807;828;ice;100
+808;828;ice;100
+809;828;ice;100
+810;828;ice;100
+811;828;ice;100
+812;828;ice;100
+813;828;ice;100
+814;828;ice;100
+815;828;ice;100
+816;828;ice;100
+817;828;ice;100
+818;817;ice;100
+819;817;ice;100
+820;817;ice;100
+821;817;ice;100
+822;817;ice;100
+823;817;ice;100
+824;817;ice;100
+825;817;ice;100
+826;817;ice;100
+827;817;ice;100
+828;817;ice;100
+829;817;ice;100
+830;817;ice;100
+831;817;ice;100
+832;817;ice;100
+833;817;ice;100
+834;817;ice;100
+835;817;ice;100
+836;817;ice;100
+837;817;ice;100
+838;817;ice;100
+839;817;ice;100
+840;817;ice;100
+841;817;ice;100
+842;817;ice;100
+843;817;ice;100
+844;817;ice;100
+845;817;ice;100
+846;817;ice;100
+847;817;ice;100
+848;817;ice;100
+849;817;ice;100
+850;817;ice;100
+851;817;ice;100
+852;817;ice;100
+853;817;ice;100
+854;817;ice;100
+855;817;ice;100
+856;817;ice;100
+857;817;ice;100
+858;817;ice;100
+859;817;ice;100
+860;817;ice;100
+861;817;ice;100
+862;817;ice;100
+863;817;ice;100
+864;817;ice;100
+865;779;ice;100
+866;779;ice;100
+867;779;ice;100
+868;779;ice;100
+869;779;ice;100
+870;779;ice;100
+871;779;ice;100
+872;786;depth hoar;100
+873;786;depth hoar;100
+874;786;depth hoar;100
+875;786;depth hoar;100
+876;786;depth hoar;100
+877;786;depth hoar;100
+878;560;wetted firn;0
+879;560;wetted firn;0
+880;560;wetted firn;0
+881;560;wetted firn;0
+882;560;wetted firn;0
+883;560;wetted firn;0
+884;560;wetted firn;0
+885;560;wetted firn;0
+886;590;wetted firn;25
+887;590;wetted firn;25
+888;590;wetted firn;25
+889;590;wetted firn;25
+890;590;wetted firn;25
+891;590;wetted firn;25
+892;590;wetted firn;25
+893;590;wetted firn;25
+894;590;wetted firn;25
+895;590;wetted firn;25
+896;590;wetted firn;25
+897;590;wetted firn;25
+898;590;wetted firn;25
+899;590;wetted firn;25
+900;590;wetted firn;25
+901;590;wetted firn;25
+902;590;wetted firn;25
+903;590;wetted firn;25
+904;590;wetted firn;25
+905;590;wetted firn;25
+906;590;wetted firn;25
+907;590;wetted firn;25
+908;590;wetted firn;25
+909;590;wetted firn;25
+910;590;wetted firn;25
+911;590;wetted firn;25
+912;590;wetted firn;25
+913;590;wetted firn;25
+914;590;wetted firn;25
+915;841;ice;100
+916;841;ice;100
+917;841;ice;100
+918;841;ice;100
+919;841;ice;100
+920;841;ice;100
+921;841;ice;100
+922;841;ice;100
+923;841;ice;100
+924;841;ice;100
+925;841;ice;100
+926;841;ice;100
+927;841;ice;100
+928;841;ice;100
+929;841;ice;100
+930;841;ice;100
+931;841;ice;100
+932;841;ice;100
+933;841;ice;100
+934;841;ice;100
+935;841;ice;100
+936;841;ice;100
+937;841;ice;100
+938;841;ice;100
+939;841;ice;100
+940;841;ice;100
+941;841;ice;100
+942;841;ice;100
+943;841;ice;100
+944;841;ice;100
+945;841;ice;100
+946;841;ice;100
+947;841;ice;100
+948;841;ice;100
+949;841;ice;100
+950;841;ice;100
+951;841;ice;100
+952;841;ice;100
+953;841;ice;100

@@ -1,0 +1,34 @@
+##################
+# Model settings #
+##################
+
+run_type = "ecmwf" #ecmwf - run on ecmwf; offline - run on home computer; add other options as necessary; used for compiling in launch_job.sc
+
+domain = "FGRN055" # domain name, used in naming conventions
+forcing = "era055" # forcing name, used in naming conventions
+
+[output_dimensions]
+proflayers = 3000
+writeindetail = 864000
+detlayers = 500
+detthick = 0.04
+
+[minimum_values]
+ts_minimum = 1.0e-04     #minimum magnitude for timeseries value, set when ts are loaded
+det2d_minimum = 1.0e-05 #minimum magnitude for refreezing sum in 2ddetail output
+
+# TKTKTK: all below should be set by netcdf
+
+[forcing_description] # only used in naming conventions
+start_ts_year = "1939"
+end_ts_year = "2023" 
+start_ave_year = "1940"
+end_ave_year = "1970"
+
+[grid_dimensions]
+numLons = 438
+numLats = 566
+num_longitude_bands = 6
+numTimes = 246424
+nyears_simulation = 63
+nyears_spinup = 20

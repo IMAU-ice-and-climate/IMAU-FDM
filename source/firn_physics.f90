@@ -253,13 +253,13 @@ function Thermal_Cond(rhoi, rho, Temp) result(ki)
     ! declare local variables
     double precision :: kice, kice_ref, kcal, kf, kair, kair_ref, theta
 
-    kice = 9.828 * exp(-0.0057*Temp)                    ! Paterson et al., 1994
-    kice_ref = 9.828 * exp(-0.0057*270.15)              ! Paterson et al., 1994
-    kcal = 0.024 - 1.23E-4*rho + 2.5E-6*rho**2.
-    kf = 2.107 + 0.003618*(rho-rhoi)                    ! Calonne (2019)
-    kair = (2.334E-3*Temp**(3./2.))/(164.54 + Temp)       ! Reid (1966)
-    kair_ref = (2.334E-3*270.15**(3./2.))/(164.54 + 270.15)
-    theta = 1./(1.+exp(-0.04*(rho-450.)))
+    kice = 9.828 * exp(-0.0057*Temp)                                            ! Paterson et al., 1994
+    kice_ref = 9.828 * exp(-0.0057*270.15)                                      ! Paterson et al., 1994
+    kcal = 0.024 - 1.23E-4*rho + 2.5E-6*rho**2.                                 ! Calonne (2019), valid between 0 and 550 kg m-3
+    kf = 2.107 + 0.003618*(rho-rhoi)                                            ! Calonne (2019), valid between 550 and 917 kg m-3
+    kair = (2.334E-3*Temp**(3./2.))/(164.54 + Temp)                             ! Reid (1966)
+    kair_ref = (2.334E-3*270.15**(3./2.))/(164.54 + 270.15)                     ! Reid (1966)
+    theta = 1./(1.+exp(-0.04*(rho-450.)))                                       ! Calonne (2019)
     ki = (1.-theta)*kice/kice_ref*kair/kair_ref*kcal + theta*kice/kice_ref*kf   ! Calonne (2019)
     
 end function Thermal_Cond
@@ -268,61 +268,64 @@ end function Thermal_Cond
 ! *******************************************************
 
 
-subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rho, T, domain)
+subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
     !*** Update the density of each layer ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, dtmodel
-    double precision, intent(in) :: rhoi, R, Ec, Eg, g, acav
+    integer, intent(in) :: ind_z_max, ind_z_surf, dtmodel, ind_t
+    double precision, intent(in) :: rhoi, R, Ec, Eg, g, acav, ffav
     double precision, dimension(ind_z_max), intent(in) :: T
     double precision, dimension(ind_z_max), intent(inout) :: Rho
     character*255 :: domain
 
     ! declare local variables
     integer :: ind_z
-    double precision :: MO, part1, Krate
+    double precision :: MO_low, MO_high, part1, Krate, corr
     
+    !low density
+    if (do_MO_fit) then
+        MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90
+    elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+        !MO = 0.6688 + 0.0048*log(acav) ! old fit from 1.2G
+        MO_low = 0.7522 - 0.0178*log(acav) ! r2>0.8
+    elseif (trim(domain)=="ANT27") then
+        MO_low = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
+    else
+        print *, "Domain not recognized for MO fit, using ANT27 fit"
+        MO_low = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
+    endif
+
+    if (MO_low < 0.25) MO_low = 0.25
+    
+    !high density
+    if (do_MO_fit) then
+        MO_high = 1 ! makes doing MO fits easier - set in model_settings.f90
+    elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+        !MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 
+        MO_high = 5.7819 * (acav**(-0.4187)) + 0.0527 ! r2>0.8
+    elseif (trim(domain)=="ANT27") then
+        MO_high = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
+    else
+        print *, "Domain not recognized for MO fit, using ANT27 fit"
+        MO_high = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
+    endif
+
+    if (MO_high < 0.25) MO_high = 0.25
+
     do ind_z = 1, ind_z_surf
 
         ! low density 
         if (Rho(ind_z) <= 550.) then 
             
-            if (do_MO_fit) then
-                MO = 1.0 ! makes doing MO fits easier - set in model_settings.f90
-            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
-                !MO = 0.6688 + 0.0048*log(acav) ! old fit from 1.2G
-                MO = 1.9333 + 0.0420*log(acav)  ! testing new fit for era 055
-            elseif (trim(domain)=="ANT27") then
-                MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
-            else
-                print *, "Domain not recognized for MO fit, using ANT27 fit"
-                MO = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
-            endif
-
-            if (MO < 0.25) MO = 0.25
-            
+            corr = 0.07*MO_low
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
-            Krate = 0.07*MO*acav*g*part1 
+            Krate = corr*acav*g*part1 
         
-        ! high density
         else
-
-            if (do_MO_fit) then
-                MO = 1 ! makes doing MO fits easier - set in model_settings.f90
-            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
-                !MO = 1.7465 - 0.2045*log(acav)      ! fit after debuggin heat eq. 
-                MO =  5.4403 + 0.3293*log(acav)      ! testing new fit for era 055
-            elseif (trim(domain)=="ANT27") then
-                MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
-            else
-                print *, "Domain not recognized for MO fit, using ANT27 fit"
-                MO = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
-            endif
-
-            if (MO < 0.25) MO = 0.25
             
+            corr = 0.03*MO_high
             part1 = exp((-Ec/(R*T(ind_z)))+(Eg/(R*T(1))))
-            Krate = 0.03*MO*acav*g*part1
+            Krate = corr*acav*g*part1
         
         endif
         
@@ -331,6 +334,9 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, Rh
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
         
     enddo
+
+    !if (mod(ind_t, 500000) == 0) print *, ""
+    !if (mod(ind_t, 500000) == 0) print *, "MO low: ", MO_low, " MO high: ", MO_high
 
 end subroutine Densific
 

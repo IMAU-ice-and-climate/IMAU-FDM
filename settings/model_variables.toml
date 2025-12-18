@@ -1,0 +1,15 @@
+[constants]
+
+R = 8.3145              #gas constant [J mole-1 K-1]
+g = 9.81                #gravitational acceleration [m s-2]
+rhoi = 917.0             #density of ice [kg m-3]
+rho_ocean = 1027.0       #density of ocean water [kg m-3]
+Tmelt = 273.15          #melting point of ice [K]
+Ec = 60000.0             #activation energy for creep [J mole-1]
+Eg = 42400.0             #activation energy for grain growth [J mole-1]
+Lh = 333500.0            #latent heat of fusion [J kg-1]
+
+days_per_year = 365.25   # days per year TKTKTK: remove once timestamps incorprated
+NaN_value = 9.96921e+36 # missing value for doubles as used in the NCL scripts
+
+# pi doesn't change, not defined

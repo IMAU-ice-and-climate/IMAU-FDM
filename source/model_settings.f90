@@ -51,7 +51,7 @@ subroutine Define_Settings()
 
     ! Model physics
 
-    do_MO_fit = .true. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
 
 end subroutine Define_Settings
 
@@ -188,7 +188,7 @@ subroutine Define_Constants()
     Ec = 60000.             ! activation energy for creep [J mole-1]
     Eg = 42400.             ! activation energy for grain growth [J mole-1]
     Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365    ! days per year [days]
+    days_per_year = 365.25    ! days per year [days]
     seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
     NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
     
