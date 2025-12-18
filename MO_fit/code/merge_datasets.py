@@ -35,47 +35,54 @@ def identify_duplicates(std_df, sumup_df, location_tolerance=0.1, year_tolerance
 
     sumup_cores_no_dupes = sumup_df.copy(deep=True) # default to drop dupes from sumup dataset and keep sumup dataset, since std was handpicked
         
-    for row_i, new_core in sumup_df.iterrows():
+    for row_i, sumup_core in sumup_df.iterrows():
         
         # Check for name matches
-        name_matches = std_df[std_df['core_name'].str.lower() == str(new_core['core_name']).lower()]
+        name_matches = std_df[std_df['core_name'].str.lower() == str(sumup_core['core_name']).lower()]
         
-        if name_matches.empty:
+        if ~(name_matches.empty):
+            match_type = 'core_name'
+
+        #no name matches found
+        else:
             # Check for location matches
-            if not pd.isna(new_core['latitude']) and not pd.isna(new_core['longitude']):
-                lat_diff = abs(std_df['latitude'] - new_core['latitude'])
-                lon_diff = abs(std_df['longitude'] - new_core['longitude'])
+            if not pd.isna(sumup_core['latitude']) and not pd.isna(sumup_core['longitude']):
+                lat_diff = abs(std_df['latitude'] - sumup_core['latitude'])
+                lon_diff = abs(std_df['longitude'] - sumup_core['longitude'])
                 location_matches = std_df[(lat_diff <= location_tolerance) & (lon_diff <= location_tolerance)]
-                
+                match_type = 'location'
+
                 # Further filter by year if available
-                if not pd.isna(new_core['year']):
-                    year_diff = abs(location_matches['year'] - new_core['year'])
+                if not pd.isna(sumup_core['year']):
+                    year_diff = abs(location_matches['year'] - std_df['year'])
                     location_matches = location_matches[
-                        pd.isna(year_diff) | (year_diff <= year_tolerance)
+                        pd.isna(year_diff) or (year_diff <= year_tolerance)
                     ]
-            else:
-                location_matches = pd.DataFrame()
-        
+                    match_type = 'location_year'
+            
+        try:
+            location_matches
+        except Exception: 
+            location_matches = pd.DataFrame()
+            
         all_matches = pd.concat([name_matches, location_matches])
         
         if not all_matches.empty:
             for _, match in all_matches.iterrows():
                 duplicate_info = {
-                    'new_core_name': new_core['core_name'],
-                    'new_core_year': new_core['year'],
-                    'new_core_lat': new_core['latitude'],
-                    'new_core_lon': new_core['longitude'],
-                    'new_core_depth_to_550': new_core.get('depth_to_550', np.nan),
-                    'new_core_ref': new_core.get('citation', ''),
-                    'sumup_name': match['core_name'],
-                    
-                    'sumup_year': match.get('year', np.nan),
-                    'sumup_lat': match['latitude'],
-                    'sumup_lon': match['longitude'],
-                    'sumup_depth_to_550': match.get('depth_to_550', np.nan),
-                    'sumup_ref': match.get('citation', ''),
-                    'match_type': 'core_name' if str(new_core['core_name']).lower() == str(match['core_name']).lower() else 'location'
-
+                    'sumup_name': sumup_core['core_name'],
+                    'std_name': match['core_name'],
+                    'sumup_year': sumup_core['year'],
+                    'std_year': match.get('year', np.nan),
+                    'sumup_lat': sumup_core['latitude'],
+                    'std_lat': match['latitude'],
+                    'sumup_lon': sumup_core['longitude'],
+                    'std_lon': match['longitude'],
+                    'sumup_depth_to_550': sumup_core.get('depth_to_550', np.nan),
+                    'std_depth_to_550': match.get('depth_to_550', np.nan),
+                    'sumup_ref': sumup_core.get('citation', ''),
+                    'std_ref': match.get('citation', ''),
+                    'match_type': match_type
                 }
                 duplicates.append(duplicate_info)
 
@@ -92,11 +99,10 @@ def create_merged_dataset(std_df, sumup_df):
     print(f"\nCreating final dataset...")
     
     # Ensure both datasets have the same columns as SUMUP format
-    column_names = ['core_name', 'latitude', 'longitude', 'elevation', 'year', 'depth_to_550', 'depth_to_830', 'r2_550', 'r2_830', 'failed_550','failed_830','source', 'citation', 'region']
+    column_names = ['core_name', 'latitude', 'longitude', 'elevation', 'year', 'depth_to_550', 'depth_to_830', 'r2_550', 'r2_830', 'failed_fit_550','failed_fit_830','source', 'citation', 'region']
     
     # Select and reorder columns
     std_final = std_df[column_names].copy(deep=True)
-    std_final['r2'] = np.nan  # Placeholder for r2 in standardized data
     
     # Prepare SUMUP data
     sumup_final = sumup_df[column_names].copy(deep=True)
@@ -180,10 +186,14 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
             return
         
     # Identify duplicates
-    duplicates_df, std_cores_no_dupes = identify_duplicates(std_df, sumup_df)
+    #duplicates_df, sumup_cores_no_dupes = identify_duplicates(std_df, sumup_df)
+
+    duplicate_sumup_names = ["ACT10A", "ACT10C", "GITS_core_1_1996", "GITS_core_2_1996", "Humboldt-M", "PARCA_6345_1998", "PARCA_6642B_1998", "PARCA_6943_1998", "PARCA_6945_1998", "PARCA_7147_1997", "PARCA_7247_1997","PARCA_7249_1998", "PARCA_7345_1998","PARCA_7551_1997", "PARCA_7653B_1997"]
+    sumup_idxs = sumup_df[sumup_df["core_name"].isin(duplicate_sumup_names)].index.values
+    sumup_df_clean = sumup_df.drop(index=sumup_idxs).copy(deep=True)
 
     if drop_duplicates:
-        final_df = create_merged_dataset(std_cores_no_dupes, sumup_df)
+        final_df = create_merged_dataset(std_df, sumup_df_clean)
     else:
         final_df = create_merged_dataset(std_df, sumup_df)
 
@@ -198,7 +208,7 @@ def merge_datasets(do_run_sumup_processing=False, do_run_std_processing=False, d
         print(f"Error saving final merged dataset: {e}")
 
     if return_df:
-        return final_df, duplicates_df, sumup_df, std_df
+        return final_df, sumup_df, std_df
 
 if __name__ == "__main__":
     merge_datasets()

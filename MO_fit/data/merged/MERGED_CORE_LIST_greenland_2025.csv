@@ -1,0 +1,147 @@
+core_name,latitude,longitude,elevation,year,depth_to_550,depth_to_830,r2_550,r2_830,failed_fit_550,failed_fit_830,source,citation,region
+Eismitte,71.183,-39.933,3000.0,1954,13.4,,0.92,,0,1,SUMUP 2024,Bader (1954) as in Spencer et al. (2001),greenland
+T15 1959,70.303,-44.57,2491.0,1959,10.97,,0.89,,0,1,SUMUP 2024,Renaud et al. (1959),greenland
+T31_1959,70.909,-40.64,3008.0,1959,11.9,,0.98,,0,1,SUMUP 2024,Renaud et al. (1959),greenland
+T43_1959,71.117,-37.317,3174.0,1959,12.69,,0.95,,0,1,SUMUP 2024,Renaud et al. (1959),greenland
+T53_1959,71.35,-33.483,2867.0,1959,12.54,,0.96,,0,1,SUMUP 2024,Renaud et al. (1959),greenland
+T61_1959,72.233,-32.333,2750.0,1959,12.86,,0.94,,0,1,SUMUP 2024,Renaud et al. (1959),greenland
+Camp Century,77.183,-61.167,1886.0,1963,12.73,74.41,1.0,0.98,0,0,SUMUP 2024,Kovacs et al. (1969) as in Spencer et al. (2001),greenland
+Site 2,76.983,-56.067,2000.0,1965,12.14,74.19,1.0,0.97,0,0,SUMUP 2024,Langway (1967) as in Spencer et al. (2001),greenland
+Carrefour 1967,69.824,-47.432,1850.0,1967,7.18,,0.99,,0,1,SUMUP 2024,Ambach 1970,greenland
+Dye3-11B-1984,65.183,-43.833,2479.0,1983,12.72,,0.98,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-15B-1984,65.183,-43.833,2479.0,1983,13.51,,0.96,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-16C-1984,65.183,-43.833,2479.0,1983,12.98,,0.96,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-4B-1983,65.183,-43.833,2479.0,1983,11.67,78.89,0.97,0.98,0,0,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-5B-1984,65.183,-43.833,2479.0,1983,11.64,,0.93,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-9B-1984,65.183,-43.833,2479.0,1983,11.43,,0.97,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+Dye3-station1-1983,65.183,-43.833,2479.0,1983,12.01,,0.97,,0,1,SUMUP 2024,"Clausen H.B., pers. comm. as in Spencer et al. (2001)",greenland
+,65.1,-44.87,2625.0,1984,9.15,70.22,0.7,0.82,1,1,SUMUP 2024,Mayewski et al. (2016d),greenland
+Site 13,72.886,-38.843,3209.0,1987,14.36,,0.89,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site 15,72.981,-36.296,3229.0,1987,14.74,,0.93,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site 31,72.349,-39.786,3151.0,1987,14.71,,0.91,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site 51,71.927,-38.165,3150.0,1987,14.54,,0.93,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site 571,72.212,-34.332,3149.0,1987,13.81,,0.93,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site 73,71.602,-37.864,3218.0,1987,14.86,,0.87,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+Site A,70.75,-35.958,3145.0,1987,15.13,83.16,1.0,0.98,0,0,SUMUP 2024, Alley (1987) as in Spencer et al. (2001),greenland
+Summit,72.294,-36.078,3263.0,1987,14.8,,0.91,,0,1,SUMUP 2024,van der Veen et al. (2001),greenland
+,71.927,-39.835,3112.0,1987,14.54,,0.93,,0,1,SUMUP 2024,"Bolzan and Strobel (1999a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)",greenland
+,71.602,-38.141,3168.0,1987,14.86,,0.87,,0,1,SUMUP 2024,"Bolzan and Strobel (1999a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)",greenland
+,72.294,-37.921,3215.0,1987,7.71,,0.91,,0,1,SUMUP 2024,"Bolzan and Strobel (2001a,b)",greenland
+,72.212,-35.667,3087.0,1987,13.81,,0.93,,0,1,SUMUP 2024,"Bolzan and Strobel (2001a,b)",greenland
+,72.349,-40.214,3115.0,1987,14.71,,0.91,,0,1,SUMUP 2024,"Bolzan and Strobel (1999a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)",greenland
+,72.886,-39.157,3167.0,1987,14.36,,0.89,,0,1,SUMUP 2024,"Bolzan and Strobel (1999a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)",greenland
+,77.981,-37.704,3188.0,1987,14.74,,0.93,,0,1,SUMUP 2024,"Bolzan and Strobel (1999a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)",greenland
+"Site A, (Crete)",70.635,-35.82,3092.0,1988,15.34,81.98,0.99,0.98,0,0,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site B,70.659,-35.479,3138.0,1988,16.1,81.31,0.97,0.97,0,0,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site C,70.677,-35.787,3072.0,1988,15.33,,0.99,,0,1,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site D,70.64,-35.618,3018.0,1988,14.93,79.95,0.99,0.98,0,0,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site E,71.759,-35.851,3087.0,1988,15.63,73.81,0.98,0.96,0,0,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site F,71.492,-35.881,3092.0,1988,16.4,,0.97,,0,1,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site G,71.155,-35.838,3098.0,1988,16.19,,0.97,,0,1,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site H,70.865,-35.838,3102.0,1988,15.57,,0.98,,0,1,SUMUP 2024,Clausen et al. (1988) as in Spencer et al. (2001),greenland
+Site J,66.87,-46.26,2030.0,1989,5.8,65.73,0.65,0.89,1,0,SUMUP 2024,Kameda et al. (1995),greenland
+GRIP,72.567,-37.617,3230.0,1990,16.71,79.34,1.0,0.96,0,0,SUMUP 2024," Johnsen, S. pers. comm. as in Spencer et al. (2001)",greenland
+ngt03C93.2_B16,73.94,-37.63,3040.0,1993,15.18,68.05,0.91,0.98,0,0,SUMUP 2024,"Wilhelms et al. (2000a,b,c,d)",greenland
+ngt06C93.2_B17,75.25,-37.625,2820.0,1993,17.25,71.09,0.88,0.98,0,0,SUMUP 2024,"Wilhelms et al. (2000a,b,c,d)",greenland
+ngt19C.0_B19,78.0,-36.23,2234.0,1994,16.09,66.46,0.92,0.99,0,0,SUMUP 2024,NGT: Wilhelms (1996),greenland
+ngt27C94.2_B21,80.0,-41.137,2185.0,1994,17.48,67.07,0.86,0.97,0,0,SUMUP 2024,"Wilhelms et al. (2000a,b,c,d)",greenland
+Humboldt-E,78.598,-55.699,2045.0,1995,15.67,,0.98,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Humboldt-M,78.527,-56.83,1995.0,1995,16.23,66.74,-2.47,0.83,0,0,PKM standardized cores,,Greenland
+Humboldt-M2,78.527,-56.83,1995.0,1995,15.35,,0.94,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Humboldt-N,78.751,-56.83,1905.0,1995,18.03,,0.95,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Humboldt-S,78.315,-56.826,2058.0,1995,15.83,,0.98,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Humboldt-W,78.452,-57.958,1924.0,1995,15.9,,0.97,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+NASA-U-1,73.842,-49.498,2369.0,1995,14.25,79.97,0.64,0.93,0,0,PKM standardized cores,Zoek in Kuipers Munneke et al. (2015),Greenland
+NASA-U-2,73.842,-49.498,2369.0,1995,14.48,,0.99,,0,1,PKM standardized cores,checked against denstiy data for PARCA cores 2013,Greenland
+NASA-U-3,73.842,-49.498,2369.0,1995,13.35,,0.98,,0,1,PKM standardized cores,checked against denstiy data for PARCA cores 2013,Greenland
+NASA-U_Henderson,73.842,-49.498,2369.0,1995,14.23,79.88,0.98,0.98,0,0,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+ngt37C95.2_B26,77.253,-49.217,2598.0,1995,16.86,76.06,0.86,0.98,0,0,SUMUP 2024,"Miller and Schwager (2000a,b)",greenland
+ngt42C95.2_B29,76.004,-43.492,2874.0,1995,17.25,74.9,0.9,0.98,0,0,SUMUP 2024,"Miller and Schwager (2000a,b)",greenland
+GITS-Core1,77.0,-61.095,,1996,13.82,,0.98,,0,1,PKM standardized cores,,Greenland
+GITS-Core2,77.0,-61.095,,1996,13.93,84.58,0.79,0.95,0,0,PKM standardized cores,,Greenland
+Tunu-1,78.017,-33.994,2113.0,1996,14.05,,0.98,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Tunu-N25,78.33,-33.888,2050.0,1996,14.01,,0.91,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Tunu-N_main,78.017,-33.994,2113.0,1996,14.18,61.09,0.96,0.98,0,0,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+Tunu_1,78.017,-33.994,2650.0,1996,13.61,60.5,0.67,0.97,0,0,PKM standardized cores,,Greenland
+7147,71.05,-47.23,,1997,10.86,,0.94,,0,1,PKM standardized cores,,Greenland
+7247,72.0,-47.487,,1997,12.14,,0.98,,0,1,PKM standardized cores,,Greenland
+7551,75.0,-51.0,,1997,13.28,,0.96,,0,1,PKM standardized cores,,Greenland
+7653-1,76.0,-53.0,,1997,13.22,,0.99,,0,1,PKM standardized cores,,Greenland
+NASA_E_1,75.0,-30.0,,1997,13.84,,0.97,,0,1,PKM standardized cores,,Greenland
+North_Dye_3,66.0,-44.501,,1997,9.65,,0.91,,0,1,PKM standardized cores,,Greenland
+PARCA_NASAEASTA_1997,75.0,-30.0,2631.0,1997,14.14,,0.97,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+PARCA_NDYE3A&B_1997,66.0,-44.501,2640.0,1997,10.64,,0.88,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+PARCA_SDOMEA_1997,63.149,-44.817,2850.0,1997,11.41,,0.96,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+PARCA_STUNUA_1997,69.5,-34.5,2650.0,1997,12.12,,0.95,,0,1,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+South_Dome_1,63.0,-44.187,,1997,13.11,,0.99,,0,1,PKM standardized cores,,Greenland
+Tunu_S_1,69.5,-34.5,,1997,12.76,,0.96,,0,1,PKM standardized cores,,Greenland
+Tunu_S_2,69.5,-34.5,,1997,12.76,,0.96,,0,1,PKM standardized cores,added by EHC using S_1 values check validity,Greenland
+6345,63.8,-45.0,,1998,11.57,,0.98,,0,1,PKM standardized cores,,Greenland
+6348,63.8,-45.0,,1998,6.21,,0.53,,0,1,PKM standardized cores,,Greenland
+6642-2,66.5,-42.5,,1998,9.69,,0.96,,0,1,PKM standardized cores,,Greenland
+6745,67.5,-45.0,,1998,10.51,,0.82,,0,1,PKM standardized cores,,Greenland
+6943,69.2,-43.0,,1998,11.96,,0.99,,0,1,PKM standardized cores,,Greenland
+6945-1,69.0,-45.0,,1998,10.92,,0.9,,0,1,PKM standardized cores,,Greenland
+7249,72.2,-49.4,,1998,11.64,,0.8,,0,1,PKM standardized cores,,Greenland
+7345,73.0,-45.0,,1998,13.07,,0.92,,0,1,PKM standardized cores,,Greenland
+Dye 2 (Raven) Core A,66.478,-46.285,2119.0,1998,8.03,66.82,0.7,0.95,1,0,SUMUP 2024,Mosley-Thompson et al. (2001),greenland
+NGRIP_1999,75.1,-42.32,2917.0,1999,17.69,,0.98,,0,1,SUMUP 2024,Vallelonga et al. (2014),greenland
+Basin1,71.8,-42.4419,,2003,14.1,,0.99,,0,1,PKM standardized cores,,Greenland
+Basin2,68.0,-44.8278,,2003,9.99,,0.85,,0,1,PKM standardized cores,,Greenland
+Basin4,62.0,-46.34,,2003,6.16,,0.72,,0,1,PKM standardized cores,,Greenland
+Basin5,63.93,-46.3539,,2003,8.45,,0.89,,0,1,PKM standardized cores,,Greenland
+Basin6,67.0,-41.7489,,2003,11.14,,0.98,,0,1,PKM standardized cores,,Greenland
+Basin7,67.52,-40.4061,,2003,10.8,,0.99,,0,1,PKM standardized cores,,Greenland
+Basin8,70.0,-36.4,,2003,13.34,,1.0,,0,1,PKM standardized cores,,Greenland
+Basin9,65.01,-44.87,,2003,12.74,,0.94,,0,1,PKM standardized cores,,Greenland
+D1,64.5,-43.5,2580.0,2003,8.92,76.22,0.46,0.98,0,0,PKM standardized cores,,Greenland
+D2,71.8,-46.2,2534.0,2003,12.57,81.28,0.87,0.99,0,0,PKM standardized cores,,Greenland
+D3,69.8,-44.0,2433.0,2003,11.8,75.97,-0.31,0.95,0,0,PKM standardized cores,,Greenland
+D4,71.4167,-44.0333,2999.0,2003,12.49,78.88,0.96,0.93,0,0,PKM standardized cores,,Greenland
+D5,68.5,-42.9,2715.0,2003,11.95,72.67,-0.68,0.88,0,0,PKM standardized cores,,Greenland
+Das1,66.0056,-43.9878,,2003,11.83,69.85,-0.73,0.99,0,0,PKM standardized cores,,Greenland
+Das2,67.5272,-36.0614,,2003,12.78,82.91,0.42,0.98,0,0,PKM standardized cores,,Greenland
+Sandy,72.55,-38.3167,3281.0,2003,14.16,74.23,0.98,0.96,0,0,PKM standardized cores,,Greenland
+ACT_1,66.0,-46.5511,,2004,7.77,,0.84,,0,1,PKM standardized cores,,Greenland
+ACT_2,66.0119,-45.1581,2419.0,2004,13.06,70.04,0.46,0.96,0,0,PKM standardized cores,,Greenland
+ACT_3,66.0,-43.6069,,2004,11.63,88.52,0.96,0.93,0,0,PKM standardized cores,,Greenland
+T12_2004_Apr,70.176,-45.34,2348.0,2004,9.96,,0.92,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T15_2004_Apr,70.303,-44.57,2491.0,2004,10.33,,0.91,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T19_2004_Apr,70.47,-43.56,2659.0,2004,10.31,,0.94,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T21_2004_May,70.544,-43.02,2737.0,2004,10.81,,0.94,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T21_2004_May_a,70.544,-43.02,2737.0,2004,10.62,,0.92,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T23_2004_May,70.625,-42.58,2794.0,2004,10.76,,0.92,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T27_2004_May,70.775,-41.54,2913.0,2004,11.66,,0.91,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T31_2004_May,70.909,-40.64,3008.0,2004,11.85,,0.91,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T35_2004_May,70.976,-39.55,3096.0,2004,11.93,,0.92,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T41_2004_Aug_c,71.079,-37.92,3201.0,2004,11.91,,0.91,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T41_2004_May_c,71.079,-37.92,3201.0,2004,12.2,,0.92,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T15_2006_May,70.303,-44.57,2491.0,2006,7.69,,0.85,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T19_2006_Aug,70.47,-43.56,2659.0,2006,7.87,,0.85,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+T19_2006_May,70.47,-43.56,2659.0,2006,8.19,,0.85,,0,1,SUMUP 2024,Morris and Wingham (2014),greenland
+CP_2007,69.9,-47.0,2000.0,2007,12.84,77.77,1.0,0.99,0,0,SUMUP 2024,Porter and Mosley-Thompson (2014),greenland
+NEEM07S3,77.45,-51.06,2460.0,2007,16.16,74.03,0.97,0.99,0,0,SUMUP 2024,Steen-Larsen et al. (2011),greenland
+T4-1,69.819983,-47.4505,1877.0,2007,8.84,,0.56,,0,1,PKM standardized cores,"Harper, J., Humphrey, N., Pfeffer, W. T., Brown, J., & Fettweis, X. (2012). Greenland ice-sheet contribution to sea-level rise buffered by meltwater storage in firn. Nature, 491(7423), 240–243. https://doi.org/10.1038/nature11566",Greenland
+,72.594,-38.625,3210.0,2007,17.11,,0.89,,0,1,SUMUP 2024,Adolph et al. (2014),greenland
+GGU163,70.0,-48.1932,1660.0,2008,1.95,,0.69,0.69,0,1,PKM standardized cores,,Greenland
+2009S2_Keegan,77.45,-51.06,2460.0,2009,16.11,74.75,0.85,0.96,0,0,SUMUP 2024,Baker et al. (2009),greenland
+NEEM2009S2_Baker,77.45,-51.06,,2009,17.08,,0.91,,0,1,SUMUP 2024,Baker et al. (2009),greenland
+ACT10_A,66.0,-41.4667,1825.0,2010,5.09,,-5.16,,0,1,PKM standardized cores,,Greenland
+ACT10_B,65.7667,-41.8667,1999.0,2010,9.11,,-0.63,,0,1,PKM standardized cores,,Greenland
+ACT10_C,66.0,-42.7667,2354.0,2010,8.86,,0.56,,0,1,PKM standardized cores,,Greenland
+ACT11C,66.291,-40.746,,2011,6.59,,0.9,,0,1,SUMUP 2024,Miège et al. (2013),greenland
+ACT11D,66.479,-46.31,,2011,4.05,54.17,,0.88,1,0,SUMUP 2024,Miège et al. (2013),greenland
+NEEM2011S1,77.45,-51.06,2460.0,2011,15.05,75.62,0.98,0.98,0,0,SUMUP 2024,Sigl et al. (2013),greenland
+EastGRIP,75.623,-35.96,2702.0,2012,17.89,65.37,0.99,0.99,0,0,SUMUP 2024,Vallelonga et al. (2014),greenland
+NG2012,75.017,-42.533,2917.0,2012,15.46,,0.93,,0,1,SUMUP 2024,Freitag et al. (2021)               ,greenland
+FA13A,66.181,-39.044,,2013,5.33,,0.94,0.77,0,1,SUMUP 2024,Miège et al. (2013),greenland
+,72.577,-38.47,3203.0,2015,14.29,,0.88,,0,1,SUMUP 2024,MacFerrin et al. (2022),greenland
+,72.577,-38.469,3203.0,2015,14.03,,0.87,,0,1,SUMUP 2024,MacFerrin et al. (2022),greenland
+EastGRIP Main Core,75.63,-36.0,2704.0,2016,17.87,65.41,0.98,0.99,0,0,SUMUP 2024,Rasmussen et al. (2023),greenland
+,70.302,-44.564,,2016,12.12,,0.87,,0,1,SUMUP 2024,Graeter et al. (2018),greenland
+,72.578,-38.469,3209.0,2017,15.59,,0.91,,0,1,SUMUP 2024,MacFerrin et al. (2022),greenland
+,72.999,-44.997,,2017,11.75,,0.97,,0,1,SUMUP 2024,Lewis et al. (2019),greenland
+,73.831,-49.478,,2017,11.86,,0.91,,0,1,SUMUP 2024,Lewis et al. (2019),greenland
+,73.593,-47.197,,2017,12.45,,0.93,,0,1,SUMUP 2024,Lewis et al. (2019),greenland
+SE-Dome II (X-ray),67.19,-36.47,3160.0,2021,10.7,92.18,0.9,0.96,0,0,SUMUP 2024,Kawakami et al. (2023),greenland
+SE-Dome II (bulk),67.19,-36.47,3160.0,2021,11.89,93.61,0.9,0.93,0,0,SUMUP 2024,Kawakami et al. (2023),greenland
