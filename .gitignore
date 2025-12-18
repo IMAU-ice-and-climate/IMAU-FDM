@@ -1,5 +1,6 @@
-# no IPYNB checkpoints
+# no cache files
 *.ipynb_checkpoints
+cores/code/__pycache__
 
 # don't track changes to netcdf files
 *.nc
@@ -68,4 +69,7 @@ modules/
 objects/
 
 # Ignore sumup data
-code/sumup/data/source/*
+cores/data/sumup/source*
+
+# Ignore figures
+cores/figures/*
