@@ -10,7 +10,7 @@ restart_type="none"
 
 logfile="example/logfiles/log_IMAU-FDM_cca_1.out" #logfile in example directory
 
-localexe="/home/jelle/.local/bin/imau-fdm" #to copy executable to example directory each time; allows for modifications to main executable during run
+localexe="/home/jelle/.local/bin/imau-fdm"
 
 echo "Running example FDM from $localexe; logfile at ${logfile}"
-$localexe $paths_file $point_numb $prefix_output $project_name $restart_type $&> ${logfile} # launches example FDM run
+$localexe "$paths_file" $point_numb $prefix_output $project_name $restart_type $&> ${logfile} # launches example FDM run
