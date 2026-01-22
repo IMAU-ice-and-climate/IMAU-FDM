@@ -2,20 +2,17 @@
 
 [directories]
 # Base directories - these set the relative directories for the source code, and the input and output data
-
-project_name = "" # name for each run, must be unique; run output is directed to data_dir + project_name
-
+project_name = "example" # name for each run, must be unique; run output is directed to data_dir + project_name
+username = "nld4814"
+forcing = "era055"
+domain = "FGRN055"
 code_dir = "/perm/nld4814/code/IMAU-FDM/"
-input_dir = "/home/nld4814/scratch/FGRN055_era055/input/" # input, output, and restart data must be in the same base folder
-output_dir = "/home/nld4814/scratch/" # in model, data is output to output_dir + project_name
+data_dir = "/home/nld4814/scratch/"
 
 # restart_dir = output_dir + "restart/" + project_name
 
 [input-subdirectories]
 # relative to input_dir
-
-averages = "averages/"
-timeseries = "timeseries/"
 
 [output-subdirectories]
 #relative to output_dir + project_name
