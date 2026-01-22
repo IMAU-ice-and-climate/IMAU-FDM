@@ -1,4 +1,3 @@
-
 # IMAU-FDM Path Configuration for Greenland 5.5km2 (FGRN055) era055-forced runs
 
 [directories]
@@ -7,16 +6,20 @@
 project_name = "" # name for each run, must be unique; run output is directed to data_dir + project_name
 
 code_dir = "/perm/nld4814/code/IMAU-FDM/"
-input_dir = "/home/nld4814/scratch/FGRN055_era055/input/" 
-output_dir = "/home/nld4814/scratch/" # in model, data is output to output_dir + project_name + output, and TKTKTK: restart data to output_dir + project name + restart
+input_dir = "/home/nld4814/scratch/FGRN055_era055/input/" # input, output, and restart data must be in the same base folder
+output_dir = "/home/nld4814/scratch/" # in model, data is output to output_dir + project_name
+
+# restart_dir = output_dir + "restart/" + project_name
 
 [input-subdirectories]
 # relative to input_dir
+
 averages = "averages/"
 timeseries = "timeseries/"
 
 [output-subdirectories]
 #relative to output_dir + project_name
+
 output = "output/"
 settings = "ms_files/" #TKTKTK: remove need for ms file, change to settings file, where these toml files are saved
 restart = "restart/"
@@ -30,7 +33,7 @@ pointlist_ref = "IN_ll_FGRN055.txt"
 
 [code-subdirectories]
 #relative to code_dir
-ref_dir = "reference/FGRN055/" #for references to mask & pointlist
+ref_dir = "reference/FGRN055/"
 source = "source/" #the location of the model
 executable = "imau-fdm.x" # the name of the executable
 
