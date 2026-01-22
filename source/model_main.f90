@@ -11,7 +11,7 @@
 !   - fix age tracking through Year
 !------------------------------------------------------
 
-program main
+module model_main
 
     use model_settings
     use openNetCDF, only: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
@@ -44,6 +44,8 @@ program main
     double precision, dimension(:,:), allocatable :: out_1D
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+
+subroutine Run_Model()
 
     print *, " "
     print *, "------------------------------------"
@@ -159,5 +161,7 @@ program main
     call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
     
     print *, "Written output data to files"
+
+end subroutine
     
-end program main
+end module model_main
