@@ -1,0 +1,16 @@
+nnodes = 1 # or 2 or 8...
+taskfactor = 1 #1 if 1 node, otherwise 3-5
+
+# DEFAULT
+
+walltime="48:00:00"   # (hms) walltime of the job 
+cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?
+hostname="cca"
+relaunch="yes"        # with "no", no new iteration will be launched
+
+account_no="spnlberg"
+jobname_base="FDM_${project_name}_i"
+FDMs_per_node=128 #128 # play around for the optimal performance 
+EC_hyperthreads=1
+memory_per_task="999Mb"
+EC_ecfs=0      # number of parallel ECFS calls 
