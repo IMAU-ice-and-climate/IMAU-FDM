@@ -47,7 +47,7 @@ fi
 echo "$(date +%c): All npnf_inner_scripts are done, wait for distributor"
 nwait=0
 waits=2
-while [[ ! -r "${requestdir}/DP" && $nwait -lt 120 ]]; do
+while [[ ! -r "${requestdir}/DP" && $nwait -lt 500 ]]; do
   sleep $waits
   let "waits+=$waits"
 done
