@@ -1,0 +1,59 @@
+
+# IMAU-FDM Path Configuration for Greenland 5.5km2 (FGRN055) era055-forced runs
+
+[directories]
+# Base directories - these set the relative directories for the source code, and the input and output data
+
+project_name = "" # name for each run, must be unique; run output is directed to data_dir + project_name
+
+code_dir = "/perm/nld4814/code/IMAU-FDM/"
+input_dir = "/home/nld4814/scratch/FGRN055_era055/input/" 
+output_dir = "/home/nld4814/scratch/" # in model, data is output to output_dir + project_name + output, and TKTKTK: restart data to output_dir + project name + restart
+
+[input-subdirectories]
+# relative to input_dir
+averages = "averages/"
+timeseries = "timeseries/"
+
+[output-subdirectories]
+#relative to output_dir + project_name
+output = "output/"
+settings = "ms_files/" #TKTKTK: remove need for ms file, change to settings file, where these toml files are saved
+restart = "restart/"
+
+[reference-files]
+# relative to ref_dir
+mask = "FGRN055_Masks.nc"
+pointlist_ref = "IN_ll_FGRN055.txt"
+
+##### DEFAULT
+
+[code-subdirectories]
+#relative to code_dir
+ref_dir = "reference/FGRN055/" #for references to mask & pointlist
+source = "source/" #the location of the model
+executable = "imau-fdm.x" # the name of the executable
+
+# # Template filenames (require variable substitution)
+# settings = "model_settings_{domain}_{point_numb}.txt"
+# restart_from_spinup = "{prefix_output}_restart_from_spinup_{point_numb}.nc"
+# restart_from_run = "{prefix_fname_ini}{end_ts_year}{suffix_fname_ini}"
+# output_1d = "{prefix_output}_1D_{point_numb}.nc"
+# output_2d = "{prefix_output}_2D_{point_numb}.nc"
+# output_2d_detail = "{prefix_output}_2Ddetail_{point_numb}.nc"
+
+# [filename_components]
+# # Components used to build filenames
+# prefix_fname_ini = "{prefix_output}_initialize_from_"
+# suffix_fname_ini = "_run_{point_numb}.nc"
+
+# # Forcing file components
+# suffix_forcing_averages = "_{prefix_output}-{start_ts_year}_{start_ave_year}-{end_ave_year}_ave.nc"
+# prefix_forcing_timeseries_standard = "_{prefix_output}_{start_ts_year}-{end_ts_year}_p"
+# prefix_forcing_timeseries_example = "_{prefix_output}_{start_ts_year}-{end_ts_year}"
+# suffix_forcing_timeseries_standard = ".nc"
+# suffix_forcing_timeseries_example = "_point_{point_numb}.nc"
+
+# [forcing_variables]
+# # Variable names used in forcing files
+# iceshelf_var_ant27 = "IceShelve"
