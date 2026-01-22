@@ -8,6 +8,10 @@
 SRC_DIR = source
 MOD_DIR = modules
 OBJ_DIR = objects
+NETCDF4_INCLUDE = -I/opt/homebrew/include
+LDFLAGS = -L/opt/homebrew/lib -lnetcdff
+OFFLINE = 1
+DEBUG = 1
 
 ifdef DEBUG
 OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
@@ -17,13 +21,22 @@ OPTIMIZATION_FLAG = -O3 # max optimization level
 endif
 endif
 
-# Compiler and flags configuration
-FC = mpifort # mpifort  # Specify the Fortran compiler
+# Specify the Fortran compiler
+ifdef OFFLINE
+    FC = gfortran # use gfortran
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+else
+ifndef OFFLINE 
+    FC =  mpifort # use mpifort on ecmwf
+ifdef ifeq ($(OMPI_FC),ifort)
+    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -warn all -diag-enable remark -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+    FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
+else
+ifndef DEBUG
+    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+endif
 
-ifeq ($(OMPI_FC),ifort)
-	FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
-else #assumes gfortran 
-	FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 endif
 
 # List of source files

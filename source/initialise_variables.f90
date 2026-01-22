@@ -15,9 +15,11 @@ contains
 
 !*** TKTKTK: move this to model_settings and make all variables global ***!
 
+
 subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
     ind_z_surf, startasice, beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, &
     initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
+
     !*** Load model settings from file ***!
     
     ! declare arguments
