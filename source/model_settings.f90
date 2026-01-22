@@ -12,7 +12,7 @@ module model_settings
 
     ! Module-level variables that can be accessed by other modules
     
-    public :: domain, paths_file, point_numb, username, prefix_output, project_name, restart_type, forcing, data_dir
+    public :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, restart_type, forcing, data_dir
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
@@ -28,7 +28,7 @@ module model_settings
 
     ! Declare the module variables
 
-    character(len=255) :: domain, paths_file, point_numb, username, prefix_output, project_name, restart_type, forcing, data_dir
+    character(len=255) :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, forcing, data_dir
     character(len=255) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     character(len=255) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
     character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
@@ -39,7 +39,7 @@ module model_settings
     logical :: do_MO_fit
     integer :: save_output
     double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
-    character(len=:), allocatable :: path_restart
+    character(len=:), allocatable :: path_restart, restart_type
 
 contains
 
@@ -47,15 +47,69 @@ subroutine Define_Settings()
     !*** Under construction ***!
     !*** Define model settings and physics ***!
 
+    ! Local variables toml tables
+
+    integer                       :: fu, rc, i
+    logical                       :: file_exists
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
+
     ! Model settings
-    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
-    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
+
+    inquire (file=model_settings_file, exist=file_exists)
+    
+    if (.not. file_exists) then
+        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
+        stop
+    end if
+
+    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
+        stop
+    end if
+
+    call toml_parse(table, fu)
+    close (fu)
+
+    if (.not. allocated(table)) then
+        write (stderr, '("Error: Parsing failed")')
+        stop
+    end if
+
+    ! find section.
+    
+    call get_value(table, 'minimum_values', child, requested=.false.)
+    
+    if (associated(child)) then
+
+        call get_value(child, 'ts_minimum', ts_minimum)
+        call get_value(child, 'det2d_minimum', det2d_minimum)
+
+        print *, " "
+        print *, "ts_minimum: ", ts_minimum
+
+    end if
+
+    call get_value(table, 'general_settings', child, requested=.false.)
+
+    if (associated(child)) then
+
+        call get_value(child, 'restart_type', restart_type)
+
+        print *, " "
+        print *, "restart_type: ", restart_type
+
+    end if
 
     save_output = 10 ! save output every 10 years
 
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+
+    deallocate(table)
 
 end subroutine Define_Settings
 
@@ -67,17 +121,17 @@ subroutine Get_All_Command_Line_Arg()
     !*** Get all command line arguments ***!
 
     ! 1: Paths toml file
-    ! 2: Simulation number, corresponding to the line number in the IN-file.
-    ! 3: Restart type, where none= do spinup; spinup = restart from spinup
+    ! 2: Model settings toml file
+    ! 3: Simulation number, corresponding to the line number in the IN-file.
+    ! 6: Restart type, where none= do spinup; spinup = restart from spinup
 
     print *, "Getting command line arguments..."
     
     call get_command_argument(1, paths_file)
-    call get_command_argument(2, point_numb)
-    call get_command_argument(3, prefix_output)
-    call get_command_argument(4, project_name)
-    call get_command_argument(5, restart_type)
- 
+    call get_command_argument(2, model_settings_file)
+    call get_command_argument(3, point_numb)
+    call get_command_argument(4, prefix_output)
+    call get_command_argument(5, project_name)
 
     if (trim(project_name) == "example") then
 
@@ -85,7 +139,7 @@ subroutine Get_All_Command_Line_Arg()
 
     else
         print *, "Running user defined point"
-        ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
+        ! Reads in current point number, config files, prefix, and project_name for path setting
     
     end if
     
