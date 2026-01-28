@@ -40,7 +40,7 @@ jobs:
       - name: Create conda settings file # workaround to ensure cached packages are used: https://github.com/conda-incubator/setup-miniconda/issues/267#issuecomment-3267265692
         run: |
           echo "use_local: True" > condarc.yml
-      - uses: conda-incubator/setup-miniconda@v3.2.0
+      - uses: conda-incubator/setup-miniconda@v3.3.0
         with:
           activate-environment: imau-fdm
           auto-activate: false
