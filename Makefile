@@ -24,7 +24,7 @@ endif
 # Specify the Fortran compiler
 ifdef OFFLINE
     FC = gfortran # use gfortran
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -J $(MOD_DIR) -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 else
 ifndef OFFLINE 
     FC =  mpifort # use mpifort on ecmwf
@@ -34,7 +34,7 @@ ifdef ifeq ($(OMPI_FC),ifort)
 else
 ifndef DEBUG
     #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -J $(MOD_DIR) -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 endif
 
 endif

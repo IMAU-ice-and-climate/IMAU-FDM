@@ -14,9 +14,6 @@ else
     echo "Run type -- $run_type -- not recognized"
 fi
 
-
-
-
 # 
 # call srun w/ new distributor (?)
 # something like srun -n ${maxFDMs} --ntasks-per-node $tasks_per_node --threads-per-core 1 $homedir/npnf_inner_script.sc $myenvfile

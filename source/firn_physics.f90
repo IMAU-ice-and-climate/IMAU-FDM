@@ -268,7 +268,7 @@ end function Thermal_Cond
 ! *******************************************************
 
 
-subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
+subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t, do_MO_fit)
     !*** Update the density of each layer ***!
 
     ! declare arguments
@@ -277,6 +277,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ff
     double precision, dimension(ind_z_max), intent(in) :: T
     double precision, dimension(ind_z_max), intent(inout) :: Rho
     character*255 :: domain
+    logical :: do_MO_fit
 
     ! declare local variables
     integer :: ind_z

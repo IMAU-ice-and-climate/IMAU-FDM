@@ -1,5 +1,7 @@
 program main
+    
     use mpi
+    use model_main
     implicit none
 
     double precision, dimension(60000) :: lat, lon
@@ -38,7 +40,7 @@ program main
         close(20)
 
         ! Read point list
-        open (unit=30, file="rundir/pointlists/pointlist_run-1957-2023-FGRN055-era055-2.txt", action="read")
+        open (unit=30, file="/ec/res4/scratch/nld4814/test-new-distributor/pointlist_1.txt", action="read")
         i_point = 1
         do
             read (30, *, iostat=io) pointlist(i_point)
@@ -57,11 +59,15 @@ program main
             ! Receive new job
             call MPI_recv(cur_lat, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
             call MPI_recv(cur_lon, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
+            call MPI_recv(point_numb, 1, MPI_Integer, 0, 2, MPI_Comm_World, status, ierror)
             print*, rank, ": doing job with lat: ", cur_lat, "lon: ", cur_lon
             ! call sleep(1)
             if (cur_lat == jobs_done) then  ! Exit the loop when no more jobs are available
                 exit
             end if
+
+            call Run_Model(point_numb, cur_lat, cur_lon)
+
         end do
     ! Distributor thread
     else
@@ -81,8 +87,12 @@ program main
                 new_lon = lon(pointlist(cur_i_point))
                 cur_i_point = cur_i_point + 1
             end if
+
+            ! distributor sends lat, lon, point numb to worker
             call MPI_send(new_lat, 1, MPI_Double_Precision, status(MPI_Source), 2, MPI_Comm_World, ierror)
             call MPI_send(new_lon, 1, MPI_Double_Precision, status(MPI_Source), 2, MPI_Comm_World, ierror)
+            call MPI_send(pointlist(cur_i_point), 1, MPI_Integer, status(MPI_Source), 2, MPI_Comm_World, ierror)
+
             if (n_proc_done == size-1) exit  ! Exit the loop when all job_done messages are sent
         end do
     end if

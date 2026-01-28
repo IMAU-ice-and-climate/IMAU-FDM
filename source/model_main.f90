@@ -23,6 +23,9 @@ module model_main
     
     implicit none
     
+subroutine Run_Model(point_numb, ind_lat, ind_lon)
+
+    integer :: point_numb
     integer :: ind_z_surf, ind_lon, ind_lat, Nt_forcing, Nlat, Nlon, Nlon_timeseries, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
     integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs
     integer :: writeinprof, writeinspeed, writeindetail
@@ -45,7 +48,6 @@ module model_main
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
-subroutine Run_Model()
 
     print *, " "
     print *, "------------------------------------"

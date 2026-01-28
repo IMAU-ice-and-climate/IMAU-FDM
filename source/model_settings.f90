@@ -21,7 +21,7 @@ module model_settings
     public :: model_first_timestep, model_last_timestep
     
     ! Parameterization options
-    public :: do_MO_fit 
+    public :: do_MO_fit
 
     ! Declare the module variables
 
@@ -70,13 +70,19 @@ subroutine Get_All_Command_Line_Arg()
     ! 6: Restart type, where none= do spinup; spinup = restart from spinup
 
     print *, "Getting command line arguments..."
+
+    username="ndl4814"
+    domain="FGRN055"
+    prefix_output="FGRN055_era055"
+    project_name="test-new-distributor"
+    restart_type="none"
     
-    call get_command_argument(1, username)
-    call get_command_argument(2, point_numb)
-    call get_command_argument(3, domain)
-    call get_command_argument(4, prefix_output)
-    call get_command_argument(5, project_name)
-    call get_command_argument(6, restart_type)
+    !call get_command_argument(1, username)
+    !call get_command_argument(2, point_numb)
+    !call get_command_argument(3, domain)
+    !call get_command_argument(4, prefix_output)
+    !call get_command_argument(5, project_name)
+    !call get_command_argument(6, restart_type)
 
     if (trim(project_name) == "example") then
 
