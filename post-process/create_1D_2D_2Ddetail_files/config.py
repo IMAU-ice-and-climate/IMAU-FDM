@@ -1,5 +1,5 @@
 """
-Configuration for IMAU-FDM 1D to gridded maps post-processing.
+Configuration file to collect and process 1D, 2D, and 2D detail output into maps of single or multiple variables
 
 This module contains all configurable paths, parameters, and variable metadata.
 Users can modify the settings below or override them via command-line arguments.

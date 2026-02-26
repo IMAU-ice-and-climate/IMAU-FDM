@@ -344,8 +344,6 @@ class RunConfig:
                     shape = ds['lat'].shape
                     if len(shape) == 2:
                         self.grid_shape = shape
-        if 'detthick' in settings and self.detail_thickness is None:
-            self.detail_thickness = float(settings['detthick'])
 
     def _detect_from_pointlist(self):
         """Get number of points from pointlist."""

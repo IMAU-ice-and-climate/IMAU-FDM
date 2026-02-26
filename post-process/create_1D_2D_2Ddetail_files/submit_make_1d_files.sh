@@ -11,12 +11,12 @@
 # IMAU-FDM Post-Processing: Convert 1D output files to gridded NetCDF files
 # =============================================================================
 #
-# This script processes all ~58,000 point files and creates gridded files for
+# This script processes all point files and creates gridded files for
 # each variable. Output files are written to the post-process directory.
 #
 # Usage:
 #   sbatch submit_make_1d_files.sh                    # Process all variables
-#   sbatch submit_make_files.sh h_surf FirnAir    # Process specific variables
+#   sbatch submit_make_1d_files.sh h_surf FirnAir    # Process specific variables
 #
 # Output location: /home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/
 # =============================================================================
@@ -27,7 +27,7 @@ set -e
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/python"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKERS=${SLURM_CPUS_PER_TASK:-16}
 TIMESTEP="10day"
 SPINUP_START=1940

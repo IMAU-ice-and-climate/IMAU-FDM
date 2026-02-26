@@ -26,7 +26,7 @@ set -e
 # -----------------------------------------------------------------------------
 # Default configuration
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/python"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era055_1939-2023/output"
 WORKERS=${SLURM_CPUS_PER_TASK:-8}
 
