@@ -26,9 +26,9 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Cache conda
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         env:
           # Increase this value to reset cache if etc/example-environment.yml has not changed
           CACHE_NUMBER: 0
@@ -40,7 +40,7 @@ jobs:
       - name: Create conda settings file # workaround to ensure cached packages are used: https://github.com/conda-incubator/setup-miniconda/issues/267#issuecomment-3267265692
         run: |
           echo "use_local: True" > condarc.yml
-      - uses: conda-incubator/setup-miniconda@v3.2.0
+      - uses: conda-incubator/setup-miniconda@v3.3.0
         with:
           activate-environment: imau-fdm
           auto-activate: false
