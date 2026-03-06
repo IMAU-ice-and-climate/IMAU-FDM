@@ -26,6 +26,22 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
     integer :: ind_z
     double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch
 
+    ! testing bucket parameterization
+    integer :: n_ice_layers, k
+    double precision :: rho_pore_closeoff, rho_ice_threshhold, ice_slab_threshhold, fraction_runoff_pc, fraction_runoff_lens, minimum_lens_runoff, ice_layer_thickness
+    logical :: do_runoff_at_pore_closeoff, do_runoff_at_ice_lenses
+
+    do_runoff_at_pore_closeoff = .TRUE.
+    do_runoff_at_ice_lenses = .FALSE.
+    
+    rho_pore_closeoff = 830
+    rho_ice_threshhold = rhoi ! could equal rhoi or 900 or some other threshhold
+    ice_slab_threshhold = 1 ! 1 m
+    minimum_lens_runoff = 0.2
+    Mrunoff = 0 ! now need to initialize runoff
+
+    ! begin Bucket_Method
+
     cp0 = 152.5 + 7.122*Tmelt
 
     M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
@@ -33,7 +49,55 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
 
     do ind_z = ind_z_surf, 1, -1   ! loop over all layers
 
-        if (Rho(ind_z) < rhoi) then
+
+        ! Testing New Bucket Parameterization
+
+        ! fractions of runoff reset each loop
+        fraction_runoff_pc = 0
+        fraction_runoff_lens = 0
+
+        if (do_runoff_at_pore_closeoff) then
+            if ((Rho(ind_z) > rho_pore_closeoff) .and. (Rho(ind_z) < rho_ice_threshhold)) then ! if rho > 830 and rho < rho_ice_threshold, which could be 900 or 917
+                fraction_runoff_pc = (1-(rho_ice_threshhold-Rho(ind_z))/(rho_ice_threshhold-rho_pore_closeoff))
+                Mrunoff = Mrunoff + (Mmelt*fraction_runoff_pc)
+                Mmelt = Mmelt - (Mmelt*fraction_runoff_pc)
+            endif 
+        endif
+
+        if (do_runoff_at_ice_lenses) then
+            if (rho(ind_z) >= rho_ice_threshhold) then
+                !check if any layers below ind_z are not ice
+                if (ANY(Rho(1:ind_z) < rho_ice_threshhold)) then  ! otherwise, all ice below, so we've reached the bottom
+                    ! you have an ice lens or slab
+                    n_ice_layers = 0
+                    do k = ind_z - 1, 1, -1
+                        if (Rho(k) >= rho_ice_threshhold) then
+                            n_ice_layers = n_ice_layers + 1
+                        else
+                            exit
+                        endif
+                    end do
+                
+                    ice_layer_thickness = sum(DZ(ind_z-n_ice_layers:ind_z)) ! continuous ice w/ depth
+
+                    ! between 1 layer and n_layers*dz = 1 m, runoff increases linearly, start at minimum_lens_runoff fraction
+                    ! if thickness reaches or exceeds ice_slab_threshhold, then all melt becomes runoff
+                    if (ice_layer_thickness >= ice_slab_threshhold) then! all melt becomes runoff
+                        Mrunoff = Mrunoff + Mmelt
+                        Mmelt = 0
+                    else
+                        fraction_runoff_lens = MAX(minimum_lens_runoff, ice_layer_thickness/ice_slab_threshhold)
+                        Mrunoff = Mrunoff + Mmelt*fraction_runoff_lens
+                        Mmelt = Mmelt - Mmelt*fraction_runoff_lens
+                    endif
+                endif
+            endif
+        endif 
+
+
+
+        !if (Rho(ind_z) < rhoi) then
+        if (Rho(ind_z) < rho_ice_threshhold) then
             cp = 152.5 + 7.122*T(ind_z)
             Efreeze = (Tmelt-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
             Mfreeze = Efreeze / Lh          !the mass that can be frozen with that energy
@@ -87,8 +151,9 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
     enddo   ! loop over all layers
     
     ! Any remaining liquid water runs off at the bottom of the column
+
     if (Mmelt .ne. 0.) then
-        Mrunoff = Mmelt
+        Mrunoff = Mrunoff + Mmelt
         Mmelt = 0.
     endif
       
