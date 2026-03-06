@@ -21,7 +21,7 @@ module model_settings
     public :: model_first_timestep, model_last_timestep
     
     ! Parameterization options
-    public :: do_MO_fit 
+    public :: do_MO_fit
 
     ! Declare the module variables
 

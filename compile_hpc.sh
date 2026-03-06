@@ -39,5 +39,5 @@ module load python3
 
 NETCDF_LDFLAG=$(nc-config --libs)
 
-(exec "$fpm" clean --all) || true
+(exec "$fpm" clean --all) #|| true
 exec "$fpm" install --profile "$profile" --flag -ffree-line-length-512 --link-flag "$NETCDF_LDFLAG"
