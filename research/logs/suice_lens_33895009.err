@@ -1,0 +1,35 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-143 at 20260303_213839.877, PID: 2638925, JOBID: 33895009
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.33895009
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/1/33895009
+/home/nld4814/perm/code/IMAU-FDM/research/ice_lens_detection.py:404: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'history'            : f'Created on {datetime.utcnow().isoformat()}',
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-03-03T22:20:03 on ac
+[ECMWF-INFO -ecepilog] JobName                   : ice_lens
+[ECMWF-INFO -ecepilog] JobID                     : 33895009
+[ECMWF-INFO -ecepilog] Submit                    : 2026-03-03T21:38:30
+[ECMWF-INFO -ecepilog] Start                     : 2026-03-03T21:38:32
+[ECMWF-INFO -ecepilog] End                       : 2026-03-03T22:20:03
+[ECMWF-INFO -ecepilog] QueuedTime                : 2.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 2491
+[ECMWF-INFO -ecepilog] ExitCode                  : 0:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : COMPLETED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/ice_lens_33895009.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/suice_lens_33895009.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 6
+[ECMWF-INFO -ecepilog] SBU                       : 35.421
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-ice_lens-1x6-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/ice_lens__JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+
