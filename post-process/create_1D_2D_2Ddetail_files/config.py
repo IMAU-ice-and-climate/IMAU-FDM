@@ -38,24 +38,26 @@ NUM_WORKERS = None
 BASE_DIR = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 
+# =============================================================================
+# MODEL METADATA
+# =============================================================================
+
+# Domain name — also controls the expected mask/pointlist file locations:
+#   <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc
+#   <BASE_DIR>/reference/<DOMAIN>/IN_ll_<DOMAIN>.txt
+DOMAIN = 'FGRN055'
+
 # Input files
 PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
 INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
-POINTLIST_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'IN_ll_FGRN055.txt'
-MASK_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_Masks.nc'
+POINTLIST_FILE = BASE_DIR / 'reference' / DOMAIN / f'IN_ll_{DOMAIN}.txt'
+MASK_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_Masks.nc'
 
 # Output directory
 OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
 
 # File naming pattern for input 1D files
-INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
-
-# =============================================================================
-# MODEL METADATA
-# =============================================================================
-
-# Domain name
-DOMAIN = 'FGRN055'
+INPUT_FILENAME_PATTERN = f'{DOMAIN}_era055_1D_{{point_id}}.nc'
 
 # Model run period
 MODEL_START = datetime(1939, 9, 1)

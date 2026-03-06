@@ -32,6 +32,7 @@ from tqdm import tqdm
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
 from run_config import RunConfig, load_pointlist, load_mask
+from utils import add_crs_to_dataset
 
 
 def find_depth_at_threshold(depth, values, threshold, direction='max'):
@@ -388,6 +389,7 @@ def main():
     # Create output dataset
     print("Creating output dataset...")
     ds = create_output_dataset(config, args.output_var, time_array, grid_data, mask_data)
+    add_crs_to_dataset(ds, mask_path)
 
     # Add variable-specific attributes
     if args.threshold is not None:
