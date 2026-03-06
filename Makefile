@@ -8,12 +8,12 @@
 SRC_DIR = source
 MOD_DIR = modules
 OBJ_DIR = objects
-NETCDF4_INCLUDE = -I/opt/homebrew/include
-LDFLAGS = -L/opt/homebrew/lib -lnetcdff
-OFFLINE = 1
-DEBUG = 1
+NETCDF4_INCLUDE = -I$(shell nc-config --includedir)
+LDFLAGS = $(shell nc-config --libs)
+OFFLINE =
+DEBUG =
 
-ifdef DEBUG
+ifeq ($(DEBUG),1)
 OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
 else
 ifndef OPTIMIZATION_FLAG 
@@ -22,21 +22,18 @@ endif
 endif
 
 # Specify the Fortran compiler
-ifdef OFFLINE
+ifeq ($(OFFLINE),1)
     FC = gfortran # use gfortran
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -J $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 else
-ifndef OFFLINE 
-    FC =  mpifort # use mpifort on ecmwf
-ifdef ifeq ($(OMPI_FC),ifort)
+    FC = mpifort # use mpifort on ecmwf
+ifeq ($(OMPI_FC),ifort)
     #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -warn all -diag-enable remark -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
     FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
 else
-ifndef DEBUG
-    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
+    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -J $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
 endif
-
 endif
 
 # List of source files

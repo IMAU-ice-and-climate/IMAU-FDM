@@ -18,7 +18,7 @@ contains
 
 subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     
-    integer :: status, ncid(1), ID(5), Nlat, Nlon
+    integer :: status, ncid(1), ID(6), Nlat, Nlon
     double precision, dimension(Nlon,Nlat) :: LSM, ISM, Latitude, Longitude
     character*255 :: domain, pad
 
