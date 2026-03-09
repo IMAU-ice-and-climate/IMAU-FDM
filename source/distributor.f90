@@ -60,6 +60,7 @@ program main
             call MPI_recv(cur_lat, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
             call MPI_recv(cur_lon, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
             call MPI_recv(point_numb, 1, MPI_Integer, 0, 2, MPI_Comm_World, status, ierror)
+
             print*, rank, ": doing job with lat: ", cur_lat, "lon: ", cur_lon
             ! call sleep(1)
             if (cur_lat == jobs_done) then  ! Exit the loop when no more jobs are available
