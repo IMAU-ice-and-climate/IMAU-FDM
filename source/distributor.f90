@@ -57,6 +57,7 @@ program main
             ! Receive new job
             call MPI_recv(cur_lat, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
             call MPI_recv(cur_lon, 1, MPI_Double_Precision, 0, 2, MPI_Comm_World, status, ierror)
+            call MPI_recv(cur_i_point, 1, MPI_Integer, 0, 2, MPI_Comm_World, status, ierror)
             print*, rank, ": doing job with lat: ", cur_lat, "lon: ", cur_lon
             ! call sleep(1)
             if (cur_lat == jobs_done) then  ! Exit the loop when no more jobs are available
@@ -83,6 +84,7 @@ program main
             end if
             call MPI_send(new_lat, 1, MPI_Double_Precision, status(MPI_Source), 2, MPI_Comm_World, ierror)
             call MPI_send(new_lon, 1, MPI_Double_Precision, status(MPI_Source), 2, MPI_Comm_World, ierror)
+            call MPI_send(cur_i_point-1, 1, MPI_Integer, status(MPI_Source), 2, MPI_Comm_World, ierror)
             if (n_proc_done == size-1) exit  ! Exit the loop when all job_done messages are sent
         end do
     end if
