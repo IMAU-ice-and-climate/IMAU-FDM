@@ -1,15 +1,18 @@
 module model_settings
     !*** Subroutines for setting paths and constants for global use throughout the model ***!
 
+    use, intrinsic :: iso_fortran_env, only: stderr => error_unit
+    use tomlf
     implicit none
 
     private
+    
 
     public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg
 
     ! Module-level variables that can be accessed by other modules
     
-    public :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing
+    public :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, restart_type, forcing, data_dir
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
@@ -25,9 +28,9 @@ module model_settings
 
     ! Declare the module variables
 
-    character(len=255) :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing
+    character(len=255) :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, forcing, data_dir
     character(len=255) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    character(len=255) :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
+    character(len=255) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
     character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
     character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
@@ -36,6 +39,7 @@ module model_settings
     logical :: do_MO_fit
     integer :: save_output
     double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
+    character(len=:), allocatable :: path_restart, restart_type
 
 contains
 
@@ -43,15 +47,69 @@ subroutine Define_Settings()
     !*** Under construction ***!
     !*** Define model settings and physics ***!
 
+    ! Local variables toml tables
+
+    integer                       :: fu, rc, i
+    logical                       :: file_exists
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
+
     ! Model settings
-    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
-    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
+
+    inquire (file=model_settings_file, exist=file_exists)
+    
+    if (.not. file_exists) then
+        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
+        stop
+    end if
+
+    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
+        stop
+    end if
+
+    call toml_parse(table, fu)
+    close (fu)
+
+    if (.not. allocated(table)) then
+        write (stderr, '("Error: Parsing failed")')
+        stop
+    end if
+
+    ! find section.
+    
+    call get_value(table, 'minimum_values', child, requested=.false.)
+    
+    if (associated(child)) then
+
+        call get_value(child, 'ts_minimum', ts_minimum)
+        call get_value(child, 'det2d_minimum', det2d_minimum)
+
+        print *, " "
+        print *, "ts_minimum: ", ts_minimum
+
+    end if
+
+    call get_value(table, 'general_settings', child, requested=.false.)
+
+    if (associated(child)) then
+
+        call get_value(child, 'restart_type', restart_type)
+
+        print *, " "
+        print *, "restart_type: ", restart_type
+
+    end if
 
     save_output = 10 ! save output every 10 years
 
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+
+    deallocate(table)
 
 end subroutine Define_Settings
 
@@ -62,21 +120,18 @@ end subroutine Define_Settings
 subroutine Get_All_Command_Line_Arg()
     !*** Get all command line arguments ***!
 
-    ! 1: ECMWF username 
-    ! 2: Simulation number, corresponding to the line number in the IN-file.
-    ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27) - set to global in define_paths_and_constants
-    ! 4: General part of output filename
-    ! 5: Project name, for defining file paths
+    ! 1: Paths toml file
+    ! 2: Model settings toml file
+    ! 3: Simulation number, corresponding to the line number in the IN-file.
     ! 6: Restart type, where none= do spinup; spinup = restart from spinup
 
     print *, "Getting command line arguments..."
     
-    call get_command_argument(1, username)
-    call get_command_argument(2, point_numb)
-    call get_command_argument(3, domain)
+    call get_command_argument(1, paths_file)
+    call get_command_argument(2, model_settings_file)
+    call get_command_argument(3, point_numb)
     call get_command_argument(4, prefix_output)
     call get_command_argument(5, project_name)
-    call get_command_argument(6, restart_type)
 
     if (trim(project_name) == "example") then
 
@@ -84,10 +139,12 @@ subroutine Get_All_Command_Line_Arg()
 
     else
         print *, "Running user defined point"
-        ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
+        ! Reads in current point number, config files, prefix, and project_name for path setting
     
     end if
     
+
+   
 end subroutine Get_All_Command_Line_Arg
 
 
@@ -96,12 +153,43 @@ end subroutine Get_All_Command_Line_Arg
 
 subroutine Define_Paths()
     !*** Definition of all paths used to read in or write out files ***!
-    
+
+    ! Local variables toml tables
+
+    integer                       :: fu, rc, i
+    logical                       :: file_exists
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
 
     ! define local variables
-    character*255 :: forcing, code_dir, output_dir, input_dir, start_ts_year, end_ts_year, start_ave_year, end_ave_year
+    character*255 :: start_ts_year, end_ts_year, start_ave_year, end_ave_year
+    character(len=:), allocatable :: code_dir, data_dir, project_name, username
+    character(len=:), allocatable :: forcing, domain, input_dir, output_dir, path_restart
 
-    forcing = "era055"
+    inquire (file=paths_file, exist=file_exists)
+    
+    if (.not. file_exists) then
+        write (stderr, '("Error: TOML file ", a, " not found")') paths_file
+        stop
+    end if
+
+    open (action='read', file=paths_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write (stderr, '("Error: Reading TOML file ", a, " failed")') paths_file
+        stop
+    end if
+
+    call toml_parse(table, fu)
+    close (fu)
+
+    if (.not. allocated(table)) then
+        write (stderr, '("Error: Parsing failed")')
+        stop
+    end if
+
+    ! parameters ## to be moved to config files
+
     start_ts_year = "1939"
     end_ts_year = "2023"
     start_ave_year = "1940"
@@ -109,24 +197,46 @@ subroutine Define_Paths()
 
     model_first_timestep = "1939-09-01T00:00:00"
     model_last_timestep = "2023-12-31T21:00:00"
+    ! paths
+
+    ! find section.
+    
+    call get_value(table, 'directories', child, requested=.false.)
+    
+    if (associated(child)) then
+        call get_value(child, 'project_name', project_name)
+
+        print *, " "
+        print *, "Project name: ", project_name
+
+ 
+        call get_value(child, 'username', username)
+        call get_value(child, 'code_dir', code_dir)
+        call get_value(child, 'data_dir', data_dir)
+        call get_value(child, 'forcing', forcing)
+        call get_value(child, 'domain', domain)
+
+        print *, "Username: ", username
+        print *, " "
+
+    end if
+
+    ! integer :: i
+
+    data_dir = trim(adjustl(data_dir))
+
+    output_dir = trim(data_dir)//"output/"
 
     if (trim(project_name) == "example") then 
 
-        code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
-        output_dir = trim(code_dir)//"example/"
-        input_dir =  trim(code_dir)//"example/input/"
+        input_dir = trim(data_dir)//"input/"
         path_restart =  trim(code_dir)//"example/restart/"
-
         prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
         suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
 
     else
-
-        code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
-        output_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/"
-        input_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain)//"_"//trim(forcing)//"/input/"
+        input_dir = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
         path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-
         prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
         suffix_forcing_timeseries = ".nc"
 
@@ -137,7 +247,7 @@ subroutine Define_Paths()
     print *, "Path to input directory: ", input_dir
     print *, "Path to restart directory: ", path_restart
 
-    path_settings = trim(output_dir)//"ms_files/"
+    path_settings = trim(data_dir)//"ms_files/"
     path_forcing_dims =  trim(code_dir)//"reference/"//trim(domain)//"/"
     path_forcing_mask = trim(code_dir)//"reference/"//trim(domain)//"/"
     path_forcing_averages = trim(input_dir)//"averages/"
@@ -165,8 +275,8 @@ subroutine Define_Paths()
         print *, "No iceshelf_var defined for domain, ", domain
         print *, "so not loading ice shelf mask."
     end if
-
     
+    deallocate(table)
 
 end subroutine Define_Paths
 

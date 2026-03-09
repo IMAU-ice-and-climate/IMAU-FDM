@@ -2,11 +2,12 @@
 # Model settings #
 ##################
 
+[general_settings]
 run_location = "ecmwf" #ecmwf - run on ecmwf; offline - run on home computer; add other options as necessary; used for compiling in launch_job.sc
 restart_type = "none" # none -> do spinup; spinup -> start post-spinup; run -> start from end of last run
 
-domain = "FGRN055" # domain name, used in naming conventions
-forcing = "era055" # forcing name, used in naming conventions
+domain = "FGRN055" # domain name, used in naming conventions #TODO: HERE or in paths??
+forcing = "era055" # forcing name, used in naming conventions #TODO: HERE or in paths??
 
 
 #DEFAULT

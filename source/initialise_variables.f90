@@ -1,7 +1,10 @@
 module initialise_variables
     !*** Subroutines for allocating memory and assigning initial values to variables ***!
 
-     use model_settings
+    use, intrinsic :: iso_fortran_env, only: stderr => error_unit
+    use tomlf
+
+    use model_settings
 
     implicit none
 
@@ -22,6 +25,13 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
 
     !*** Load model settings from file ***!
     
+    ! Local variables toml tables
+
+    integer                       :: fu, rc, i
+    logical                       :: file_exists
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
+
     ! declare arguments
     integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
         dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nlon_timeseries, &
@@ -31,52 +41,73 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     ! declare local variables
     integer :: NoR
 
-    print *, "Path to input settings file:"
-    print *, trim(path_settings)//trim(fname_settings)
-    print *, " "
-
-    open(unit=12, file=trim(path_settings)//trim(fname_settings))
-
-    ! read model settings and forcing dimensions
-    read (12,*)
-    read (12,*)
-    read (12,*) nyears              ! simulation time [yr]
-    read (12,*) nyearsSU            ! simulation time during the spin up period [yr]
-    read (12,*) dtmodelExp          ! time step in model with explicit T-scheme [s] 
-    read (12,*) dtmodelImp          ! time step in model with implicit T-scheme [s]
-    read (12,*) ImpExp              ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
-    read (12,*) dtobs               ! time step in input data [s]
-    read (12,*) dtSnow              ! duration of running average of variables used in snow parameterisation [s]
-    read (12,*)
-    read (12,*) dzmax               ! vertical model resolution [m]
-    read (12,*) initdepth           ! initial depth of firn profile [m]
-    read (12,*) th                  ! theta (if theta=0.5 , it is a Crank Nicolson scheme) 
-    read (12,*) startasice          ! indicates the initial rho-profile (1=linear, 2=ice)
-    read (12,*) beginT              ! indicates the inital T-profile (0=winter, 1=summer, 2=linear)
-    read (12,*) NoR                 ! number of times the data series is repeated for the initial rho profile is constructed
-    read (12,*) 
-    read (12,*) writeinspeed        ! frequency of writing speed components to file
-    read (12,*) writeinprof         ! frequency of writing of firn profiles to file
-    read (12,*) proflayers          ! number of output layers in the prof file
-    read (12,*) writeindetail       ! frequency of writing to detailed firn profiles to file
-    read (12,*) detlayers           ! number of output layers in the detailed prof file
-    read (12,*) detthick            ! thickness of output layer in the detailed prof file
-    read (12,*)
-    read (12,*) lon_current         ! Lon; indicates the longitude gridpoint
-    read (12,*) lat_current         ! Lat; indicates the latitude gridpoint
-    read (12,*)
-    read (12,*) Nlon                 ! Number of longitude points in forcing
-    read (12,*) Nlat                 ! Number of latitude points in forcing
-    read (12,*) Nlon_timeseries      ! num of longitude bands (set during input pre-processing)
-    read (12,*) Nt_forcing           ! Number of timesteps in forcing
-
-
-    ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
-
-    close(12)
-    
     print *, "Loaded model settings"
     print *, " "
+
+    inquire (file=model_settings_file, exist=file_exists)
+    
+    if (.not. file_exists) then
+        write (stderr, '("Error: TOML file ", a, " not found")') model_setting_file
+        stop
+    end if
+
+    open (action='read', file=model_setting_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_setting_file
+        stop
+    end if
+
+    call toml_parse(table, fu)
+    close (fu)
+
+    if (.not. allocated(table)) then
+        write (stderr, '("Error: Parsing failed")')
+        stop
+    end if
+
+    ! find section.
+    
+    call get_value(table, 'output_dimensions', child, requested=.false.)
+    
+    if (associated(child)) then
+
+        call get_value(child, 'proflayers', proflayers)
+        call get_value(child, 'writeindetail', writeindetail)
+        call get_value(child, 'detlayers', detlayers)
+        call get_value(child, 'detthick', detthick)
+
+        print *, " "
+        print *, "Proflayers: ", proflayers
+
+    end if
+
+    ! set default values
+    nyears = 84                 ! simulation time [yr]
+    nyearsSU = 30               ! simulation time during the spin up period [yr]
+    dtmodelExp = 180            ! time step in model with explicit T-scheme [s] 
+    dtmodelImp = 900            ! time step in model with implicit T-scheme [s]
+    ImpExp = 1                  ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
+    dtobs = 10800               ! time step in input data [s]
+    dtSnow = 31557600           ! duration of running average of variables used in snow parameterisation [s]
+    dzmax = 0.15                ! vertical model resolution [m]
+    initdepth = 1               ! initial depth of firn profile [m]
+    th = 0.5                    ! theta (if theta=0.5 , it is a Crank Nicolson scheme)
+    startasice = 1              ! indicates the initial rho-profile (1=linear, 2=ice)
+    beginT = 3                  ! indicates the inital T-profile (0=winter, 1=summer, 2=linear)
+    NoR = 6                     ! number of times the data series is repeated for the initial rho profile is constructed
+    writeinspeed = 86400        ! frequency of writing speed components to file
+    writeinprof = 2592000       ! frequency of writing of firn profiles to file
+    lon_current = -43.5083      ! indicates the longitude gridpoint  ##TODO: These vary, where to set this?
+    lat_current = 60.1478       ! indicates the latitude gridpoint  ##TODO: These vary, where to set this?
+    Nlon = 438                  ! Number of longitude points in forcing
+    Nlat = 566                  ! Number of latitude points in forcing
+    Nlon_timeseries = 6         ! num of longitude bands (set during input pre-processing)
+    Nt_forcing = 246424         ! Number of timesteps in forcing
+     
+    ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
+
+    deallocate(table)
 
 end subroutine Get_Model_Settings_and_Forcing_Dimensions
 
