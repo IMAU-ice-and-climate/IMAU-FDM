@@ -1,7 +1,7 @@
-nnodes = 1 # or 2 or 8...
-taskfactor = 1 #1 if 1 node, otherwise 3-5
 
-# DEFAULT
+[ecmwf]
+nnodes = 1 # or 2 or 8...
+taskfactor = 1 #1 if 1 node, otherwise 3-5, doesn't work yet
 
 walltime="48:00:00"   # (hms) walltime of the job 
 cooldown="00:00:30"   # (hms) how long prior end should focus shift to completing running jobs?

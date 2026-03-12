@@ -68,11 +68,14 @@ rundir/launch_new_job.sc
 # Ignore reference files -- too big
 reference/
 
+# Ignore temp files, acts as scratch
+temp/
+
 # Ignore modules and objects
 modules/
 objects/
 
-# Ignore a lot of the MO-fit files -- too big
+# Ignore a lot of the MO-fit data and figures -- too big
 MO_fit/data/sumup/source/*
 MO_fit/figures/*
 MO_fit/data/PKM/source/*

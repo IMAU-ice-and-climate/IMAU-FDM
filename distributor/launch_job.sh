@@ -6,8 +6,9 @@
 
 # load the yq module to read toml files
 
+RUN_TYPE="${1" #ECMWF" #or offline, or other options as added
 PATHS_TOML="${path_to_FDM}/settings/paths.toml"
-RUN_TYPE="ECMWF" #or offline, or other options as added
+
 
 if [ "$RUN_TYPE" = "ECMWF" ]; then
     module load yq/4.45.2
@@ -17,7 +18,6 @@ else
         exit 1
     fi
 fi
-
 
 #read in file structure from toml file
 
