@@ -332,7 +332,7 @@ def get_output_time_axis(start_date, end_date, method='10day'):
 
 
 def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
-                          detrended=False, timestep='10day'):
+                          grid_file=None, detrended=False, timestep='10day'):
     """
     Create an xarray Dataset for output.
 
@@ -345,9 +345,12 @@ def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
     time_values : np.ndarray
         Time coordinate values (fractional years)
     mask_ds : xr.Dataset
-        Mask dataset containing lat, lon, rlat, rlon coordinates
+        Mask dataset containing lat, lon coordinates
     var_metadata : dict
         Variable metadata (long_name, units)
+    grid_file : str or Path, optional
+        Path to FGRN055_grid.nc containing rotated pole rlat/rlon coordinates
+        in degrees and the rotated_pole grid mapping variable.
     detrended : bool
         Whether detrending was applied
     timestep : str
@@ -358,47 +361,80 @@ def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
     xr.Dataset
         Output dataset ready for saving
     """
-    # Create the dataset
+    n_rlat = data.shape[1]
+    n_rlon = data.shape[2]
+
+    # Load rotated pole grid coordinates from the grid reference file
+    if grid_file is None:
+        raise ValueError("grid_file must be provided (path to FGRN055_grid.nc)")
+    with xr.open_dataset(grid_file) as grid_ds:
+        rlat_deg = grid_ds['rlat'].values
+        rlon_deg = grid_ds['rlon'].values
+        rotated_pole_attrs = grid_ds['rotated_pole'].attrs
+
     ds = xr.Dataset(
         data_vars={
             var_name: (['time', 'rlat', 'rlon'], data.astype(np.float32)),
             'lat': (['rlat', 'rlon'], mask_ds['lat'].values),
             'lon': (['rlat', 'rlon'], mask_ds['lon'].values),
+            'rotated_pole': ([], np.int32(0)),
+            'y_FDM': (['rlat'], np.arange(n_rlat, dtype=np.int32)),
+            'x_FDM': (['rlon'], np.arange(n_rlon, dtype=np.int32)),
         },
         coords={
             'time': time_values,
-            'rlat': mask_ds['rlat'].values,
-            'rlon': mask_ds['rlon'].values,
+            'rlat': rlat_deg,
+            'rlon': rlon_deg,
         }
     )
 
-    # Add rotated pole if available
-    if 'rotated_pole' in mask_ds:
-        ds['rotated_pole'] = mask_ds['rotated_pole']
+    # CF-1.6 rotated pole grid mapping variable (from RACMO FGRN055 input files)
+    ds['rotated_pole'].attrs = rotated_pole_attrs
 
-    # Set variable attributes
     ds[var_name].attrs = {
         'long_name': var_metadata.get('long_name', var_name),
         'units': var_metadata.get('units', ''),
         'detrended': str(detrended),
         '_FillValue': np.float32(np.nan),
+        'grid_mapping': 'rotated_pole',
+        'coordinates': 'lon lat',
     }
 
-    # Set coordinate attributes
     ds['time'].attrs = {
         'long_name': 'Time in fractional years',
         'units': 'years',
     }
+    ds['rlat'].attrs = {
+        'axis': 'Y',
+        'long_name': 'latitude in rotated pole grid',
+        'standard_name': 'grid_latitude',
+        'units': 'degrees',
+    }
+    ds['rlon'].attrs = {
+        'axis': 'X',
+        'long_name': 'longitude in rotated pole grid',
+        'standard_name': 'grid_longitude',
+        'units': 'degrees',
+    }
     ds['lat'].attrs = {
         'long_name': 'latitude',
+        'standard_name': 'latitude',
         'units': 'degrees_north',
     }
     ds['lon'].attrs = {
         'long_name': 'longitude',
+        'standard_name': 'longitude',
         'units': 'degrees_east',
     }
+    ds['y_FDM'].attrs = {
+        'long_name': 'row index in IMAU-FDM grid (0-based)',
+        'units': '1',
+    }
+    ds['x_FDM'].attrs = {
+        'long_name': 'column index in IMAU-FDM grid (0-based)',
+        'units': '1',
+    }
 
-    # Set global attributes
     ds.attrs = {
         'title': f'IMAU-FDM gridded output: {var_metadata.get("long_name", var_name)}',
         'source': 'IMAU-FDM version 1.2+',

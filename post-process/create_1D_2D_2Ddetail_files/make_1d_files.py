@@ -254,6 +254,7 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         time_values=time_values,
         mask_ds=mask_ds,
         var_metadata=var_metadata,
+        grid_file=config.GRID_FILE,
         detrended=needs_detrend,
         timestep=timestep,
     )

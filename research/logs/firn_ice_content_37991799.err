@@ -1,0 +1,63 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-163 at 20260312_161442.004, PID: 3747131, JOBID: 37991799
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.37991799
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/7/37991799
+/home/nld4814/perm/code/IMAU-FDM/research/firn_ice_content_analysis.py:305: RuntimeWarning: Mean of empty slice
+  fic_mean = np.nanmean(fic_out, axis=0).astype(np.float32)
+/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/numpy/lib/_nanfunctions_impl.py:2015: RuntimeWarning: Degrees of freedom <= 0 for slice.
+  var = nanvar(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+/home/nld4814/perm/code/IMAU-FDM/research/firn_ice_content_analysis.py:413: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'history'    : f'Created on {datetime.utcnow().isoformat()}',
+Traceback (most recent call last):
+  File "/home/nld4814/perm/code/IMAU-FDM/research/firn_ice_content_analysis.py", line 449, in <module>
+    create_gridded_firn_ice_content(
+  File "/home/nld4814/perm/code/IMAU-FDM/research/firn_ice_content_analysis.py", line 309, in create_gridded_firn_ice_content
+    out = xr.Dataset(
+          ^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/dataset.py", line 393, in __init__
+    variables, coord_names, dims, indexes, _ = merge_data_and_coords(
+                                               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/structure/merge.py", line 1137, in merge_data_and_coords
+    coords = create_coords_with_default_indexes(coords, data_vars)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/coordinates.py", line 1270, in create_coords_with_default_indexes
+    new_coords = Coordinates._construct_direct(coords=variables, indexes=indexes)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/coordinates.py", line 358, in _construct_direct
+    obj._data = Dataset._construct_direct(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/dataset.py", line 852, in _construct_direct
+    dims = calculate_dimensions(variables)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/variable.py", line 3132, in calculate_dimensions
+    raise ValueError(
+ValueError: conflicting sizes for dimension 'dim_0': length 566 on 'rlat' and length 1026 on {'dim_0': 'time'}
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-03-12T18:44:04 on ac
+[ECMWF-INFO -ecepilog] JobName                   : firn_ice_content
+[ECMWF-INFO -ecepilog] JobID                     : 37991799
+[ECMWF-INFO -ecepilog] Submit                    : 2026-03-12T16:14:30
+[ECMWF-INFO -ecepilog] Start                     : 2026-03-12T16:14:34
+[ECMWF-INFO -ecepilog] End                       : 2026-03-12T18:44:04
+[ECMWF-INFO -ecepilog] QueuedTime                : 4.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 8970
+[ECMWF-INFO -ecepilog] ExitCode                  : 1:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : FAILED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/firn_ice_content_37991799.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/firn_ice_content_37991799.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 6
+[ECMWF-INFO -ecepilog] SBU                       : 127.551
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-firn_ice_content-1x6-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/logs/firn_ice_content__JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+

@@ -192,7 +192,7 @@ def create_output_dataset(config, output_var, time_array, grid_data, mask_data):
     grid_data : np.ndarray
         3D data array [time, rlat, rlon]
     mask_data : dict
-        Mask data with lat, lon, rlat, rlon
+        Mask data with lat, lon
 
     Returns
     -------
@@ -200,32 +200,61 @@ def create_output_dataset(config, output_var, time_array, grid_data, mask_data):
         Output dataset
     """
     nlat, nlon = config.grid_shape
-    ntime = len(time_array)
 
-    # Create dataset
+    # Load rotated pole grid coordinates from the grid reference file
+    grid_path = config.get_grid_path()
+    if grid_path is None:
+        raise FileNotFoundError(f"Grid file not found for domain {config.domain}")
+    with xr.open_dataset(grid_path) as grid_ds:
+        rlat_deg = grid_ds['rlat'].values
+        rlon_deg = grid_ds['rlon'].values
+        rotated_pole_attrs = grid_ds['rotated_pole'].attrs
+
     ds = xr.Dataset(
         {
             output_var: (['time', 'rlat', 'rlon'], grid_data.astype(np.float32)),
             'lat': (['rlat', 'rlon'], mask_data['lat'].astype(np.float32)),
             'lon': (['rlat', 'rlon'], mask_data['lon'].astype(np.float32)),
+            'rotated_pole': ([], np.int32(0)),
+            'y_FDM': (['rlat'], np.arange(nlat, dtype=np.int32)),
+            'x_FDM': (['rlon'], np.arange(nlon, dtype=np.int32)),
         },
         coords={
             'time': time_array,
-            'rlat': mask_data['rlat'].astype(np.float32),
-            'rlon': mask_data['rlon'].astype(np.float32),
+            'rlat': rlat_deg,
+            'rlon': rlon_deg,
         }
     )
 
-    # Add attributes
+    ds['rotated_pole'].attrs = rotated_pole_attrs
+    ds[output_var].attrs = {
+        'missing_value': np.float32(9.96921e+36),
+        'grid_mapping': 'rotated_pole',
+        'coordinates': 'lon lat',
+    }
+    ds['rlat'].attrs = {
+        'axis': 'Y',
+        'long_name': 'latitude in rotated pole grid',
+        'standard_name': 'grid_latitude',
+        'units': 'degrees',
+    }
+    ds['rlon'].attrs = {
+        'axis': 'X',
+        'long_name': 'longitude in rotated pole grid',
+        'standard_name': 'grid_longitude',
+        'units': 'degrees',
+    }
+    ds['lat'].attrs = {'long_name': 'latitude', 'standard_name': 'latitude', 'units': 'degrees_north'}
+    ds['lon'].attrs = {'long_name': 'longitude', 'standard_name': 'longitude', 'units': 'degrees_east'}
+    ds['y_FDM'].attrs = {'long_name': 'row index in IMAU-FDM grid (0-based)', 'units': '1'}
+    ds['x_FDM'].attrs = {'long_name': 'column index in IMAU-FDM grid (0-based)', 'units': '1'}
+
     ds.attrs['title'] = f'IMAU-FDM gridded output: {output_var}'
     ds.attrs['source'] = 'IMAU-FDM version 1.2+'
     ds.attrs['domain'] = config.domain
     ds.attrs['institution'] = 'IMAU, Utrecht University'
     ds.attrs['history'] = f'Created on {datetime.now().isoformat()}'
     ds.attrs['Conventions'] = 'CF-1.6'
-
-    # Variable attributes
-    ds[output_var].attrs['missing_value'] = np.float32(9.96921e+36)
 
     return ds
 

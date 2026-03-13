@@ -1,7 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=ice_lens
+#SBATCH --chdir=/home/nld4814/perm/code/IMAU-FDM/research
 #SBATCH --output=logs/%x_%j.out
-#SBATCH --error=logs/su%x_%j.err
+#SBATCH --error=logs/%x_%j.err
 #SBATCH --time=08:00:00
 #SBATCH --mem=24G
 #SBATCH --ntasks=1

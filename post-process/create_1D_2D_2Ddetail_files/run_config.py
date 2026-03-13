@@ -377,6 +377,14 @@ class RunConfig:
                 return mask_path
         return None
 
+    def get_grid_path(self) -> Optional[Path]:
+        """Get path to grid file containing rotated pole rlat/rlon coordinates."""
+        if self.reference_dir and self.domain:
+            grid_path = self.reference_dir / self.domain / f'{self.domain}_grid.nc'
+            if grid_path.exists():
+                return grid_path
+        return None
+
     def get_pointlist_path(self) -> Optional[Path]:
         """Get path to pointlist file for this domain."""
         if self.reference_dir and self.domain:
