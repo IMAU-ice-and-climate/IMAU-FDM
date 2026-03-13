@@ -8,35 +8,29 @@
 SRC_DIR = source
 MOD_DIR = modules
 OBJ_DIR = objects
-NETCDF4_INCLUDE = -I/opt/homebrew/include
-LDFLAGS = -L/opt/homebrew/lib -lnetcdff
-OFFLINE = 1
+OFFLINE = 0
 DEBUG = 1
 
-ifdef DEBUG
-OPTIMIZATION_FLAG = -Og # optimize while keeping debug experience in mind
+# Specify the Fortran compiler and NetCDF paths
+ifeq ($(OFFLINE),1)
+    FC = gfortran
+    NETCDF4_INCLUDE = -I/opt/homebrew/include
+    LDFLAGS = -L/opt/homebrew/lib -lnetcdff
+    ifeq ($(DEBUG),1)
+    OPTIMIZATION_FLAG = -Og
+    else
+    OPTIMIZATION_FLAG = -O3
+    endif
+    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE)
 else
-ifndef OPTIMIZATION_FLAG 
-OPTIMIZATION_FLAG = -O3 # max optimization level
-endif
-endif
-
-# Specify the Fortran compiler
-ifdef OFFLINE
-    FC = gfortran # use gfortran
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
-else
-ifndef OFFLINE 
-    FC =  mpifort # use mpifort on ecmwf
-ifdef ifeq ($(OMPI_FC),ifort)
-    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -warn all -diag-enable remark -g -debug -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
-    FFLAGS = $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)  # Compilation flags: optimization, module directory, and NetCDF include
-else
-ifndef DEBUG
-    #FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE) 
-    FFLAGS = -Wall $(OPTIMIZATION_FLAG) -g -ffree-line-length-0 -fimplicit-none -fcheck=all -fbacktrace -I $(MOD_DIR) $(NETCDF4_INCLUDE) # Compilation flags: optimization, module directory, and NetCDF include
-endif
-
+    FC = mpifort
+    NETCDF4_INCLUDE = -I$(shell nc-config --includedir)
+    LDFLAGS = $(shell nc-config --flibs)
+    ifeq ($(DEBUG),1)
+    FFLAGS = -O0 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+    else
+    FFLAGS = -O3 -g -traceback -module $(MOD_DIR) $(NETCDF4_INCLUDE)
+    endif
 endif
 
 # List of source files
