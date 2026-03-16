@@ -79,3 +79,6 @@ objects/
 MO_fit/data/sumup/source/*
 MO_fit/figures/*
 MO_fit/data/PKM/source/*
+
+#No claude files
+*.claude.md*
