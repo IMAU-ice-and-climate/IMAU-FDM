@@ -55,7 +55,8 @@ fi
 # get maximum number of parallel FDM runs in a job
 if [[ "$jobtype" == "np" ]]; then
   # tasks are defined by the number of tasks per node, cool down at the end
-  let "maxFDMs=${nnodes}*${FDMs_per_node}"
+  # Use tasks_per_node (matches SBATCH --ntasks-per-node allocation), not FDMs_per_node
+  let "maxFDMs=${nnodes}*${tasks_per_node}"
   let "coolFDMs=${maxFDMs}/2"
 elif [[ "$jobtype" == "nf" ]]; then
   # a FDM run for every task, no cool down

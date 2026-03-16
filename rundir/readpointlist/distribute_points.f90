@@ -242,20 +242,18 @@ do while ( count(threadok).ge.mintreads )
   &             ipoint, npoints, ntimesort, itact, sortedlist, &
   &             ngridpointsmax, pointlist, expruntime)
             
-            if ( itact > 1 ) then
-  	          
+            if ( itact > 0 ) then
+
               call get_point_list(ntimesort, itact, sortedlist, &
   &                               ngridpointsmax, pointlist, expruntime, nsecleft, itodo)
-            else 
-  	           
+            else
+
                itodo = -1
-               write(0,'(A,I8)') 'itodo = ', itodo
-               write(0,'(2A)') 'request = ', trim(request)
 
   	        endif
 
             if ( itodo > 0 ) then
-          	  
+
               open(112, file=reqfile, action='write')
           	  write(112,'(I8)') pointlist(itodo)
           	  write(112,'(I8)') expruntime(pointlist(itodo))/60
@@ -266,7 +264,7 @@ do while ( count(threadok).ge.mintreads )
           	  & 'DP: Give thread ',it-1,' # ',pointlist(itodo),&
           	  & ' , exprt ',expruntime(pointlist(itodo))/60, &
           	  & ' m; ',nsecleft/60, ' m left.'
-  	  
+
   	        else
 
           	  close(112)
@@ -275,11 +273,18 @@ do while ( count(threadok).ge.mintreads )
           	  close(112)
           	  threadok(it) = .false.
           	  p4thread(it) = -1
-          	  write(6,'(A,I4,A,I4,A,I4,A)') &
-          	  & 'DP: No points for thread ',it-1,'; no points available suitable with ',&
-          	  & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
-  	
-  	        endif  
+          	  if ( itact == 0 ) then
+          	    write(6,'(A,I4,A,I4,A)') &
+          	    & 'DP: No points for thread ',it-1,'; point list exhausted. ',&
+          	    & count(threadok), ' threads still active.'
+          	  else
+          	    write(6,'(A,I4,A,I4,A,I4,A,I4,A)') &
+          	    & 'DP: No points for thread ',it-1,'; ',itact,&
+          	    & ' point(s) remain but none fit within ',&
+          	    & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
+          	  endif
+
+  	        endif
          
           else
             
@@ -502,6 +507,17 @@ real    :: upfc, lwfc
 
 upfc = 1.3
 lwfc = 1.0
+
+! with only one point left, just check if there is enough time for it
+if ( ilist == 1 ) then
+  if ( nsecleft >= expruntime(pointlist(sortedlist(1)))*lwfc ) then
+    itodo = sortedlist(1)
+    ilist = ilist - 1
+  else
+    itodo = -1
+  endif
+  return
+endif
 
 if ( nsecleft > expruntime(pointlist(sortedlist(1)))*upfc ) then
   itodo = sortedlist(1)

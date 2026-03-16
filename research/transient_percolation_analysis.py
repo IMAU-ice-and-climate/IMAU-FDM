@@ -1,25 +1,21 @@
 """
 Transient percolation zone analysis for IMAU-FDM output.
 
-Three analyses, each supporting any gridded variable registered in
-config.VARIABLE_FILES (currently 'surfmelt' and 'Runoff'):
+Three long-window analyses (any registered variable):
 
-  1. map_melt_frequency
-     Map of how many years each pixel exceeded an annual event threshold.
-     Can cover the full simulation or be restricted to the last N years.
+  1. map_melt_frequency        — per-pixel event count over full run or N years
+  2. plot_melt_histogram       — count-distribution comparison between two periods
+  3. plot_percolation_migration — 4-category migration map (early vs. late window)
+  3b. plot_migration_panel     — multi-year grid of migration maps
 
-  2. plot_melt_histogram
-     Side-by-side bar chart comparing the distribution of per-pixel event
-     counts between two user-specified time periods.
+Year-to-year transition analyses (surfmelt only):
 
-  3. plot_percolation_migration
-     Map classifying whether pixels stayed in the low-event category, stayed
-     in the high-event category, or transitioned between the two when
-     comparing an early and a late window.
+  4. classify_zone_transitions  — per-pixel 4-category map for year-1 vs. year
+  5. plot_zone_transitions      — visualise the transition map
+  5b. plot_zone_transition_panel — multi-year grid of transition maps
 
-All functions default to variable='surfmelt'.  Pass variable='Runoff' (or any
-other key in config.VARIABLE_FILES) to run the same analysis on a different
-field.  All other defaults come from config.py and can be overridden inline.
+All functions default to variable='surfmelt'.  All other defaults come from
+config.py and can be overridden inline.
 """
 
 import sys
@@ -679,6 +675,197 @@ def plot_migration_panel(
         framealpha=0.9,
         bbox_to_anchor=(0.5, 0.01),
     )
+
+    if title:
+        fig.suptitle(title, fontsize=12)
+
+    return fig, axes_flat
+
+
+# =============================================================================
+# Year-to-year zone transition analysis  (formerly zone_transition.py)
+# =============================================================================
+
+def _annual_melt_for_year(year):
+    """Annual cumulative surface melt [mm w.e.] for a single calendar *year*."""
+    ds  = xr.open_dataset(config.VARIABLE_FILES['surfmelt'], decode_times=False)
+    out = ds['surfmelt'].sel(time=slice(year, year + 1)).sum(dim='time')
+    ds.close()
+    return out
+
+
+def _ice_mask_for_year(year):
+    """Boolean DataArray — True where the pixel is on-ice in *year*."""
+    ds   = xr.open_dataset(config.VARIABLE_FILES['vacc'], decode_times=False)
+    vacc = ds['vacc'].sel(time=slice(year, year + 1)).mean(dim='time')
+    ds.close()
+    return vacc.notnull()
+
+
+def classify_zone_transitions(year, melt_threshold=10.0):
+    """
+    Classify each grid pixel by its melt-zone transition between year-1 and year.
+
+    Parameters
+    ----------
+    year : int
+    melt_threshold : float — annual melt (mm w.e.) separating dry from percolation
+
+    Returns
+    -------
+    xr.DataArray (rlat, rlon)
+        1 = dry both years  2 = percolation both  3 = dry→percolation  4 = perc→dry
+        NaN = off-ice in either year, or no data
+    """
+    melt_prev = _annual_melt_for_year(year - 1)
+    melt_curr = _annual_melt_for_year(year)
+    on_ice    = _ice_mask_for_year(year - 1) & _ice_mask_for_year(year)
+
+    perc_prev = melt_prev >= melt_threshold
+    perc_curr = melt_curr >= melt_threshold
+
+    transitions = xr.full_like(melt_curr, np.nan)
+    transitions = transitions.where( perc_prev |  perc_curr, 1)   # dry  both
+    transitions = transitions.where(~perc_prev | ~perc_curr, 2)   # perc both
+    transitions = transitions.where( perc_prev | ~perc_curr, 3)   # dry → perc
+    transitions = transitions.where(~perc_prev |  perc_curr, 4)   # perc → dry
+    transitions = transitions.where(on_ice, np.nan)
+
+    transitions.attrs.update({
+        'long_name'     : f'Melt-zone transition {year - 1}\u2192{year}',
+        'melt_threshold': melt_threshold,
+        'flag_values'   : [1, 2, 3, 4],
+        'flag_meanings' : 'dry_unchanged perc_unchanged dry_to_perc perc_to_dry',
+    })
+    return transitions
+
+
+def plot_zone_transitions(year, melt_threshold=10.0, ax=None,
+                          show_unchanged=True, show_colorbar=False,
+                          add_title=True):
+    """
+    Map of melt-zone transitions between year-1 and year.
+
+    Parameters
+    ----------
+    year : int
+    melt_threshold : float
+    ax : matplotlib Axes, optional
+    show_unchanged : bool — show all 4 categories (default True)
+    show_colorbar : bool
+    add_title : bool
+
+    Returns
+    -------
+    ax : matplotlib Axes
+    """
+    transitions = classify_zone_transitions(year, melt_threshold)
+
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 10))
+
+    if show_unchanged:
+        colors = ['#c8c8c8', '#42628F', '#2ca02c', '#d62728']
+        bounds = [0.5, 1.5, 2.5, 3.5, 4.5]
+        labels = ['Dry (unchanged)', 'Percolation (unchanged)',
+                  'Dry \u2192 Percolation', 'Percolation \u2192 Dry']
+        plot_data = transitions
+    else:
+        colors = ['#2ca02c', '#d62728']
+        bounds = [2.5, 3.5, 4.5]
+        labels = ['Dry \u2192 Percolation', 'Percolation \u2192 Dry']
+        plot_data = transitions.where(transitions >= 3)
+
+    cmap = ListedColormap(colors)
+    norm = BoundaryNorm(bounds, cmap.N)
+    im   = plot_data.plot(ax=ax, cmap=cmap, norm=norm, add_colorbar=False)
+
+    if show_colorbar:
+        cbar = plt.colorbar(im, ax=ax, shrink=0.6, aspect=20, pad=0.02)
+        ticks = [1, 2, 3, 4] if show_unchanged else [3, 4]
+        cbar.set_ticks(ticks)
+        cbar.set_ticklabels(labels)
+
+    ax.set_aspect('equal')
+    ax.set_xlabel('rlon (grid index)')
+    ax.set_ylabel('rlat (grid index)')
+    if add_title:
+        ax.set_title(
+            f'Zone transitions {year - 1}\u2192{year}\n'
+            f'(threshold: {melt_threshold} mm w.e.)'
+        )
+    return ax
+
+
+def plot_zone_transition_panel(
+    years,
+    melt_threshold=10.0,
+    show_unchanged=True,
+    ncols=3,
+    figsize=None,
+    title=None,
+):
+    """
+    Multi-year grid of zone-transition maps with a single shared horizontal colorbar.
+
+    Parameters
+    ----------
+    years : list of int — each compared against year-1
+    melt_threshold : float
+    show_unchanged : bool
+    ncols : int
+    figsize : tuple, optional
+    title : str, optional
+
+    Returns
+    -------
+    fig, axes : Figure and (n_panels,) array of Axes
+    """
+    n            = len(years)
+    nrows        = int(np.ceil(n / ncols))
+    ncols_actual = min(n, ncols)
+
+    if figsize is None:
+        figsize = (ncols_actual * 4, nrows * 5 + 1.2)
+
+    from matplotlib.gridspec import GridSpec as _GS
+    top_val = 0.90 if title else 0.97
+    fig     = plt.figure(figsize=figsize)
+    _gs     = _GS(nrows, ncols_actual, figure=fig,
+                  left=0.02, right=0.98, bottom=0.10, top=top_val,
+                  wspace=0.05, hspace=0.15)
+    axes_flat = [fig.add_subplot(_gs[i // ncols_actual, i % ncols_actual])
+                 for i in range(n)]
+
+    for i, year in enumerate(years):
+        ax = axes_flat[i]
+        plot_zone_transitions(year, melt_threshold=melt_threshold, ax=ax,
+                              show_unchanged=show_unchanged, show_colorbar=False,
+                              add_title=False)
+        ax.set_title(f'{year - 1}\u2192{year}', fontsize=10)
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+
+    if show_unchanged:
+        colors = ['#c8c8c8', '#42628F', '#2ca02c', '#d62728']
+        bounds = [0.5, 1.5, 2.5, 3.5, 4.5]
+        labels = ['Dry (unchanged)', 'Percolation (unchanged)',
+                  'Dry \u2192 Percolation', 'Percolation \u2192 Dry']
+        ticks  = [1, 2, 3, 4]
+    else:
+        colors = ['#2ca02c', '#d62728']
+        bounds = [2.5, 3.5, 4.5]
+        labels = ['Dry \u2192 Percolation', 'Percolation \u2192 Dry']
+        ticks  = [3, 4]
+
+    from matplotlib.cm import ScalarMappable
+    sm = ScalarMappable(cmap=ListedColormap(colors),
+                        norm=BoundaryNorm(bounds, len(colors)))
+    sm.set_array([])
+    cbar_ax = fig.add_axes([0.15, 0.03, 0.70, 0.022])
+    cbar    = fig.colorbar(sm, cax=cbar_ax, orientation='horizontal')
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels(labels, fontsize=9)
 
     if title:
         fig.suptitle(title, fontsize=12)
