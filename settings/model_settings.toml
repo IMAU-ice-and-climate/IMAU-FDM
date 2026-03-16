@@ -9,6 +9,8 @@ restart_type = "none" # none -> do spinup; spinup -> start post-spinup; run -> s
 domain = "FGRN055" # domain name, used in naming conventions #TODO: HERE or in paths??
 forcing = "era055" # forcing name, used in naming conventions #TODO: HERE or in paths??
 
+[[model_physics]]
+DO_MO_FIT = "true"
 
 #DEFAULT
 
@@ -24,16 +26,18 @@ det2d_minimum = 1.0e-05 #minimum magnitude for refreezing sum in 2ddetail output
 
 # TKTKTK: all below should be set by netcdf
 
-# [forcing_description] # only used in naming conventions
-# start_ts_year = "1939"
-# end_ts_year = "2023" 
-# start_ave_year = "1940"
-# end_ave_year = "1970"
+[forcing_description] 
+start_ts_year = "1939"
+end_ts_year = "2023" 
+start_ave_year = "1940"
+end_ave_year = "1970"
 
 # [grid_dimensions]
-# numLons = 438
-# numLats = 566
-# num_longitude_bands = 6
-# numTimes = 246424
-# nyears_simulation = 84
-# nyears_spinup = 30
+numLons = 438
+numLats = 566
+num_longitude_bands = 6
+numTimes = 246424
+nyears_simulation = 84
+nyears_spinup = 30
+
+# 
