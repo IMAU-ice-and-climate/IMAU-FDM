@@ -34,13 +34,14 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
+import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
 from run_config import RunConfig, load_pointlist, load_mask
-from utils import add_crs_to_dataset
+from utils import create_output_dataset
 
 
 def average_over_layers(values, z_begin, z_end):
@@ -194,38 +195,6 @@ def process_point(args):
     except Exception as e:
         print(f"Error processing point {point_num}: {e}")
         return None
-
-
-def create_output_dataset(config, output_var, time_array, grid_data, mask_data):
-    """
-    Create output xarray Dataset with CF conventions.
-    """
-    nlat, nlon = config.grid_shape
-    ntime = len(time_array)
-
-    ds = xr.Dataset(
-        {
-            output_var: (['time', 'rlat', 'rlon'], grid_data.astype(np.float32)),
-            'lat': (['rlat', 'rlon'], mask_data['lat'].astype(np.float32)),
-            'lon': (['rlat', 'rlon'], mask_data['lon'].astype(np.float32)),
-        },
-        coords={
-            'time': time_array,
-            'rlat': mask_data['rlat'].astype(np.float32),
-            'rlon': mask_data['rlon'].astype(np.float32),
-        }
-    )
-
-    ds.attrs['title'] = f'IMAU-FDM gridded output: {output_var}'
-    ds.attrs['source'] = 'IMAU-FDM version 1.2+'
-    ds.attrs['domain'] = config.domain
-    ds.attrs['institution'] = 'IMAU, Utrecht University'
-    ds.attrs['history'] = f'Created on {datetime.now().isoformat()}'
-    ds.attrs['Conventions'] = 'CF-1.6'
-
-    ds[output_var].attrs['missing_value'] = np.float32(9.96921e+36)
-
-    return ds
 
 
 # Variable metadata for common outputs
@@ -386,14 +355,14 @@ def main():
         print("ERROR: Could not determine number of timesteps")
         sys.exit(1)
 
-    # Create time array (fractional years)
-    time_array = np.array([config.get_fractional_year(t, '2Ddetail') for t in range(n_timesteps)])
+    # Create time array
+    time_array = pd.DatetimeIndex([config.get_datetime(t, '2Ddetail') for t in range(n_timesteps)])
 
     # Filter by year range
     if args.start_year:
-        time_mask = time_array >= args.start_year
+        time_mask = time_array.year >= args.start_year
         if args.end_year:
-            time_mask &= time_array <= args.end_year
+            time_mask &= time_array.year <= args.end_year
         time_indices = np.where(time_mask)[0]
     else:
         time_indices = np.arange(n_timesteps)
@@ -401,7 +370,7 @@ def main():
     time_array = time_array[time_indices]
     n_times_output = len(time_array)
 
-    print(f"Output time range: {time_array[0]:.2f} to {time_array[-1]:.2f} ({n_times_output} timesteps)")
+    print(f"Output time range: {time_array[0]} to {time_array[-1]} ({n_times_output} timesteps)")
 
     # Initialize output grid
     nlat, nlon = config.grid_shape
@@ -444,28 +413,44 @@ def main():
 
     print(f"Completed: {completed}, Errors/Missing: {errors}")
 
+    # Build variable metadata
+    if args.output_var in VARIABLE_METADATA:
+        var_metadata = VARIABLE_METADATA[args.output_var]
+        extra_attrs = {}
+    elif args.depth is not None:
+        var_metadata = {'long_name': f'{args.var} at {args.depth}m depth', 'units': ''}
+        extra_attrs = {'depth': args.depth}
+    elif z_begin is not None and z_end is not None:
+        depth_begin_m = z_begin * layer_thickness
+        depth_end_m = z_end * layer_thickness
+        var_metadata = {
+            'long_name': f'{args.operation} of {args.var} from {depth_begin_m:.2f}m to {depth_end_m:.2f}m',
+            'units': '',
+        }
+        extra_attrs = {
+            'depth_begin': depth_begin_m,
+            'depth_end': depth_end_m,
+            'z_begin': z_begin,
+            'z_end': z_end,
+        }
+    else:
+        var_metadata = {'long_name': args.output_var, 'units': ''}
+        extra_attrs = {}
+
     # Create output dataset
     print("Creating output dataset...")
-    ds = create_output_dataset(config, args.output_var, time_array, grid_data, mask_data)
-    add_crs_to_dataset(ds, mask_path)
+    ds = create_output_dataset(
+        var_name=args.output_var,
+        data=grid_data,
+        time_values=time_array,
+        mask_ds=mask_data,
+        var_metadata=var_metadata,
+        timestep='10day',
+        domain=config.domain,
+    )
 
-    # Add variable-specific attributes
-    if args.output_var in VARIABLE_METADATA:
-        meta = VARIABLE_METADATA[args.output_var]
-        ds[args.output_var].attrs.update(meta)
-    else:
-        if args.depth is not None:
-            ds[args.output_var].attrs['long_name'] = f'{args.var} at {args.depth}m depth'
-            ds[args.output_var].attrs['depth'] = args.depth
-        elif z_begin is not None and z_end is not None:
-            # Calculate actual depth range
-            depth_begin_m = z_begin * layer_thickness
-            depth_end_m = z_end * layer_thickness
-            ds[args.output_var].attrs['long_name'] = f'{args.operation} of {args.var} from {depth_begin_m:.2f}m to {depth_end_m:.2f}m'
-            ds[args.output_var].attrs['depth_begin'] = depth_begin_m
-            ds[args.output_var].attrs['depth_end'] = depth_end_m
-            ds[args.output_var].attrs['z_begin'] = z_begin
-            ds[args.output_var].attrs['z_end'] = z_end
+    # Add extra variable-specific attributes
+    ds[args.output_var].attrs.update(extra_attrs)
 
     # Save output
     config.processed_output_dir.mkdir(parents=True, exist_ok=True)

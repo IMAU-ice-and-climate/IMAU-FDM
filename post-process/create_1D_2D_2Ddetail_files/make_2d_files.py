@@ -26,13 +26,14 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
+import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
 from run_config import RunConfig, load_pointlist, load_mask
-from utils import add_crs_to_dataset
+from utils import create_output_dataset
 
 
 def find_depth_at_threshold(depth, values, threshold, direction='max'):
@@ -178,57 +179,6 @@ def process_point(args):
         return None
 
 
-def create_output_dataset(config, output_var, time_array, grid_data, mask_data):
-    """
-    Create output xarray Dataset with CF conventions.
-
-    Parameters
-    ----------
-    config : RunConfig
-        Run configuration
-    output_var : str
-        Output variable name
-    time_array : np.ndarray
-        Fractional year time values
-    grid_data : np.ndarray
-        3D data array [time, rlat, rlon]
-    mask_data : dict
-        Mask data with lat, lon, rlat, rlon
-
-    Returns
-    -------
-    xr.Dataset
-        Output dataset
-    """
-    nlat, nlon = config.grid_shape
-    ntime = len(time_array)
-
-    # Create dataset
-    ds = xr.Dataset(
-        {
-            output_var: (['time', 'rlat', 'rlon'], grid_data.astype(np.float32)),
-            'lat': (['rlat', 'rlon'], mask_data['lat'].astype(np.float32)),
-            'lon': (['rlat', 'rlon'], mask_data['lon'].astype(np.float32)),
-        },
-        coords={
-            'time': time_array,
-            'rlat': mask_data['rlat'].astype(np.float32),
-            'rlon': mask_data['rlon'].astype(np.float32),
-        }
-    )
-
-    # Add attributes
-    ds.attrs['title'] = f'IMAU-FDM gridded output: {output_var}'
-    ds.attrs['source'] = 'IMAU-FDM version 1.2+'
-    ds.attrs['domain'] = config.domain
-    ds.attrs['institution'] = 'IMAU, Utrecht University'
-    ds.attrs['history'] = f'Created on {datetime.now().isoformat()}'
-    ds.attrs['Conventions'] = 'CF-1.6'
-
-    # Variable attributes
-    ds[output_var].attrs['missing_value'] = np.float32(9.96921e+36)
-
-    return ds
 
 
 def main():
@@ -328,14 +278,14 @@ def main():
         print("ERROR: Could not determine number of timesteps")
         sys.exit(1)
 
-    # Create time array (fractional years)
-    time_array = np.array([config.get_fractional_year(t, '2D') for t in range(n_timesteps)])
+    # Create time array
+    time_array = pd.DatetimeIndex([config.get_datetime(t, '2D') for t in range(n_timesteps)])
 
     # Filter by year range if specified
     if args.start_year:
-        time_mask = time_array >= args.start_year
+        time_mask = time_array.year >= args.start_year
         if args.end_year:
-            time_mask &= time_array <= args.end_year
+            time_mask &= time_array.year <= args.end_year
         time_indices = np.where(time_mask)[0]
     else:
         time_indices = np.arange(n_timesteps)
@@ -343,7 +293,7 @@ def main():
     time_array = time_array[time_indices]
     n_times_output = len(time_array)
 
-    print(f"Output time range: {time_array[0]:.2f} to {time_array[-1]:.2f} ({n_times_output} timesteps)")
+    print(f"Output time range: {time_array[0]} to {time_array[-1]} ({n_times_output} timesteps)")
 
     # Initialize output grid
     nlat, nlon = config.grid_shape
@@ -386,18 +336,36 @@ def main():
 
     print(f"Completed: {completed}, Errors/Missing: {errors}")
 
+    # Build variable metadata from args
+    if args.threshold is not None:
+        var_metadata = {
+            'long_name': f'Depth where {args.var} = {args.threshold}',
+            'units': 'm',
+        }
+    elif args.depth is not None:
+        var_metadata = {
+            'long_name': f'{args.var} at {args.depth}m depth',
+            'units': '',
+        }
+    else:
+        var_metadata = {'long_name': args.output_var, 'units': ''}
+
     # Create output dataset
     print("Creating output dataset...")
-    ds = create_output_dataset(config, args.output_var, time_array, grid_data, mask_data)
-    add_crs_to_dataset(ds, mask_path)
+    ds = create_output_dataset(
+        var_name=args.output_var,
+        data=grid_data,
+        time_values=time_array,
+        mask_ds=mask_data,
+        var_metadata=var_metadata,
+        timestep='monthly',
+        domain=config.domain,
+    )
 
-    # Add variable-specific attributes
+    # Add extra variable-specific attributes (threshold/depth values)
     if args.threshold is not None:
-        ds[args.output_var].attrs['long_name'] = f'Depth where {args.var} = {args.threshold}'
-        ds[args.output_var].attrs['units'] = 'm'
         ds[args.output_var].attrs['threshold'] = args.threshold
     elif args.depth is not None:
-        ds[args.output_var].attrs['long_name'] = f'{args.var} at {args.depth}m depth'
         ds[args.output_var].attrs['depth'] = args.depth
 
     # Save output

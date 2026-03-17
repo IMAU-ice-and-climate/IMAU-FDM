@@ -22,7 +22,7 @@ Usage:
 
 import re
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Tuple
 import numpy as np
@@ -456,6 +456,29 @@ class RunConfig:
         # Add timestep contribution (dt in days / days per year)
         dt_days = dt / 86400.0
         return start_frac + (timestep_idx * dt_days) / 365.25
+
+    def get_datetime(self, timestep_idx: int, file_type: str = '2D'):
+        """
+        Convert timestep index to datetime.
+
+        Parameters
+        ----------
+        timestep_idx : int
+            Zero-based timestep index
+        file_type : str
+            File type ('1D', '2D', '2Ddetail')
+
+        Returns
+        -------
+        datetime
+        """
+        if file_type == '1D':
+            dt = self.timestep_1d or 86400
+        elif file_type == '2D':
+            dt = self.timestep_2d or 2592000
+        else:  # 2Ddetail
+            dt = self.timestep_2ddetail or 864000
+        return self.model_start + timedelta(seconds=timestep_idx * dt)
 
     def get_spinup_end_index(self, file_type: str = '1D') -> int:
         """

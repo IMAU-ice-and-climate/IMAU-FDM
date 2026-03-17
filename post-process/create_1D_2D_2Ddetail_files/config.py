@@ -52,6 +52,7 @@ PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
 INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
 POINTLIST_FILE = BASE_DIR / 'reference' / DOMAIN / f'IN_ll_{DOMAIN}.txt'
 MASK_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_Masks.nc'
+GRID_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_grid.nc'
 
 # Output directory
 OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'

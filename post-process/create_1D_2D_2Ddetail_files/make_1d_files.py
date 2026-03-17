@@ -165,7 +165,7 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
 
     # Calculate time dimensions
     ntime_daily = len(create_time_array(config.MODEL_START, config.MODEL_END))
-    time_values, time_datetimes = get_output_time_axis(
+    time_values = get_output_time_axis(
         config.MODEL_START, config.MODEL_END, method=timestep
     )
     ntime_output = len(time_values)
