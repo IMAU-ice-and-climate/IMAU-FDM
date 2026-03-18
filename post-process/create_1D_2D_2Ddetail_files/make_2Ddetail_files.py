@@ -40,7 +40,8 @@ from tqdm import tqdm
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
-from run_config import RunConfig, load_pointlist, load_mask
+import config as post_config
+from run_config import RunConfig, load_pointlist, load_mask, validate_time_aggregation
 from utils import create_output_dataset
 
 
@@ -297,6 +298,13 @@ def main():
 
     print(config.summary())
 
+    # Validate that the configured aggregation is not finer than the model output timestep
+    validate_time_aggregation(
+        post_config.TIME_AGGREGATION_2Ddetail,
+        config.timestep_2ddetail or 864000,
+        context='2Ddetail files',
+    )
+
     # Get layer thickness
     layer_thickness = args.layer_thickness or config.detail_thickness or 0.04
     print(f"Layer thickness: {layer_thickness}m")
@@ -445,7 +453,7 @@ def main():
         time_values=time_array,
         mask_ds=mask_data,
         var_metadata=var_metadata,
-        timestep='10day',
+        timestep=post_config.TIME_AGGREGATION_2Ddetail,
         domain=config.domain,
     )
 

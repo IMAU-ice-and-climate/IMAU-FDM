@@ -27,6 +27,52 @@ from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Tuple
 import numpy as np
 
+# Mapping from human-readable label to seconds
+TIMESTEP_LABEL_TO_SECONDS = {
+    'daily':   86400,
+    '10day':   864000,
+    'monthly': 2592000,
+}
+# Reverse mapping: seconds → label (for auto-detection)
+TIMESTEP_SECONDS_TO_LABEL = {v: k for k, v in TIMESTEP_LABEL_TO_SECONDS.items()}
+
+
+def validate_time_aggregation(requested_label: str, actual_seconds: int, context: str = ''):
+    """
+    Validate that a requested time aggregation label is consistent with the
+    actual model output timestep.
+
+    Raises ValueError if:
+    - requested_label is not a known aggregation label
+    - the requested period is finer than actual_seconds (cannot upsample)
+
+    Parameters
+    ----------
+    requested_label : str
+        Requested aggregation label ('daily', '10day', 'monthly')
+    actual_seconds : int
+        Actual model output timestep in seconds
+    context : str
+        Optional description for error messages (e.g. '2D files')
+    """
+    prefix = f"{context}: " if context else ""
+
+    if requested_label not in TIMESTEP_LABEL_TO_SECONDS:
+        known = list(TIMESTEP_LABEL_TO_SECONDS)
+        raise ValueError(
+            f"{prefix}Unknown time aggregation '{requested_label}'. "
+            f"Known values: {known}"
+        )
+
+    requested_seconds = TIMESTEP_LABEL_TO_SECONDS[requested_label]
+    if requested_seconds < actual_seconds:
+        actual_label = TIMESTEP_SECONDS_TO_LABEL.get(actual_seconds, f'{actual_seconds}s')
+        raise ValueError(
+            f"{prefix}Requested aggregation '{requested_label}' ({requested_seconds}s) "
+            f"is finer than the model output timestep '{actual_label}' ({actual_seconds}s). "
+            f"Choose an aggregation >= the model output timestep."
+        )
+
 
 @dataclass
 class RunConfig:
@@ -479,6 +525,22 @@ class RunConfig:
         else:  # 2Ddetail
             dt = self.timestep_2ddetail or 864000
         return self.model_start + timedelta(seconds=timestep_idx * dt)
+
+    def get_time_aggregation_label(self, file_type: str = '2D') -> str:
+        """
+        Return a human-readable time aggregation label for the given file type.
+
+        Derived from the actual timestep in seconds read from the model output,
+        so it reflects what the model actually produced rather than any assumption.
+        """
+        _LABELS = {86400: 'daily', 864000: '10day', 2592000: 'monthly'}
+        if file_type == '2D':
+            dt = self.timestep_2d or 2592000
+        elif file_type == '2Ddetail':
+            dt = self.timestep_2ddetail or 864000
+        else:
+            dt = self.timestep_1d or 86400
+        return _LABELS.get(dt, f'{dt}s')
 
     def get_spinup_end_index(self, file_type: str = '1D') -> int:
         """
