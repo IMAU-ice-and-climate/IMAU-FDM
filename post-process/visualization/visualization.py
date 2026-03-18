@@ -307,75 +307,70 @@ def plot_multi_var_map(var_names, time_value, cmaps=None, vlims=None, figsize=No
 # Ice Sheet Facies Classification
 # =============================================================================
 
-def classify_zones(year, firn_air_threshold=0.5, melt_threshold=5.0):
+def classify_zones(year, melt_threshold=5.0):
     """
-    Classify ice sheet zones for a given year based on annual mean values.
+    Classify ice sheet zones for a given year based on annual totals.
 
     Parameters
     ----------
     year : int
-        Year to classify
-    firn_air_threshold : float
-        Threshold for firn air content (m). Below this = ablation zone.
-        Default 0.5 m.
+        Year to classify.
     melt_threshold : float
-        Threshold for cumulative annual surface melt (mm w.e.).
-        Above this = melt present. Default 0.0.
+        Cumulative annual surface melt (mm w.e.) above which a pixel is
+        considered to have significant melt. Default 5.0.
 
     Returns
     -------
     xr.DataArray
         Zone classification:
         0 = No data (NaN)
-        1 = Ablation zone (FirnAir < threshold)
-        2 = Percolation zone (melt > 0 AND FirnAir >= threshold)
-        3 = Dry snow zone (no melt AND FirnAir >= threshold)
+        1 = Ablation zone  (annual melt > annual accumulation)
+        2 = Percolation zone (melt > threshold AND NOT ablation)
+        3 = Dry snow zone  (melt <= threshold AND NOT ablation)
     """
-    # Load FirnAir and surfmelt data
-    ds_firn = load_gridded_data('FirnAir')
     ds_melt = load_gridded_data('surfmelt')
+    ds_vacc = load_gridded_data('vacc')
 
-    # Get annual means
-    firn_year = ds_firn['FirnAir'].sel(time=slice(year, year + 1)).mean(dim='time')
-    melt_year = ds_melt['surfmelt'].sel(time=slice(year, year + 1)).sum(dim='time')  # Cumulative melt
+    yr = slice(year, year + 1)
+    # Annual cumulative melt [mm w.e.]
+    melt_year = ds_melt['surfmelt'].sel(time=yr).sum(dim='time')
+    # Annual mean accumulation rate [m/yr] → convert to mm w.e./yr
+    accum_year = ds_vacc['vacc'].sel(time=yr).mean(dim='time') * 1000.0
 
-    # Create zone array (start with NaN = 0)
-    zones = xr.zeros_like(firn_year)
+    zones = xr.zeros_like(melt_year)
 
-    # Classify zones
-    # Ablation: low firn air content
-    ablation_mask = firn_year < firn_air_threshold
+    # Ablation: annual melt exceeds annual accumulation
+    ablation_mask = melt_year > accum_year
     zones = zones.where(~ablation_mask, 1)
 
-    # Percolation: has melt AND has firn air
-    percolation_mask = (melt_year > melt_threshold) & (firn_year >= firn_air_threshold)
+    # Percolation: significant melt but not losing mass overall
+    percolation_mask = (melt_year > melt_threshold) & ~ablation_mask
     zones = zones.where(~percolation_mask, 2)
 
-    # Dry snow: no significant melt AND has firn air
-    dry_snow_mask = (melt_year <= melt_threshold) & (firn_year >= firn_air_threshold)
+    # Dry snow: little or no melt and not ablating
+    dry_snow_mask = (melt_year <= melt_threshold) & ~ablation_mask
     zones = zones.where(~dry_snow_mask, 3)
 
-    # Keep NaN where original data was NaN
-    zones = zones.where(~np.isnan(firn_year), np.nan)
+    # Preserve NaN mask: off-ice pixels are NaN in vacc even if melt=0
+    valid = ~np.isnan(melt_year) & ~np.isnan(accum_year)
+    zones = zones.where(valid, np.nan)
 
-    # Add metadata
     zones.attrs['long_name'] = f'Ice sheet facies classification ({year})'
     zones.attrs['flag_values'] = [1, 2, 3]
     zones.attrs['flag_meanings'] = 'ablation_zone percolation_zone dry_snow_zone'
 
-    # Store coordinates for plotting
     zones = zones.assign_coords(
-        lat=ds_firn['lat'],
-        lon=ds_firn['lon']
+        lat=ds_melt['lat'],
+        lon=ds_melt['lon'],
     )
 
-    ds_firn.close()
     ds_melt.close()
+    ds_vacc.close()
 
     return zones
 
 
-def plot_zones(year, ax=None, firn_air_threshold=0.5, melt_threshold=5.0):
+def plot_zones(year, ax=None, melt_threshold=5.0, add_colorbar=True):
     """
     Plot ablation and percolation zones for a given year.
 
@@ -385,27 +380,27 @@ def plot_zones(year, ax=None, firn_air_threshold=0.5, melt_threshold=5.0):
         Year to plot
     ax : matplotlib axes, optional
         Axes to plot on
-    firn_air_threshold : float
-        Threshold for firn air content (m). Default 0.5 m.
     melt_threshold : float
-        Threshold for surface melt. Default 0.0.
+        Cumulative annual surface melt (mm w.e.) above which a pixel is
+        classified as percolation zone. Default 5.0.
+    add_colorbar : bool
+        Whether to add a colorbar. Set to False when using
+        plot_zones_timeseries, which adds one shared colorbar. Default True.
 
     Returns
     -------
     matplotlib axes
     """
     # Get zone classification
-    zones = classify_zones(year, firn_air_threshold, melt_threshold)
+    zones = classify_zones(year, melt_threshold)
 
     # Create figure if needed
     if ax is None:
         fig, ax = plt.subplots(figsize=(8, 10))
 
-    # Custom colormap: ablation=red, percolation=orange, dry snow=blue
-    colors = ['#d62728', '#ff7f0e', '#1f77b4']  # red, orange, blue
-    cmap = ListedColormap(colors)
-    bounds = [0.5, 1.5, 2.5, 3.5]
-    norm = BoundaryNorm(bounds, cmap.N)
+    zones_colors = ["#E57ACF", "#42628F", "#c8c8c8"]
+    cmap = ListedColormap(zones_colors)
+    norm = BoundaryNorm([0.5, 1.5, 2.5, 3.5], cmap.N)
 
     # Plot
     im = zones.plot(
@@ -415,10 +410,10 @@ def plot_zones(year, ax=None, firn_air_threshold=0.5, melt_threshold=5.0):
         add_colorbar=False
     )
 
-    # Add colorbar with labels
-    cbar = plt.colorbar(im, ax=ax, shrink=0.6, aspect=20, pad=0.02)
-    cbar.set_ticks([1, 2, 3])
-    cbar.set_ticklabels(['Ablation', 'Percolation', 'Dry Snow'])
+    if add_colorbar:
+        cbar = plt.colorbar(im, ax=ax, shrink=0.6, aspect=20, pad=0.02)
+        cbar.set_ticks([1, 2, 3])
+        cbar.set_ticklabels(['Ablation', 'Percolation', 'Dry Snow'])
 
     ax.set_aspect('equal')
     ax.set_xlabel('rlon (grid index)')
@@ -428,8 +423,7 @@ def plot_zones(year, ax=None, firn_air_threshold=0.5, melt_threshold=5.0):
     return ax
 
 
-def plot_zones_timeseries(years, firn_air_threshold=0.5, melt_threshold=5.0,
-                          ncols=4, figsize=None):
+def plot_zones_timeseries(years, melt_threshold=5.0, ncols=4, figsize=None):
     """
     Plot zone maps for multiple years.
 
@@ -437,10 +431,9 @@ def plot_zones_timeseries(years, firn_air_threshold=0.5, melt_threshold=5.0,
     ----------
     years : list of int
         Years to plot
-    firn_air_threshold : float
-        Threshold for firn air content (m). Default 0.5 m.
     melt_threshold : float
-        Threshold for surface melt. Default 0.0.
+        Cumulative annual surface melt (mm w.e.) above which a pixel is
+        classified as percolation zone. Default 5.0.
     ncols : int
         Number of columns in subplot grid. Default 4.
     figsize : tuple, optional
@@ -462,14 +455,33 @@ def plot_zones_timeseries(years, firn_air_threshold=0.5, melt_threshold=5.0,
 
     for i, year in enumerate(years):
         plot_zones(year, ax=axes[i],
-                   firn_air_threshold=firn_air_threshold,
-                   melt_threshold=melt_threshold)
+                   melt_threshold=melt_threshold,
+                   add_colorbar=False)
+        axes[i].set_title(str(year))
 
     # Hide unused axes
     for j in range(i + 1, len(axes)):
         axes[j].set_visible(False)
 
-    plt.tight_layout()
+    fig.suptitle(f'Ice Sheet Facies Timeseries (\u2265{melt_threshold} mm w.e.)',
+                 fontsize=13)
+
+    # Single shared colorbar — placed in reserved space below all subplots
+    zones_colors = ["#E57ACF", "#42628F", "#c8c8c8"]
+    zones_cmap = ListedColormap(zones_colors)
+    zones_norm = BoundaryNorm([0.5, 1.5, 2.5, 3.5], zones_cmap.N)
+    sm = plt.cm.ScalarMappable(cmap=zones_cmap, norm=zones_norm)
+    sm.set_array([])
+
+    # tight_layout rect leaves space at top (suptitle) and bottom (colorbar)
+    plt.tight_layout(rect=[0, 0.10, 1, 0.95])
+    # Colorbar axes: centred horizontally, [left, bottom, width, height]
+    cbar_width = 0.30
+    cax = fig.add_axes([(1 - cbar_width) / 2, 0.03, cbar_width, 0.025])
+    cbar = fig.colorbar(sm, cax=cax, orientation='horizontal')
+    cbar.set_ticks([1, 2, 3])
+    cbar.set_ticklabels(['Ablation', 'Percolation', 'Dry Snow'])
+
     return fig, axes
 
 

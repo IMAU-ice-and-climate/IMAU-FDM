@@ -14,7 +14,6 @@ import xarray as xr
 from datetime import datetime, timedelta
 from pathlib import Path
 
-
 def load_pointlist(pointlist_file):
     """
     Load and parse the pointlist file.
@@ -290,9 +289,9 @@ def get_output_time_axis(start_date, end_date, method='10day'):
 
     Returns
     -------
-    tuple
-        (time_values, time_units, calendar)
-        time_values as fractional years for compatibility with existing tools
+    pd.DatetimeIndex
+        Time axis as datetime timestamps (xarray encodes as CF-compliant
+        'days since ...' when writing to NetCDF).
     """
     # Create full daily time array
     daily_times = create_time_array(start_date, end_date)
@@ -325,14 +324,127 @@ def get_output_time_axis(start_date, end_date, method='10day'):
     else:
         raise ValueError(f"Unknown method: {method}")
 
-    # Convert to fractional years for compatibility
-    time_values = datetime_to_fractional_year(output_times)
+    return pd.DatetimeIndex(output_times)
 
-    return time_values, output_times
+
+def _load_rotated_pole_attrs(grid_file):
+    """Read rotated_pole attributes from the reference grid NetCDF file."""
+    with xr.open_dataset(grid_file) as gds:
+        return dict(gds['rotated_pole'].attrs)
+
+
+def _load_crs_attrs(grid_file):
+    """Read crs attributes from the reference grid NetCDF file."""
+    with xr.open_dataset(grid_file) as gds:
+        return dict(gds['crs'].attrs)
+
+
+def _load_grid_coords(grid_file):
+    """Read rlat/rlon coordinate arrays and attrs from the reference grid NetCDF file."""
+    with xr.open_dataset(grid_file) as gds:
+        return (
+            gds['rlat'].values.astype(np.float32),
+            dict(gds['rlat'].attrs),
+            gds['rlon'].values.astype(np.float32),
+            dict(gds['rlon'].attrs),
+        )
+
+
+def add_crs_to_dataset(ds, mask_source=None, grid_source=None):
+    """
+    Add EPSG:3413 CRS metadata to an xarray Dataset in place.
+
+    Adds a 'crs' grid-mapping variable, 2D 'x'/'y' coordinate arrays in
+    metres, and 'grid_mapping'/'coordinates' attributes on every data
+    variable that has a 'time' dimension.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Output dataset to modify.
+    mask_source : str, Path, xr.Dataset, or None
+        Source for the X/Y coordinate arrays (must contain 'X' and 'Y' in km).
+        - Path / str  : path to the mask .nc file
+        - xr.Dataset  : already-loaded mask dataset
+        - None (default): look up automatically from config.py using DOMAIN:
+              <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc
+    grid_source : str, Path, or None
+        Path to the reference grid .nc file containing the rotated_pole variable.
+        - None (default): look up automatically from config.py using DOMAIN:
+              <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_grid.nc
+    """
+    if mask_source is None:
+        from config import BASE_DIR, DOMAIN
+        mask_source = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_Masks.nc'
+
+    if grid_source is None:
+        from config import BASE_DIR, DOMAIN
+        grid_source = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_grid.nc'
+
+    if isinstance(mask_source, (str, Path)):
+        mask_path = Path(mask_source)
+        if not mask_path.exists():
+            try:
+                from config import BASE_DIR, DOMAIN
+                hint = (
+                    f"  DOMAIN   = '{DOMAIN}'  (config.py)\n"
+                    f"  BASE_DIR = '{BASE_DIR}'  (config.py)\n"
+                    f"Change DOMAIN or BASE_DIR in config.py, or pass mask_source explicitly."
+                )
+            except ImportError:
+                hint = "Pass mask_source explicitly (config.py could not be imported)."
+            raise FileNotFoundError(
+                f"Mask file not found: {mask_path}\n"
+                f"Expected pattern: <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc\n"
+                f"{hint}"
+            )
+        mask_ds = xr.open_dataset(mask_path)
+        close_after = True
+    else:
+        mask_ds = mask_source
+        close_after = False
+
+    try:
+        x_m = (mask_ds['X'].values * 1000.0).astype(np.float32)  # km → m
+        y_m = (mask_ds['Y'].values * 1000.0).astype(np.float32)
+    finally:
+        if close_after:
+            mask_ds.close()
+
+    # Rotated pole and CRS scalar variables (attrs loaded from reference grid file)
+    ds['rotated_pole'] = xr.DataArray(
+        np.int32(0), attrs=_load_rotated_pole_attrs(grid_source)
+    )
+    crs_attrs = _load_crs_attrs(grid_source)
+    ds['crs'] = xr.DataArray(np.int32(0), attrs=crs_attrs)
+
+    epsg = crs_attrs.get('epsg_code', 'crs')
+    # x / y 2-D coordinate arrays
+    ds['x'] = xr.DataArray(
+        x_m, dims=['rlat', 'rlon'],
+        attrs={'standard_name': 'projection_x_coordinate',
+               'long_name': f'x coordinate ({epsg})',
+               'units': 'm', 'grid_mapping': 'crs'},
+    )
+    ds['y'] = xr.DataArray(
+        y_m, dims=['rlat', 'rlon'],
+        attrs={'standard_name': 'projection_y_coordinate',
+               'long_name': f'y coordinate ({epsg})',
+               'units': 'm', 'grid_mapping': 'crs'},
+    )
+
+    # Link data variables to the CRS and lat/lon auxiliary coordinates
+    for vname, var in ds.data_vars.items():
+        if 'time' in var.dims and var.ndim > 1:
+            ds[vname].attrs['grid_mapping'] = 'crs'
+            ds[vname].attrs['coordinates']  = 'lat lon'
+
+    ds.attrs['Conventions'] = 'CF-1.8'
 
 
 def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
-                          detrended=False, timestep='10day'):
+                          detrended=False, timestep='10day', domain=None,
+                          grid_source=None):
     """
     Create an xarray Dataset for output.
 
@@ -342,39 +454,54 @@ def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
         Variable name
     data : np.ndarray
         3D data array (time, rlat, rlon)
-    time_values : np.ndarray
-        Time coordinate values (fractional years)
+    time_values : pd.DatetimeIndex
+        Time coordinate values
     mask_ds : xr.Dataset
-        Mask dataset containing lat, lon, rlat, rlon coordinates
+        Mask dataset containing lat, lon, X, Y coordinates (from *_Masks.nc)
     var_metadata : dict
         Variable metadata (long_name, units)
     detrended : bool
         Whether detrending was applied
     timestep : str
         Time aggregation used
+    domain : str, optional
+        Domain name (e.g. 'FGRN055'). Defaults to DOMAIN from config.py.
+    grid_source : str, Path, or None
+        Path to the reference grid .nc file containing rlat/rlon degree values
+        and rotated_pole/crs variables. Defaults to
+        <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_grid.nc from config.py.
 
     Returns
     -------
     xr.Dataset
         Output dataset ready for saving
     """
+    if domain is None:
+        from config import DOMAIN
+        domain = DOMAIN
+
+    if grid_source is None:
+        from config import BASE_DIR, DOMAIN as _DOMAIN
+        grid_source = BASE_DIR / 'reference' / _DOMAIN / f'{_DOMAIN}_grid.nc'
+
+    # rlat/rlon degree values come from the RACMO grid file, not the mask
+    rlat_vals, rlat_attrs, rlon_vals, rlon_attrs = _load_grid_coords(grid_source)
+
     # Create the dataset
     ds = xr.Dataset(
         data_vars={
             var_name: (['time', 'rlat', 'rlon'], data.astype(np.float32)),
             'lat': (['rlat', 'rlon'], mask_ds['lat'].values),
             'lon': (['rlat', 'rlon'], mask_ds['lon'].values),
+            'y_FDM': (['rlat'], np.arange(len(rlat_vals), dtype=np.int32)),
+            'x_FDM': (['rlon'], np.arange(len(rlon_vals), dtype=np.int32)),
         },
         coords={
             'time': time_values,
-            'rlat': mask_ds['rlat'].values,
-            'rlon': mask_ds['rlon'].values,
+            'rlat': rlat_vals,
+            'rlon': rlon_vals,
         }
     )
-
-    # Add rotated pole if available
-    if 'rotated_pole' in mask_ds:
-        ds['rotated_pole'] = mask_ds['rotated_pole']
 
     # Set variable attributes
     ds[var_name].attrs = {
@@ -386,28 +513,45 @@ def create_output_dataset(var_name, data, time_values, mask_ds, var_metadata,
 
     # Set coordinate attributes
     ds['time'].attrs = {
-        'long_name': 'Time in fractional years',
-        'units': 'years',
+        'long_name': 'time',
+        'standard_name': 'time',
     }
     ds['lat'].attrs = {
         'long_name': 'latitude',
+        'standard_name': 'latitude',
         'units': 'degrees_north',
     }
     ds['lon'].attrs = {
         'long_name': 'longitude',
+        'standard_name': 'longitude',
         'units': 'degrees_east',
+    }
+    # rlat/rlon attrs come directly from the grid file
+    ds['rlat'].attrs = rlat_attrs
+    ds['rlon'].attrs = rlon_attrs
+    ds['y_FDM'].attrs = {
+        'long_name': 'row index in IMAU-FDM grid (0-based)',
+        'units': '1',
+    }
+    ds['x_FDM'].attrs = {
+        'long_name': 'column index in IMAU-FDM grid (0-based)',
+        'units': '1',
     }
 
     # Set global attributes
     ds.attrs = {
         'title': f'IMAU-FDM gridded output: {var_metadata.get("long_name", var_name)}',
         'source': 'IMAU-FDM version 1.2+',
-        'domain': 'FGRN055',
+        'domain': domain,
         'institution': 'IMAU, Utrecht University',
         'history': f'Created on {datetime.now().isoformat()}',
         'time_aggregation': timestep,
-        'Conventions': 'CF-1.6',
+        'Conventions': 'CF-1.8',
     }
+
+    # Add CRS metadata (requires X/Y arrays in the mask dataset)
+    if 'X' in mask_ds and 'Y' in mask_ds:
+        add_crs_to_dataset(ds, mask_ds, grid_source=grid_source)
 
     return ds
 

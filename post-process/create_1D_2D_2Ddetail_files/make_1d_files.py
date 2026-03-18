@@ -41,6 +41,7 @@ from tqdm import tqdm
 
 # Import local modules
 import config
+from run_config import validate_time_aggregation
 from utils import (
     load_pointlist,
     load_mask,
@@ -138,11 +139,14 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         Path to the output file
     """
     # Use defaults from config if not specified
-    timestep = timestep or config.TIME_AGGREGATION
+    timestep = timestep or config.TIME_AGGREGATION_1D
     spinup_start = spinup_start or config.SPINUP_START
     spinup_end = spinup_end or config.SPINUP_END
     output_dir = Path(output_dir) if output_dir else config.OUTPUT_DIR
     workers = workers or config.NUM_WORKERS or mp.cpu_count()
+
+    # Validate that the requested aggregation is not finer than the input timestep
+    validate_time_aggregation(timestep, config.INPUT_TIMESTEP_SECONDS, context='1D files')
 
     # Check if variable exists
     if var_name not in config.VARIABLES:
@@ -165,7 +169,7 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
 
     # Calculate time dimensions
     ntime_daily = len(create_time_array(config.MODEL_START, config.MODEL_END))
-    time_values, time_datetimes = get_output_time_axis(
+    time_values = get_output_time_axis(
         config.MODEL_START, config.MODEL_END, method=timestep
     )
     ntime_output = len(time_values)
@@ -370,7 +374,7 @@ Examples:
         '--timestep', '-t',
         choices=['daily', '10day', 'monthly'],
         default=None,
-        help=f'Time aggregation (default: {config.TIME_AGGREGATION})'
+        help=f'Time aggregation for 1D resampling (default: {config.TIME_AGGREGATION_1D})'
     )
     parser.add_argument(
         '--spinup-start',

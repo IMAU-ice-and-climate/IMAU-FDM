@@ -12,8 +12,14 @@ from datetime import datetime
 # USER-CONFIGURABLE SETTINGS
 # =============================================================================
 
-# Time aggregation: 'daily', '10day', or 'monthly'
-TIME_AGGREGATION = '10day'
+# Time aggregation for 1D output (daily input files are resampled to this):
+# 'daily', '10day', or 'monthly'
+TIME_AGGREGATION_1D = '10day'
+
+# Time aggregation for 2D and 2Ddetail output — these are fixed by the model
+# output timestep and cannot be changed without re-running the model.
+TIME_AGGREGATION_2D = 'monthly'        # 2D profile files: 30-day steps
+TIME_AGGREGATION_2Ddetail = '10day'    # 2Ddetail files: 10-day steps
 
 # Spinup period for detrending (h_surf and FirnAir only)
 # The model runs repeated forcing during this period
@@ -38,24 +44,27 @@ NUM_WORKERS = None
 BASE_DIR = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 
+# =============================================================================
+# MODEL METADATA
+# =============================================================================
+
+# Domain name — also controls the expected mask/pointlist file locations:
+#   <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc
+#   <BASE_DIR>/reference/<DOMAIN>/IN_ll_<DOMAIN>.txt
+DOMAIN = 'FGRN055'
+
 # Input files
 PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
 INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
-POINTLIST_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'IN_ll_FGRN055.txt'
-MASK_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_Masks.nc'
+POINTLIST_FILE = BASE_DIR / 'reference' / DOMAIN / f'IN_ll_{DOMAIN}.txt'
+MASK_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_Masks.nc'
+GRID_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_grid.nc'
 
 # Output directory
 OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
 
 # File naming pattern for input 1D files
-INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
-
-# =============================================================================
-# MODEL METADATA
-# =============================================================================
-
-# Domain name
-DOMAIN = 'FGRN055'
+INPUT_FILENAME_PATTERN = f'{DOMAIN}_era055_1D_{{point_id}}.nc'
 
 # Model run period
 MODEL_START = datetime(1939, 9, 1)
@@ -98,53 +107,53 @@ VARIABLES = {
         'long_name': 'Ice velocity at model base',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate 
     },
     'vacc': {
         'long_name': 'Accumulation velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate 
     },
     'vfc': {
         'long_name': 'Firn compaction velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate
     },
     'vmelt': {
         'long_name': 'Melt velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate
     },
-    'vbouy': {  # Note: typo in original model output
+    'vbouy': {  
         'long_name': 'Buoyancy velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate
     },
     'vsub': {
         'long_name': 'Sublimation velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate 
     },
     'vsnd': {
         'long_name': 'Snowdrift velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate 
     },
     'vtotal': {
         'long_name': 'Total velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate - already annualized in model
+        'aggregation': 'mean',  # Rate
     },
     'Runoff': {
         'long_name': 'Runoff',
-        'units': 'mm w.e.',  # Total per output period
+        'units': 'mm w.e.',  
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
@@ -156,19 +165,19 @@ VARIABLES = {
     },
     'refreeze': {
         'long_name': 'Refreezing',
-        'units': 'mm w.e.',  # Total per output period
+        'units': 'mm w.e.',  
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
     'rain': {
         'long_name': 'Rainfall',
-        'units': 'mm w.e.',  # Total per output period
+        'units': 'mm w.e.', 
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
     'surfmelt': {
         'long_name': 'Surface melt',
-        'units': 'mm w.e.',  # Total per output period
+        'units': 'mm w.e.', 
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
@@ -176,7 +185,7 @@ VARIABLES = {
         'long_name': 'Solar insolation',
         'units': 'W/m2',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Intensive variable - mean is appropriate
+        'aggregation': 'mean',  # Intensive variable 
     },
     'icemass': {
         'long_name': 'Ice mass',
