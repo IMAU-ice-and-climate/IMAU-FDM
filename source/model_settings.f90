@@ -16,12 +16,13 @@ module model_settings
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
+    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, & 
+    rgrain2_fresh, rgrain2_refreeze, kg, kcgH, kcgL, dzmax_upper_layer, surface_layer_upper_range, surface_layer_lower_range
     public :: save_output
     public :: model_first_timestep, model_last_timestep
     
     ! Parameterization options
-    public :: do_MO_fit
+    public :: do_MO_fit, grainsize_veldhuijsen, three_layer_grid_routines
 
     ! Declare the module variables
 
@@ -33,9 +34,11 @@ module model_settings
     character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var
     character(len=255) :: model_first_timestep, model_last_timestep
-    logical :: do_MO_fit
+    logical :: do_MO_fit, grainsize_veldhuijsen, three_layer_grid_routines
     integer :: save_output
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
+    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, &
+        det2d_minimum, days_per_year, rgrain2_fresh, rgrain2_refreeze, kg, kcgH, kcgL, dzmax_upper_layer, &
+        surface_layer_upper_range, surface_layer_lower_range
 
 contains
 
@@ -52,6 +55,13 @@ subroutine Define_Settings()
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    grainsize_veldhuijsen = .true. ! if true, densification based on Veldhuijsen et al., 2024
+
+    if (grainsize_veldhuijsen) then
+        three_layer_grid_routines = .true. 
+    else 
+        three_layer_grid_routines = .false. !requires a range for the surface layer, does not work without grainsize_veldhuijsen, as rgrain2 is required 
+    endif
 
 end subroutine Define_Settings
 
@@ -191,7 +201,15 @@ subroutine Define_Constants()
     days_per_year = 365.25    ! days per year [days]
     seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
     NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-    
+    rgrain2_fresh = (0.001_8 * 0.032715_8)**2 !squared grain size fresh snow
+    rgrain2_refreeze = (0.00025_8)**2 !squared grain size after refreezing
+    kg = 2.6D-7 
+    kcgH = 0.03_8
+    kcgL = 0.07_8
+    dzmax_upper_layer = 0.01 ! maximum upper layer [m], only when three_layer_grid_routines = .true. dzmax/3 should always be larger than dzmax_upper_layer
+    surface_layer_upper_range = 0.012
+    surface_layer_lower_range = 0.008
+
 !    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
 !    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
 

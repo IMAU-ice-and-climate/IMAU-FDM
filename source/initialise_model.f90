@@ -274,14 +274,14 @@ end subroutine Init_Density_Prof
 ! *******************************************************
 
 
-subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
+subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi, rgrain2_fresh, rgrain2, Year, dtmodel)
     !*** Initialise the temperature profile ***!
     
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, beginT
-    double precision, intent(in) :: tsav, pi, rhoi
+    integer, intent(in) :: ind_z_max, ind_z_surf, beginT, dtmodel
+    double precision, intent(in) :: tsav, pi, rhoi, rgrain2_fresh
     double precision, dimension(ind_z_max), intent(in) :: Depth, Rho
-    double precision, dimension(ind_z_max), intent(out) :: T
+    double precision, dimension(ind_z_max), intent(out) :: T, rgrain2, Year
 
     ! declare local variables
     integer :: ind_z
@@ -323,7 +323,14 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
             if (T(ind_z) > 272.15) T(ind_z) = 272.15
         endif
 
+        if (grainsize_veldhuijsen) then
+            Year(ind_z) = dtmodel
+            rgrain2(ind_z) = (0.001*0.03)**2
+        endif
+
     enddo
+
+    rgrain2(ind_z_surf) = rgrain2_fresh
 
     print *, 'Initial temperature 10 lowermost layers:'
     print *, T(1:10)

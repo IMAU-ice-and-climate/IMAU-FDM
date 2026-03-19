@@ -76,6 +76,9 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     close(12)
     
     print *, "Loaded model settings"
+    print *, 'Nlon_timeseries =', Nlon_timeseries
+    print *, 'writeindetail =', writeindetail
+    print *, 'Nt_forcing =', Nt_forcing
     print *, " "
 
 end subroutine Get_Model_Settings_and_Forcing_Dimensions
@@ -166,13 +169,13 @@ end subroutine Calc_Output_Freq
 ! *******************************************************
 
 
-subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, DZ_max)
+subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, DZ_max, rgrain2)
     !*** Initialise firn profile variables with zeros ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_surf
     double precision, intent(in) :: DZ_max
-    double precision, dimension(:), intent(out) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
+    double precision, dimension(:), intent(out) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
     ! declare local variables
     integer :: ind_z
@@ -186,6 +189,7 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     DenRho(:) = 0.
     Refreeze(:) = 0.
     Year(:) = 0.
+    rgrain2(:) = 0
     
     DZ(1:ind_z_surf) = DZ_max
 

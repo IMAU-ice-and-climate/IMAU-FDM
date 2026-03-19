@@ -1,7 +1,7 @@
 module time_loop
     !*** Subroutines for stepping through time ***!
 
-    use grid_routines, only: Split_Layers, Merge_Layers, Delete_Layers, Add_Layers
+    use grid_routines, only: Split_Surface_Layer_By_Threshold, Merge_Surface_Layer_By_Threshold, Delete_Layers, Add_Layers, Split_Surface_Layer_By_Thickness_Range, Merge_Surface_Layer_By_Thickness_Range, Split_Second_Layer_By_Threshold, Merge_Second_Layer_By_Threshold
     use firn_physics, only: Update_Surface, Densific, Solve_Temp_Imp, Solve_Temp_Exp, Calc_Integrated_Var
     use output, only: Accumulate_Output, To_out_1D, To_out_2D, To_out_2Ddetail
     use model_settings
@@ -17,16 +17,16 @@ contains
 ! *******************************************************
 
 
-subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax, M, T, DZ, Rho, &
-    DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-    ImpExp, nyears, nyearsSU)
+subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax, rgrain2_fresh, rgrain2_refreeze, M, T, DZ, Rho, &
+    DenRho, Depth, Mlwc, Refreeze, Year, rgrain2, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
+    ImpExp, nyears, nyearsSU, surface_layer_upper_range, surface_layer_lower_range)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
         
     ! declare arguments
     integer, intent(in) :: Nt_model_tot, Nt_model_spinup, ind_z_max, dtmodel, nyears, nyearsSU, IceShelf, ImpExp
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax
-    double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
+    double precision, intent(in) :: R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range
+    double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
 
@@ -79,29 +79,48 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             Sd = DrifFM(ind_t)
             
             ! Calculate the densification	  
-            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
+            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg, rhoi, acav, ffav, Rho, Year, rgrain2, T, M, domain, ind_t)
             
             ! Re-calculate the Temp-profile (explicit or implicit)		  
             if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
             if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
 
             ! Re-caluclate DZ/M-values according to new Rho-/T-values
-            call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, h_surf, vice, vmelt, vacc, vsub, &
-                vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
+            call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+                vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
                 ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
 
             ! Check if the vertical grid is still valid
-            if (DZ(ind_z_surf) > dzMAX) then
-                call Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
+
+            if (three_layer_grid_routines) then
+                if (DZ(ind_z_surf) > surface_layer_upper_range) then
+                    call Split_Surface_Layer_By_Thickness_Range(ind_z_max,dzmax_upper_layer,ind_z_surf,dzmax,Rho,M,T,Mlwc,DZ,DenRho,Refreeze,Year,rgrain2)
+                endif
+                if (DZ(ind_z_surf) < surface_layer_lower_range) then 
+                    call Merge_Surface_Layer_By_Thickness_Range(ind_z_max,dzmax_upper_layer,ind_z_surf,Rho,M,T,Mlwc,DZ,DenRho,Refreeze,Year,rgrain2)
+                endif
+                if (DZ(ind_z_surf-1) > dzMAX) then
+                    call Split_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
+                endif
+                if (DZ(ind_z_surf-1) <= dzMAX/3.) then
+                    call Merge_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
+                endif
+            else
+
+                if (DZ(ind_z_surf) > dzMAX) then
+                    call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
+                endif
+                if (DZ(ind_z_surf) <= dzMAX/3.) then
+                    call Merge_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+                endif
+
             endif
-            if (DZ(ind_z_surf) <= dzMAX/3.) then
-                call Merge_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
-            endif
+
             if ((ind_z_surf > 2500) .and. (MINVAL(Rho(1:200)) >= (rhoi-7.))) then
-                call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+                call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
             endif
             if (ind_z_surf < 200) then
-                call Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+                call Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
             endif
     
             ! Update the depth of each layer
@@ -144,8 +163,8 @@ end subroutine Time_Loop_SpinUp
 
 
 subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
-    outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
-    TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
+    outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
+    TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2, &
     domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
     out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
@@ -155,9 +174,9 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, ffav, detthick
+    double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, ffav, detthick, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
-    double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
+    double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
     double precision, dimension((outputSpeed), 18), intent(inout) :: out_1D
     double precision, dimension((outputProf), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension((outputDetail), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
@@ -193,31 +212,48 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         Sd = DrifFM(ind_t)
         
         ! Calculate the density profile      
-        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
+        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg, rhoi, acav, ffav, Rho, Year, rgrain2, T, M, domain, ind_t)
         
         ! Calculate the temperature profile (explicit or implicit)         
         if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
         if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
                 
         ! Add/remove mass from the surface layer and the update the layer thickness
-        call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, h_surf, vice, vmelt, vacc, vsub, &
-            vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
+        call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+            vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
             ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
         
         if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf
         
-        ! Check if the vertical grid is still valid
-        if (DZ(ind_z_surf) > dzMAX) then
-            call Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
+        if (three_layer_grid_routines) then
+            if (DZ(ind_z_surf) > surface_layer_upper_range) then
+                call Split_Surface_Layer_By_Thickness_Range(ind_z_max,dzmax_upper_layer,ind_z_surf,dzmax,Rho,M,T,Mlwc,DZ,DenRho,Refreeze,Year,rgrain2)
+            endif
+            if (DZ(ind_z_surf) < surface_layer_lower_range) then 
+                call Merge_Surface_Layer_By_Thickness_Range(ind_z_max,dzmax_upper_layer,ind_z_surf,Rho,M,T,Mlwc,DZ,DenRho,Refreeze,Year,rgrain2)
+            endif
+            if (DZ(ind_z_surf-1) > dzMAX) then
+                call Split_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
+            endif
+            if (DZ(ind_z_surf-1) <= dzMAX/3.) then
+                call Merge_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
+            endif
+        else
+
+            ! Check if the vertical grid is still valid
+            if (DZ(ind_z_surf) > dzMAX) then
+                call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
+            endif
+            if (DZ(ind_z_surf) <= dzMAX/3.) then
+                call Merge_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+            endif
         endif
-        if (DZ(ind_z_surf) <= dzMAX/3.) then
-            call Merge_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
-        endif
+
         if ((ind_z_surf > 2500) .and. (MINVAL(Rho(1:200)) >= (rhoi-7.))) then
-            call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+            call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
         endif
         if (ind_z_surf < 200) then
-            call Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+            call Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
         endif
 
         ! Update the depth of each layer

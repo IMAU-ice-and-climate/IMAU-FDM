@@ -3,6 +3,7 @@ module firn_physics
     
     use water_physics, only: Bucket_Method, LWrefreeze
     use model_settings
+    use grid_routines, only: Remove_Surface_Layer
 
     implicit none
     private
@@ -15,23 +16,23 @@ contains
 ! *******************************************************
 
 
-subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, h_surf, vice, vmelt, vacc, vsub, &
-    vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
+subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+    vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
     ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
     !*** Add and remove mass to the surface layer and calculate the velocity components ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_max, dtmodel, ImpExp, IceShelf
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: rho0, rhoi, acav, Lh
+    double precision, intent(in) :: rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer
     double precision, intent(inout) :: Ts, Psol, Pliq, Su, Sd, Me
     double precision, intent(inout) :: Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze
     double precision, intent(inout) :: vmelt, vice, h_surf, vacc, vsub, vsnd, vfc, vbouy
-    double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, DZ, Mlwc, Refreeze, DenRho
+    double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, DZ, Mlwc, Refreeze, DenRho, rgrain2, Year
 
     ! declare local variables
     integer :: ind_z
-    double precision :: mdiff, macc, mice, mrun, Mmelt, oldDZ
+    double precision :: mdiff, macc, mice, mrun, Mmelt, oldDZ, accumulation, negative_accumulation
 
     ! Prepare climate input for time step
     if (ImpExp == 1) then
@@ -67,9 +68,35 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
         DenRho(ind_z) = DenRho(ind_z) - (oldDZ - DZ(ind_z))   
     enddo
 
-    ! Add mass to the upper layer
-    M(ind_z_surf) = M(ind_z_surf) + (Psol+Su-Sd)
+    !Add mass to upper layer
+    if (grainsize_veldhuijsen) then
+        accumulation = Psol + Su - Sd
+        if (accumulation >= 0.) then !positive accumulation, so add to surface
+            M(ind_z_surf) = M(ind_z_surf) + accumulation
+        else
+            negative_accumulation = -accumulation !negative accumulation, so subtract from surface
+            do while (negative_accumulation > 0.) 
+                if (M(ind_z_surf) >= negative_accumulation) then !subtract if there is more mass in the surface layer than the mass that is removed
+                    M(ind_z_surf) = M(ind_z_surf) - negative_accumulation
+                    negative_accumulation = 0.
+                else
+                    negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
+                    call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
+                endif
+            enddo
+        endif
+    else
+        M(ind_z_surf) = M(ind_z_surf) + (Psol+Su-Sd)
+    endif
+
+    ! Accumulated accumulation for output 1D
     Msolin = Msolin + (Psol+Su-Sd)
+
+    if (grainsize_veldhuijsen) then
+        !recalculate grain size of the surface layer
+        rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Psol) + rgrain2_fresh *(Psol))/M(ind_z_surf)  
+        Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Psol))/M(ind_z_surf)
+    endif
 
     ! Snow accumulation
     DZ(ind_z_surf) = DZ(ind_z_surf) + (Psol/rho0)
@@ -99,8 +126,8 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
 
     ! Calculate the liquid water content
     if (ImpExp == 1) then
-        call Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
-        call LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
+        call Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper_layer, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
+        call LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
     endif
 
     ! If ice Shelf = on, vbouy has to be calculated
@@ -268,20 +295,73 @@ end function Thermal_Cond
 ! *******************************************************
 
 
-subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t)
+subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg, rhoi, acav, ffav, Rho, Year, rgrain2, T, M, domain, ind_t)
     !*** Update the density of each layer ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, dtmodel, ind_t
-    double precision, intent(in) :: rhoi, R, Ec, Eg, g, acav, ffav
-    double precision, dimension(ind_z_max), intent(in) :: T
-    double precision, dimension(ind_z_max), intent(inout) :: Rho
+    double precision, intent(in) :: rhoi, R, Ec, Eg, g, kcgL, kcgH, kg, acav, ffav
+    double precision, dimension(ind_z_max), intent(in) :: T, M
+    double precision, dimension(ind_z_max), intent(inout) :: Rho, Year, rgrain2
     character*255 :: domain
 
     ! declare local variables
     integer :: ind_z
-    double precision :: MO_low, MO_high, part1, Krate, corr
-    
+    double precision :: MO_low, MO_high, part1, Krate, corr, kc_low, kc_high, b_loc
+    double precision, dimension(ind_z_max) :: Sigm
+
+    if (grainsize_veldhuijsen) then
+        Year(:) = Year(:)+dtmodel                   ! age of the layer 
+        kc_low =  kcgL * kg                         ! constant with low density
+        kc_high = kcgH * kg                         ! constant with high density
+       
+        do ind_z = 1, ind_z_surf
+            Sigm(ind_z) = g*(SUM(M(ind_z+1:ind_z_surf))+0.5*M(ind_z))    ! overburden pressure
+        enddo 
+
+        do ind_z = 1, ind_z_surf
+            b_loc = Sigm(ind_z)*3600*24*365/(g*Year(ind_z))
+            
+            !low density
+            if (do_MO_fit) then
+                MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90
+            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+                !MO = 0.6688 + 0.0048*log(b_loc) ! old fit from 1.2G
+                MO_low = 0.7522 - 0.0178*log(b_loc) ! r2>0.8
+            endif
+
+            if (MO_low < 0.25) MO_low = 0.25
+
+            !high density
+            if (do_MO_fit) then
+                MO_high = 1 ! makes doing MO fits easier - set in model_settings.f90
+            elseif ((trim(domain) == "FGRN11") .or. (trim(domain) == "FGRN055")) then
+                !MO = 1.7465 - 0.2045*log(b_loc)      ! fit after debuggin heat eq. 
+                MO_high = 5.7819 * (b_loc**(-0.4187)) + 0.0527 ! r2>0.8
+            endif
+            
+            if (MO_high < 0.25) MO_high = 0.25
+
+            rgrain2(ind_z) = rgrain2(ind_z) + dtmodel * kg * exp(-Eg/(R*T(ind_z)))     ! grain size
+            
+            ! low density 
+            if (Rho(ind_z) <= 550.) then 
+                corr = kc_low*MO_low
+                part1 = exp(-Ec/(R*T(ind_z)))
+                Krate = corr * part1 * Sigm(ind_z)/rgrain2(ind_z)
+            else
+                corr = kc_high*MO_high
+                part1 = exp(-Ec/(R*T(ind_z)))
+                Krate = corr*acav*g*part1
+            endif
+
+            Rho(ind_z) = Rho(ind_z)+(rhoi-Rho(ind_z))*krate*dtmodel
+            if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
+
+        enddo
+
+    else       !so if grainsize_veldhuijsen is not used
+
     !low density
     if (do_MO_fit) then
         MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90
@@ -334,6 +414,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ff
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
         
     enddo
+
+    endif
 
     !if (mod(ind_t, 500000) == 0) print *, ""
     !if (mod(ind_t, 500000) == 0) print *, "MO low: ", MO_low, " MO high: ", MO_high

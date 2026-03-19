@@ -433,7 +433,7 @@ subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Ml
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dim1')
     status = nf90_inq_dimid(ncid(1),"constant",LayerID(2))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dimid2')
-    status = nf90_inquire_dimension(ncid(1),LayerID(2))!,len=1)
+    status = nf90_inquire_dimension(ncid(1),LayerID(2))!,len=1
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_dim2')
     
     ! Get all variables from the netCDF files

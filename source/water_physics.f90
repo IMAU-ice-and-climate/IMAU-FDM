@@ -2,6 +2,8 @@ module water_physics
     !*** All functions and subroutines for calculating vertical water percolation
 
     use model_settings
+    use grid_routines, only: Remove_Surface_Layer
+
     implicit none
     private
 
@@ -13,23 +15,39 @@ contains
 ! *******************************************************
 
 
-subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
+subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
     !*** Distribute new liquid water using the bucket method ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
-    double precision, intent(in) :: Me, rhoi, Lh
+    integer, intent(in) :: ind_z_max
+    integer, intent(inout) :: ind_z_surf
+    double precision, intent(in) :: Me, rhoi, Lh, rgrain2_refreeze, dzmax_upper
     double precision, intent(inout) :: Mmelt, Mrunoff, Mrefreeze
-    double precision, dimension(ind_z_max), intent(inout) :: Rho, T, DZ, M, Mlwc, Refreeze
+    double precision, dimension(ind_z_max), intent(inout) :: Rho, T, DZ, M, Mlwc, Refreeze, rgrain2, DenRho, Year
 
     ! declare local variables
     integer :: ind_z
-    double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch
+    double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch, remove_mass
 
     cp0 = 152.5 + 7.122*Tmelt
 
-    M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
-    DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
+    if (grainsize_veldhuijsen) then 
+        remove_mass = Me
+        do while (remove_mass > 0.)
+            if (M(ind_z_surf) >= remove_mass) then
+                M(ind_z_surf) = M(ind_z_surf) - remove_mass          !Substract melted snow from upper layer
+                DZ(ind_z_surf) = DZ(ind_z_surf) - (remove_mass/Rho(ind_z_surf))   !Recalculate the height of the upper layer
+                remove_mass = 0.
+            else 
+                remove_mass = remove_mass - M(ind_z_surf)
+                call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
+            endif
+        enddo
+    else
+        M(ind_z_surf) = M(ind_z_surf) - remove_mass                !Substract melted snow from upper layer
+        DZ(ind_z_surf) = DZ(ind_z_surf) - (remove_mass/Rho(ind_z_surf))   !Recalculate the height of the upper layer
+    endif
+   
 
     do ind_z = ind_z_surf, 1, -1   ! loop over all layers
 
@@ -46,6 +64,11 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                 Madd = Mmelt
                 Mmelt = 0.
                 T(ind_z) = T(ind_z) + ((Madd*Lh) / (M(ind_z)*cp0))
+                if (grainsize_veldhuijsen) then
+                    if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
+                        rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
+                    endif
+                endif
                 M(ind_z) = M(ind_z) + Madd
                 Mrefreeze = Mrefreeze + Madd
                 Refreeze(ind_z) = Refreeze(ind_z) + Madd
@@ -57,6 +80,11 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
             else
                 if (Mfreeze > Mavail) then
                     Madd = Mavail
+                    if (grainsize_veldhuijsen) then
+                        if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
+                            rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
+                        endif
+                    endif
                     M(ind_z) = M(ind_z) + Madd
                     Mrefreeze = Mrefreeze + Madd
                     Refreeze(ind_z) = Refreeze(ind_z) + Madd
@@ -64,6 +92,11 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                     T(ind_z) = T(ind_z) + ((Madd*Lh) / (M(ind_z)*cp0))
                 else
                     Madd = Mfreeze
+                    if (grainsize_veldhuijsen) then
+                        if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
+                            rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
+                        endif
+                    endif
                     M(ind_z) = M(ind_z) + Madd
                     Mrefreeze = Mrefreeze + Madd
                     Refreeze(ind_z) = Refreeze(ind_z) + Madd
@@ -136,15 +169,15 @@ end subroutine LWcontent
 ! *******************************************************
 
 
-subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
+subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
     !*** Refreeze water if layers have cooled below the melting point after temperature update ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf
-    double precision, intent(in) :: Lh
+    double precision, intent(in) :: Lh, rgrain2_refreeze
     double precision, intent(inout) :: Mrefreeze
     double precision, dimension(ind_z_max), intent(in) :: DZ
-    double precision, dimension(ind_z_max), intent(inout) :: Rho, T, M, Mlwc, Refreeze
+    double precision, dimension(ind_z_max), intent(inout) :: Rho, T, M, Mlwc, Refreeze, rgrain2
 
     ! declare local variables
     integer :: ind_z
@@ -157,6 +190,11 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
             cp = 152.5 + 7.122*T(ind_z)
             Mfreeze = ((Tmelt-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
             if (Mfreeze >= Mlwc(ind_z)) then
+                if (grainsize_veldhuijsen) then
+                    if (rgrain2(ind_z) < rgrain2_refreeze) then
+                        rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Mlwc(ind_z))/(M(ind_z)+Mlwc(ind_z))
+                    endif
+                endif
                 M(ind_z) = M(ind_z) + Mlwc(ind_z)                   ! Enough energy: all LWC is refrozen
                 Mrefreeze = Mrefreeze + Mlwc(ind_z)
                 Refreeze(ind_z) = Refreeze(ind_z) + Mlwc(ind_z)
@@ -164,6 +202,11 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
                 T(ind_z) = T(ind_z) + ((Mlwc(ind_z)*Lh) / (M(ind_z)*cp0))
                 Mlwc(ind_z) = 0.
             else 
+                if (grainsize_veldhuijsen) then
+                    if (rgrain2(ind_z) < rgrain2_refreeze) then
+                        rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Mfreeze)/(M(ind_z)+Mfreeze)
+                    endif
+                endif
                 M(ind_z) = M(ind_z) + Mfreeze                   ! Not enough energy: all energy is used for refreezing. Rest will remain LWC
                 Mrefreeze = Mrefreeze + Mfreeze
                 Refreeze(ind_z) = Refreeze(ind_z) + Mfreeze
