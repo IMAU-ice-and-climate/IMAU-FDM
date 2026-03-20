@@ -79,7 +79,7 @@ while [[ "$action" != "stop" ]]; do
     # put request into communicating file
     let "timeleft=${endsec}-${duration}"
     echo "$(date +%c): ${rankmss} Request for a grid point (${timeleft} s left), wait 2 seconds." >> $logfile
-    printf "provide\n%d\n" ${timeleft} > $requestfile
+	printf "provide\n%d\n" ${timeleft} > $requestfile
     action="listen"
     nlisten=0
     sleep 2
