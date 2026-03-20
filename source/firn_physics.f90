@@ -85,18 +85,14 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
                 endif
             enddo
         endif
+        rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Psol) + rgrain2_fresh * (Psol))/M(ind_z_surf) 
+        Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Psol))/M(ind_z_surf)
     else
         M(ind_z_surf) = M(ind_z_surf) + (Psol+Su-Sd)
     endif
 
     ! Accumulated accumulation for output 1D
     Msolin = Msolin + (Psol+Su-Sd)
-
-    if (grainsize_veldhuijsen) then
-        !recalculate grain size of the surface layer
-        rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Psol) + rgrain2_fresh *(Psol))/M(ind_z_surf)  
-        Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Psol))/M(ind_z_surf)
-    endif
 
     ! Snow accumulation
     DZ(ind_z_surf) = DZ(ind_z_surf) + (Psol/rho0)
