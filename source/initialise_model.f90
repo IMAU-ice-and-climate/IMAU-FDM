@@ -330,7 +330,9 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
 
     enddo
 
-    rgrain2(ind_z_surf) = rgrain2_fresh
+    if (grainsize_veldhuijsen) then
+        rgrain2(ind_z_surf) = rgrain2_fresh
+    endif
 
     print *, 'Initial temperature 10 lowermost layers:'
     print *, T(1:10)

@@ -189,7 +189,9 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     DenRho(:) = 0.
     Refreeze(:) = 0.
     Year(:) = 0.
-    rgrain2(:) = 0
+    if (grainsize_veldhuijsen) then
+        rgrain2(:) = 0
+    endif
     
     DZ(1:ind_z_surf) = DZ_max
 

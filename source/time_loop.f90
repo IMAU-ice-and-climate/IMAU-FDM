@@ -138,7 +138,9 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
 
         enddo  ! time loop
 
-        Year(:) = Year(:) - DBLE(nyearsSU)
+        if (.not. grainsize_veldhuijsen) then
+            Year(:) = Year(:) - DBLE(nyearsSU)
+        endif
         
         ! Calculate the firn air content, ice mass and total liquid water content of the firn column
         call Calc_Integrated_Var(ind_z_max, ind_z_surf, rhoi, Rho, Mlwc, M, DZ, FirnAir, TotLwc, IceMass)

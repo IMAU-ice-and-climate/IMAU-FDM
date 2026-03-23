@@ -44,8 +44,8 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, 
             endif
         enddo
     else
-        M(ind_z_surf) = M(ind_z_surf) - remove_mass                !Substract melted snow from upper layer
-        DZ(ind_z_surf) = DZ(ind_z_surf) - (remove_mass/Rho(ind_z_surf))   !Recalculate the height of the upper layer
+        M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
+        DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
     endif
    
 

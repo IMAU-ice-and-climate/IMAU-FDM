@@ -614,7 +614,7 @@ def match_fdm_points_to_cores(core_locations, fdm_pointlist_df, save_pointlist=F
     #pointlist_df.loc[xs].plot.scatter(x='longitude', y='latitude', title='FDM points nearest to cores', xlabel='Longitude', ylabel='Latitude',figsize=(4,5))
 
     if save_pointlist:
-        output_path = f"{output_dir}pointlist_from_cores.csv"
+        output_path = f"{output_dir}pointlist_from_cores_tesse_test.csv"
         pointlist_near_cores = fdm_pointlist_df.loc[xs].index.values
         np.savetxt(output_path, pointlist_near_cores, fmt='%d')
 
