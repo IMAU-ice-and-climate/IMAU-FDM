@@ -1,6 +1,8 @@
 !------------------------------------------------------
 !- MAIN PROGRAM OF THE FIRN DENSIFICATION MODEL
 !--------------
+!- 2026 updates: 
+!      - Submodule of distributor (distributor.f90)
 !- Cleaned up to become IMAU-FDM v1.2
 !- Cleaned up to become IMAU-FDM v1.0 (SL: 12-2014)
 !- Adapted for ECMWF use (01-2012)
@@ -22,10 +24,11 @@ module model_main
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main
     
     implicit none
-    
-subroutine Run_Model(point_numb, ind_lat, ind_lon)
 
-    integer :: point_numb
+contains
+
+subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon) 
+    
     integer :: ind_z_surf, ind_lon, ind_lat, Nt_forcing, Nlat, Nlon, Nlon_timeseries, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
     integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs
     integer :: writeinprof, writeinspeed, writeindetail
@@ -35,6 +38,8 @@ subroutine Run_Model(point_numb, ind_lat, ind_lon)
     integer :: prev_nt
     integer, parameter :: ind_z_max = 20000
     
+    double precision :: cur_lat, cur_lon
+
     double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, lon_current, lat_current, detthick
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
@@ -47,7 +52,6 @@ subroutine Run_Model(point_numb, ind_lat, ind_lon)
     double precision, dimension(:,:), allocatable :: out_1D
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
-
 
     print *, " "
     print *, "------------------------------------"
@@ -166,4 +170,8 @@ subroutine Run_Model(point_numb, ind_lat, ind_lon)
 
 end subroutine
     
+
+! ******************************************************* 
+
+
 end module model_main

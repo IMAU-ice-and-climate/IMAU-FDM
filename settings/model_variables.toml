@@ -10,6 +10,4 @@ Eg = 42400.0             #activation energy for grain growth [J mole-1]
 Lh = 333500.0            #latent heat of fusion [J kg-1]
 
 days_per_year = 365.25   # days per year TKTKTK: remove once timestamps incorprated
-NaN_value = 9.96921e+36 # missing value for doubles as used in the NCL scripts
-
-# pi doesn't change, not defined
+NaN_value = 9.96921e+36 # maybe should be a nan value missing value for doubles as used in the NCL scripts

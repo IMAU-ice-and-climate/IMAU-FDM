@@ -12,7 +12,8 @@ module model_settings
 
     ! Module-level variables that can be accessed by other modules
     
-    public :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, restart_type, forcing, data_dir
+    public :: point_numb
+    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, restart_type, forcing, data_dir
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
@@ -27,20 +28,22 @@ module model_settings
     public :: do_MO_fit
 
     ! Declare the module variables
+    ! note
+    !   Variables read directly from TOML via get_value → character(len=:), allocatable
+    !   Everything else (paths built by concatenation, command-line args, hardcoded strings) → character(len=512)
 
-    character(len=255) :: domain, paths_file, model_settings_file, point_numb, username, prefix_output, project_name, forcing, data_dir
-    character(len=255) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    character(len=255) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
-    character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
-    character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
-    character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    character(len=255) :: model_first_timestep, model_last_timestep
+    character(len=512) :: domain, paths_file, point_numb, username, prefix_output, project_name, forcing, data_dir
+    character(len=512) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
+    character(len=512) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
+    character(len=512) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
+    character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
+    character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
+    character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
+    character(len=512) :: model_first_timestep, model_last_timestep
     logical :: do_MO_fit
     integer :: save_output
     double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
-    character(len=:), allocatable :: path_restart, restart_type
-
+    character(len=:), allocatable :: path_restart, restart_type, model_settings_file
 contains
 
 subroutine Define_Settings()

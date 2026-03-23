@@ -2,7 +2,7 @@ module initialise_variables
     !*** Subroutines for allocating memory and assigning initial values to variables ***!
 
     use, intrinsic :: iso_fortran_env, only: stderr => error_unit
-    use tomlf
+    use tomlf, only: toml_table, toml_parse, get_value
 
     use model_settings
 
@@ -37,7 +37,6 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
         dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nlon_timeseries, &
         Nt_forcing
     double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
-
     ! declare local variables
     integer :: NoR
 
@@ -47,14 +46,14 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     inquire (file=model_settings_file, exist=file_exists)
     
     if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') model_setting_file
+        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
         stop
     end if
 
-    open (action='read', file=model_setting_file, iostat=rc, newunit=fu)
+    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
 
     if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_setting_file
+        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
         stop
     end if
 

@@ -39,5 +39,3 @@ num_longitude_bands = 6
 numTimes = 246424
 nyears_simulation = 84
 nyears_spinup = 30
-
-# 

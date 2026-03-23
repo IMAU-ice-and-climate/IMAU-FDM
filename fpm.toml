@@ -14,9 +14,9 @@ source-dir = "source"
 include-dir = "objects"
 
 [[executable]]
-name = "imau-fdm.x"
+name = "imau-fdm"
 source-dir = "source"
-main = "main.f90"
+main = "distributor.f90"
 
 [dependencies]
 toml-f = { git = "https://github.com/toml-f/toml-f", tag = "v0.4.2" }
