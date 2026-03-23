@@ -25,21 +25,23 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
     ! declare local variables
     integer :: ind_z
     double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch
-
+    
+    
     ! testing bucket parameterization
     integer :: n_ice_layers, k
-    double precision :: rho_pore_closeoff, rho_ice_threshhold, ice_slab_threshhold, fraction_runoff_pc, fraction_runoff_lens, minimum_lens_runoff, ice_layer_thickness
+    double precision :: rho_pore_closeoff, rho_ice_threshhold, ice_slab_threshhold, fraction_runoff_pc, ice_layer_thickness
     logical :: do_runoff_at_pore_closeoff, do_runoff_at_ice_lenses
-
-    do_runoff_at_pore_closeoff = .TRUE.
-    do_runoff_at_ice_lenses = .FALSE.
+    double precision :: lambda 
+    
+    do_runoff_at_pore_closeoff = .True.
+    do_runoff_at_ice_lenses = .False.
     
     rho_pore_closeoff = 830
     rho_ice_threshhold = rhoi ! could equal rhoi or 900 or some other threshhold
-    ice_slab_threshhold = 1 ! 1 m
-    minimum_lens_runoff = 0.2
+    lambda = 4.605 !ln(100)=4.605 to cause ~99% runoff at 1 m for Beer-Lambert attenuation
+    ice_slab_threshhold = 1.0
     Mrunoff = 0 ! now need to initialize runoff
-
+    
     ! begin Bucket_Method
 
     cp0 = 152.5 + 7.122*Tmelt
@@ -52,10 +54,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
 
         ! Testing New Bucket Parameterization
 
-        ! fractions of runoff reset each loop
-        fraction_runoff_pc = 0
-        fraction_runoff_lens = 0
-
+        ! updating pore close off so that you don't get double effects for ice lenses
         if (do_runoff_at_pore_closeoff) then
             if ((Rho(ind_z) > rho_pore_closeoff) .and. (Rho(ind_z) < rho_ice_threshhold)) then ! if rho > 830 and rho < rho_ice_threshold, which could be 900 or 917
                 fraction_runoff_pc = (1-(rho_ice_threshhold-Rho(ind_z))/(rho_ice_threshhold-rho_pore_closeoff))
@@ -65,9 +64,10 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
         endif
 
         if (do_runoff_at_ice_lenses) then
-            if (rho(ind_z) >= rho_ice_threshhold) then
-                !check if any layers below ind_z are not ice
-                if (ANY(Rho(1:ind_z) < rho_ice_threshhold)) then  ! otherwise, all ice below, so we've reached the bottom
+            if ((rho(ind_z) >= rho_ice_threshhold) .and. ((ind_z == ind_z_surf) .or. (Rho(ind_z+1) < rho_ice_threshhold))) then
+                !check if any layers below ind_z are not ice --> ice lens/slab and not the bottom of the firn column
+                !
+                if (ANY(Rho(1:ind_z-1) < rho_ice_threshhold)) then  ! otherwise, all ice below, so we've reached the bottom
                     ! you have an ice lens or slab
                     n_ice_layers = 0
                     do k = ind_z - 1, 1, -1
@@ -80,15 +80,14 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                 
                     ice_layer_thickness = sum(DZ(ind_z-n_ice_layers:ind_z)) ! continuous ice w/ depth
 
-                    ! between 1 layer and n_layers*dz = 1 m, runoff increases linearly, start at minimum_lens_runoff fraction
-                    ! if thickness reaches or exceeds ice_slab_threshhold, then all melt becomes runoff
+                    ! runoff related to thickness by Beer-Lambert attenuation, until at 1m all melt becomes runoff
+                    ! lambda set so that 99% of melt runs off when ice lens is 1m thick (discontinuity should be small)
                     if (ice_layer_thickness >= ice_slab_threshhold) then! all melt becomes runoff
                         Mrunoff = Mrunoff + Mmelt
                         Mmelt = 0
                     else
-                        fraction_runoff_lens = MAX(minimum_lens_runoff, ice_layer_thickness/ice_slab_threshhold)
-                        Mrunoff = Mrunoff + Mmelt*fraction_runoff_lens
-                        Mmelt = Mmelt - Mmelt*fraction_runoff_lens
+                        Mrunoff = Mrunoff + Mmelt * (1.0 - exp(-lambda * ice_layer_thickness))
+                        Mmelt   = Mmelt * exp(-lambda * ice_layer_thickness)
                     endif
                 endif
             endif
@@ -255,10 +254,18 @@ function Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ) result(Mavail)
 
     ! declare local variables
     double precision :: poro, maxpore, MavailCol, MavailMax, Mavail
+    logical :: test_coleau_fix
+
+    test_coleau_fix = .False.
 
     ! Maximum available capacity for liquid water according to Coleou, 1998
     poro = (rhoi-Rho(ind_z))/rhoi
     maxpore = 0.017 + 0.057 * (poro/(1.-poro))
+
+    if (test_coleau_fix) then
+        maxpore = maxpore / ( 1 - maxpore )
+    endif
+
     MavailCol = maxpore * M(ind_z)
 
     ! Maximum available capacity for liquid water for high density firn
