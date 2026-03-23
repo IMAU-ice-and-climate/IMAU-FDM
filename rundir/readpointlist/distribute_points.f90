@@ -243,17 +243,15 @@ do while ( count(threadok).ge.mintreads )
   &             ngridpointsmax, pointlist, expruntime)
             
             if ( itact > 0 ) then
-
+  	          
               call get_point_list(ntimesort, itact, sortedlist, &
   &                               ngridpointsmax, pointlist, expruntime, nsecleft, itodo)
             else
-
                itodo = -1
-
   	        endif
 
             if ( itodo > 0 ) then
-
+          	  
               open(112, file=reqfile, action='write')
           	  write(112,'(I8)') pointlist(itodo)
           	  write(112,'(I8)') expruntime(pointlist(itodo))/60
@@ -264,7 +262,7 @@ do while ( count(threadok).ge.mintreads )
           	  & 'DP: Give thread ',it-1,' # ',pointlist(itodo),&
           	  & ' , exprt ',expruntime(pointlist(itodo))/60, &
           	  & ' m; ',nsecleft/60, ' m left.'
-
+  	  
   	        else
 
           	  close(112)
@@ -273,18 +271,11 @@ do while ( count(threadok).ge.mintreads )
           	  close(112)
           	  threadok(it) = .false.
           	  p4thread(it) = -1
-          	  if ( itact == 0 ) then
-          	    write(6,'(A,I4,A,I4,A)') &
-          	    & 'DP: No points for thread ',it-1,'; point list exhausted. ',&
-          	    & count(threadok), ' threads still active.'
-          	  else
-          	    write(6,'(A,I4,A,I4,A,I4,A,I4,A)') &
-          	    & 'DP: No points for thread ',it-1,'; ',itact,&
-          	    & ' point(s) remain but none fit within ',&
-          	    & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
-          	  endif
-
-  	        endif
+          	  write(6,'(A,I4,A,I4,A,I4,A)') &
+          	  & 'DP: No points for thread ',it-1,'; no points available suitable with ',&
+          	  & nsecleft/60, ' minutes left. ', count(threadok), ' threads still active.'
+  	
+  	        endif  
          
           else
             
@@ -420,10 +411,10 @@ if ( any(ptodo) .or. any(p4thread > 1) ) then
   ! because we still have an error where 1 point can't be run alone, 
   ! so many jobs are submitted in a short amount of time
 
-  if ( nabort+nover .le. 2) then
-    request = "done"
-    write(6, '(A)') 'Only 2 points are left, so job is *NOT* resubmitted.'
-  endif
+  !if ( nabort+nover .le. 2) then
+  !  request = "done"
+  !  write(6, '(A)') 'Only 2 points are left, so job is *NOT* resubmitted.'
+  !endif
 
 else
   write(6,'(A)') 'distribute_points sees that everyting is completed!'
@@ -508,17 +499,6 @@ real    :: upfc, lwfc
 upfc = 1.3
 lwfc = 1.0
 
-! with only one point left, just check if there is enough time for it
-if ( ilist == 1 ) then
-  if ( nsecleft >= expruntime(pointlist(sortedlist(1)))*lwfc ) then
-    itodo = sortedlist(1)
-    ilist = ilist - 1
-  else
-    itodo = -1
-  endif
-  return
-endif
-
 if ( nsecleft > expruntime(pointlist(sortedlist(1)))*upfc ) then
   itodo = sortedlist(1)
   sortedlist(1:ilist-1) = sortedlist(2:ilist)
@@ -529,17 +509,17 @@ elseif ( nsecleft < expruntime(pointlist(sortedlist(ilist)))*lwfc ) then
 elseif ( nsecleft < expruntime(pointlist(sortedlist(ilist)))*upfc ) then
   ! find the largest one that is upfc of the remaining time
   jtodo = ilist
-  do while ( nsecleft > expruntime(pointlist(sortedlist(jtodo-1)))*lwfc ) 
+  do while ( jtodo > 1 .and. nsecleft > expruntime(pointlist(sortedlist(jtodo-1)))*lwfc )
    jtodo = jtodo - 1
-  enddo       
+  enddo
   itodo = sortedlist(jtodo)
-  sortedlist(jtodo:ilist-1) = sortedlist(jtodo+1:ilist) 
+  sortedlist(jtodo:ilist-1) = sortedlist(jtodo+1:ilist)
   ilist = ilist -1
-  
+
 else
   ! find the largest one that is no more than half of the remaining time
   jtodo = ilist
-  do while ( nsecleft > expruntime(pointlist(sortedlist(jtodo-1)))*upfc ) 
+  do while ( jtodo > 1 .and. nsecleft > expruntime(pointlist(sortedlist(jtodo-1)))*upfc )
    jtodo = jtodo - 1
   enddo       
   itodo = sortedlist(jtodo)

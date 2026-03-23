@@ -14,8 +14,8 @@ shopt -s expand_aliases  # Enables alias expansion.
 
 # script settions
 sleeptime=10 # seconds, defines time between different checks
-exittime=1500 # how many seconds before the end do we terminate
-nlistmax=1500 # how long (s) do we wait for a new job? Maybe the distributor "died"?
+exittime=500 # how many seconds before the end do we terminate
+nlistmax=500 # how long (s) do we wait for a new job? Maybe the distributor "died"?
 
 # identify "my rank"
 # ranks go from 0 to ntasks-1
