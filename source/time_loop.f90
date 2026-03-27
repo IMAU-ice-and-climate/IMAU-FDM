@@ -106,7 +106,6 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
                     call Merge_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
                 endif
             else
-                print*, 'test DEBUG: this should not print'
 
                 if (DZ(ind_z_surf) > dzMAX) then
                     call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
@@ -140,7 +139,6 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         enddo  ! time loop
 
         if (.not. grainsize_veldhuijsen) then
-            print*, 'test: this should not do something'
             Year(:) = Year(:) - DBLE(nyearsSU)
         endif
         
@@ -246,7 +244,6 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         else
 
             ! Check if the vertical grid is still valid
-            print*, 'test2: this should not print'
             if (DZ(ind_z_surf) > dzMAX) then
                 call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
             endif

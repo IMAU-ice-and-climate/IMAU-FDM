@@ -83,7 +83,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, aca
                     print*, 'update_surface, m>neg_accu, negative_accumulation=', negative_accumulation
                     negative_accumulation = 0.
                 else
-                    negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
+                    !negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
                     print*, 'update_surface, m<neg_accu, negative_accumulation=', negative_accumulation
                     call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
                 endif
@@ -376,7 +376,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg
         enddo
 
     else       !so if grainsize_veldhuijsen is not used
-    print*, 'this should not print'
+
     !low density
     if (do_MO_fit) then
         MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90

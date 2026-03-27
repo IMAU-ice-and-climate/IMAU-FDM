@@ -49,7 +49,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, ind_t, rhoi, Lh, Me, rgrain2_ref
             endif
         enddo
     else
-        print*, 'test1: this should not print'
+        !print*, 'test1: this should not print'
         M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
         DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
     endif

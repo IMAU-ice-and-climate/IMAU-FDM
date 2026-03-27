@@ -55,7 +55,7 @@ subroutine Define_Settings()
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
-    grainsize_veldhuijsen = .true. ! if true, densification based on Veldhuijsen et al., 2024
+    grainsize_veldhuijsen = .false. ! if true, densification based on Veldhuijsen et al., 2024
 
     if (grainsize_veldhuijsen) then
         three_layer_grid_routines = .true. 
