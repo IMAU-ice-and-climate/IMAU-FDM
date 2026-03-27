@@ -86,7 +86,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
 
             ! Re-caluclate DZ/M-values according to new Rho-/T-values
-            call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+            call Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
                 vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
                 ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
 
@@ -106,6 +106,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
                     call Merge_Second_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
                 endif
             else
+                print*, 'test DEBUG: this should not print'
 
                 if (DZ(ind_z_surf) > dzMAX) then
                     call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
@@ -139,6 +140,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         enddo  ! time loop
 
         if (.not. grainsize_veldhuijsen) then
+            print*, 'test: this should not do something'
             Year(:) = Year(:) - DBLE(nyearsSU)
         endif
         
@@ -167,8 +169,8 @@ end subroutine Time_Loop_SpinUp
 subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
     outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2, &
-    domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+    domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho,out_2D_rgrain, out_2D_year, &
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, prev_nt, restart_type)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
     
     ! declare arguments
@@ -180,8 +182,8 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
     double precision, dimension((outputSpeed), 18), intent(inout) :: out_1D
-    double precision, dimension((outputProf), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
-    double precision, dimension((outputDetail), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension((outputProf), proflayers), intent(inout) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain
+    double precision, dimension((outputDetail), detlayers), intent(inout) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year
     character*255, intent(in) :: domain, restart_type
     
     ! declare local variables
@@ -221,13 +223,14 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ, rhoi)
                 
         ! Add/remove mass from the surface layer and the update the layer thickness
-        call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+        call Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
             vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
             ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
         
         if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf
         
         if (three_layer_grid_routines) then
+            if (mod(ind_t, 200000) == 0) print *, 'test 8: three_layer_grid_routine'
             if (DZ(ind_z_surf) > surface_layer_upper_range) then
                 call Split_Surface_Layer_By_Thickness_Range(ind_z_max,dzmax_upper_layer,ind_z_surf,dzmax,Rho,M,T,Mlwc,DZ,DenRho,Refreeze,Year,rgrain2)
             endif
@@ -243,6 +246,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         else
 
             ! Check if the vertical grid is still valid
+            print*, 'test2: this should not print'
             if (DZ(ind_z_surf) > dzMAX) then
                 call Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
             endif
@@ -280,15 +284,15 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         endif
         
         if (mod(ind_t, numOutputProf) == 0.) then
-            call To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, &
-                Rho, T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, &
-                out_2D_depth, out_2D_dRho, out_2D_year)
+            call To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, Rho, &
+            T, rgrain2, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
+            out_2D_year, out_2D_rgrain)
         endif
         
         if (mod(ind_t, numOutputDetail) == 0.) then
-            call To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, detlayers, detthick, numOutputDetail, &
-                outputDetail, Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, &
-                out_2D_det_lwc, out_2D_det_refreeze)
+            call To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, numOutputDetail, outputDetail, &
+                Rho, T, rgrain2, Mlwc, Refreeze, DZ, Year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, &
+                out_2D_det_rgrain, out_2D_det_year)
         endif
     enddo
     

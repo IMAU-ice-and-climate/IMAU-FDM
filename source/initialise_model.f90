@@ -324,6 +324,7 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
         endif
 
         if (grainsize_veldhuijsen) then
+            if (ind_z == ind_z_surf) print*, 'test 6: Init_Temp_Prof works, inital year and rgrain profile'
             Year(ind_z) = dtmodel
             rgrain2(ind_z) = (0.001*0.03)**2
         endif
@@ -331,11 +332,13 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
     enddo
 
     if (grainsize_veldhuijsen) then
+        print*, 'test 7: Init_Temp_Prof, fresh grain size works'
         rgrain2(ind_z_surf) = rgrain2_fresh
     endif
 
     print *, 'Initial temperature 10 lowermost layers:'
     print *, T(1:10)
+    print *, Year(1:20)
     print *, " "
     
 end subroutine Init_Temp_Prof

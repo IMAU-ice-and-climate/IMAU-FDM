@@ -42,8 +42,8 @@ program main
     double precision, dimension(:,:), allocatable :: ISM, LSM, Latitude, Longitude
 
     double precision, dimension(:,:), allocatable :: out_1D
-    double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
-    double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain
+    double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year
 
     print *, " "
     print *, "------------------------------------"
@@ -112,7 +112,7 @@ program main
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
+        out_2D_rgrain, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, outputSpeed, outputProf, outputDetail, &
         proflayers, detlayers)
     
     ! Interpolate the RACMO forcing data to firn model time step
@@ -147,15 +147,15 @@ program main
 
     ! Call subprogram for spin-up and the time-integration			
     call Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
-        outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
-        TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2, &
-        domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+    outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, rgrain2_fresh, rgrain2_refreeze, surface_layer_upper_range, surface_layer_lower_range, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
+    TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2, &
+    domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho,out_2D_rgrain, out_2D_year, &
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, prev_nt, restart_type)
 
     ! Write output to netcdf files
     call Save_out_1D(outputSpeed, out_1D, writeinspeed)
-    call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
-    call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
+    call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain, writeinprof)
+    call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, writeindetail)
     call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
     
     print *, "Written output data to files"

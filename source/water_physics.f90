@@ -15,11 +15,11 @@ contains
 ! *******************************************************
 
 
-subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
+subroutine Bucket_Method(ind_z_max, ind_z_surf, ind_t, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
     !*** Distribute new liquid water using the bucket method ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max
+    integer, intent(in) :: ind_z_max, ind_t
     integer, intent(inout) :: ind_z_surf
     double precision, intent(in) :: Me, rhoi, Lh, rgrain2_refreeze, dzmax_upper
     double precision, intent(inout) :: Mmelt, Mrunoff, Mrefreeze
@@ -32,18 +32,24 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, 
     cp0 = 152.5 + 7.122*Tmelt
 
     if (grainsize_veldhuijsen) then 
+        if (mod(ind_t, 200000) == 0) print *, 'test 11: Bucket_Method, remove melt'
         remove_mass = Me
-        do while (remove_mass > 0.)
+        do while (remove_mass > 0.000005)
             if (M(ind_z_surf) >= remove_mass) then
+                print*, 'remove_mass>0.05, before substraction, M(ind_z_surf)=', M(ind_z_surf), 'remove_mass =', remove_mass, 'Me=', Me
                 M(ind_z_surf) = M(ind_z_surf) - remove_mass          !Substract melted snow from upper layer
                 DZ(ind_z_surf) = DZ(ind_z_surf) - (remove_mass/Rho(ind_z_surf))   !Recalculate the height of the upper layer
+                print*, 'melt routine: after subtraction removemass > 0.05, removemass =', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 remove_mass = 0.
             else 
+                print*, 'melt routine: M<removemass, removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 remove_mass = remove_mass - M(ind_z_surf)
+                print*, 'melt routine: M<removemass, new removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
             endif
         enddo
     else
+        print*, 'test1: this should not print'
         M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
         DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
     endif
@@ -65,6 +71,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, 
                 Mmelt = 0.
                 T(ind_z) = T(ind_z) + ((Madd*Lh) / (M(ind_z)*cp0))
                 if (grainsize_veldhuijsen) then
+                    if (mod(ind_t, 200000) == 0) print *, 'test 12: grain size calc in Bucket_Method'
                     if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
                         rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
                     endif
@@ -81,6 +88,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, 
                 if (Mfreeze > Mavail) then
                     Madd = Mavail
                     if (grainsize_veldhuijsen) then
+                        if (mod(ind_t, 200000) == 0) print *, 'test 13: grain size calc 2 in Bucket_Method'
                         if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
                             rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
                         endif
@@ -93,6 +101,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, 
                 else
                     Madd = Mfreeze
                     if (grainsize_veldhuijsen) then
+                        if (mod(ind_t, 200000) == 0) print *, 'test 14: grain size calc 3 in Bucket_Method'
                         if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
                             rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
                         endif
@@ -169,11 +178,11 @@ end subroutine LWcontent
 ! *******************************************************
 
 
-subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
+subroutine LWrefreeze(ind_z_max, ind_z_surf, ind_t, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
     !*** Refreeze water if layers have cooled below the melting point after temperature update ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
+    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t
     double precision, intent(in) :: Lh, rgrain2_refreeze
     double precision, intent(inout) :: Mrefreeze
     double precision, dimension(ind_z_max), intent(in) :: DZ
@@ -191,6 +200,7 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T,
             Mfreeze = ((Tmelt-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
             if (Mfreeze >= Mlwc(ind_z)) then
                 if (grainsize_veldhuijsen) then
+                    if (mod(ind_t, 200000) == 0) print *, 'test 15: grain size calc in LW refreeze' !remove ind_t when test is over
                     if (rgrain2(ind_z) < rgrain2_refreeze) then
                         rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Mlwc(ind_z))/(M(ind_z)+Mlwc(ind_z))
                     endif
@@ -203,6 +213,7 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T,
                 Mlwc(ind_z) = 0.
             else 
                 if (grainsize_veldhuijsen) then
+                    if (mod(ind_t, 200000) == 0) print *, 'test 16: grain size calc 2 in LW refreeze'
                     if (rgrain2(ind_z) < rgrain2_refreeze) then
                         rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Mfreeze)/(M(ind_z)+Mfreeze)
                     endif

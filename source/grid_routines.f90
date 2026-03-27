@@ -24,6 +24,8 @@ subroutine Split_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Ml
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
     
+    print*, 'start Split_Surface_Layer_By_Threshold'
+
     ! Create the new uppermost layer
     T(ind_z_surf+1) = T(ind_z_surf)
     Rho(ind_z_surf+1) = Rho(ind_z_surf)
@@ -57,6 +59,8 @@ subroutine Merge_Surface_Layer_By_Threshold(ind_z_max, ind_z_surf, Rho, M, T, Ml
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
     
+    print*, 'start Merge_Surface_Layer_By_Threshold'
+
     ! Add the upper first layer into the second layer
     T(ind_z_surf-1) = (T(ind_z_surf-1)*M(ind_z_surf-1) + T(ind_z_surf)*M(ind_z_surf)) / (M(ind_z_surf-1)+M(ind_z_surf))
     Year(ind_z_surf-1) = (Year(ind_z_surf-1)*M(ind_z_surf-1) + Year(ind_z_surf)*M(ind_z_surf)) / (M(ind_z_surf-1)+M(ind_z_surf))
@@ -95,6 +99,8 @@ subroutine Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Ref
 
     ! declare local variables
     integer :: ind_z
+
+    print*, 'start Delete_Layers'
     
     ! Move the upper 200 layers downwards
     do ind_z = 1, (ind_z_surf-200)
@@ -143,7 +149,9 @@ subroutine Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, D
 
     ! declare local variables
     integer :: ind_z
-    
+
+    print*, 'start Add_Layers'
+
     ! Move the old layers up a 100 indices 
     M(101:100+ind_z_surf)    = M(1:ind_z_surf)
     T(101:100+ind_z_surf)    = T(1:ind_z_surf)
@@ -192,6 +200,8 @@ end subroutine Add_Layers
     ! declare local variables
     integer :: DZ_to_second_layer, M_to_second_layer
   
+    print*, 'start Split_Surface_Layer_By_Thickness_Range'
+
     DZ_to_second_layer = DZ(ind_z_surf) - dzmax_upper_layer
     M_to_second_layer = DZ_to_second_layer * Rho(ind_z_surf)
 
@@ -227,6 +237,9 @@ end subroutine Add_Layers
     ! declare local variables
     integer :: dz_merge, m_merge
 
+
+    print*, 'start Merge_Surface_Layer_By_Thickness_Range'
+
     dz_merge = dzmax_upper_layer - DZ(ind_z_surf) 
     m_merge = M(ind_z_surf-1)*dz_merge/DZ(ind_z_surf-1)
 
@@ -256,6 +269,8 @@ end subroutine Add_Layers
     integer, intent(in) :: ind_z_max
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
+
+    print*, 'start Split_Second_Layer_By_Threshold'
 
     ! Create the new uppermost layer
     T(ind_z_surf+1) = T(ind_z_surf)
@@ -298,6 +313,8 @@ end subroutine Add_Layers
     integer, intent(in) :: ind_z_max
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
+
+    print*, 'start Merge_Second_Layer_By_Threshold'
 
     ! Add the second layer into the third layer
     T(ind_z_surf-2) = (T(ind_z_surf-2)*M(ind_z_surf-2) + T(ind_z_surf-1)*M(ind_z_surf-1)) / (M(ind_z_surf-2)+M(ind_z_surf-1))
@@ -345,6 +362,8 @@ end subroutine Add_Layers
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
+    print*, 'start Remove_Surface_Layer'
+    print*, 'ind_z_surf=', ind_z_surf
     ! Add liquid water from surface layer into new surface layer
     Mlwc(ind_z_surf-1) = Mlwc(ind_z_surf) + Mlwc(ind_z_surf - 1)
     

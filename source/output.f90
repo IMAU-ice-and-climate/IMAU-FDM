@@ -128,16 +128,16 @@ end subroutine To_out_1D
 
 
 subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, Rho, &
-        T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
-        out_2D_year)
+        T, rgrain2, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
+        out_2D_year, out_2D_rgrain)
     !*** Write the 2D output variables to the variables that will be converted into a netcdf file after the time loop ***!
     
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers
-    double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
+    double precision, dimension(ind_z_max), intent(in) :: Rho, T, rgrain2, Mlwc, Depth, Year
     double precision, dimension(ind_z_max), intent(inout) :: DenRho
     double precision, dimension(outputProf,proflayers), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+        out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain
 
     ! declare local variables
     integer :: ind_t_out, ind_z_bot, ind_z_surf_out
@@ -163,6 +163,9 @@ subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outpu
     out_2D_depth(ind_t_out, 1:ind_z_surf_out) = REAL(Depth(ind_z_bot:ind_z_surf))
     out_2D_dRho(ind_t_out, 1:ind_z_surf_out) = REAL(DenRho(ind_z_bot:ind_z_surf))
     out_2D_year(ind_t_out, 1:ind_z_surf_out) = REAL(Year(ind_z_bot:ind_z_surf))
+    if (grainsize_veldhuijsen) then
+        out_2D_rgrain(ind_t_out, 1:ind_z_surf_out) = REAL(1000.*(rgrain2(ind_z_bot:ind_z_surf)**0.5)) !grainsize in mm 
+    endif
     
     DenRho(:) = 0.
     
@@ -173,26 +176,31 @@ end subroutine To_out_2D
 
 
 subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, numOutputDetail, outputDetail, &
-    Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
+    Rho, T, rgrain2, Mlwc, Refreeze, DZ, Year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, &
+    out_2D_det_rgrain, out_2D_det_year)
     !*** Write the 2Ddetail output variables to the variables that will be converted into a netcdf file after the time loop ***!
     
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, detlayers, numOutputDetail, outputDetail
     double precision, intent(in) :: detthick
-    double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, DZ
+    double precision, dimension(ind_z_max), intent(in) :: Rho, T, rgrain2, Mlwc, DZ, Year
     double precision, dimension(ind_z_max), intent(inout) :: Refreeze
-    double precision, dimension(outputDetail,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(outputDetail,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year
 
     ! declare local arguments
     integer :: ind_t_out, ind_orig, ind_int
     double precision :: dist, part, refreeze_sum
     double precision, dimension(ind_z_max) :: DZ_mod
-    double precision, dimension(detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze
+    double precision, dimension(detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze,IntRgrain,IntYear
         
     IntRho(:) = 0.
     IntT(:) = 0.
     IntMlwc(:) = 0.
     IntRefreeze(:) = 0.
+    if (grainsize_veldhuijsen) then
+        IntRgrain(:) = 0.
+        IntYear(:) = 0.
+    endif
 
     DZ_mod = DZ
     dist = 0.
@@ -203,12 +211,20 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
             IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
             IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
+            if (grainsize_veldhuijsen) then
+                IntRgrain(ind_int) = IntRgrain(ind_int) + (1000.*(rgrain2(ind_orig)**0.5)) * (DZ_mod(ind_orig) / detthick)
+                IntYear(ind_int) = IntYear(ind_int) + Year(ind_orig) * (DZ_mod(ind_orig) / detthick)
+            endif
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
         else if ((dist + DZ_mod(ind_orig)) == (detthick * ind_int)) then
             IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
             IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
+            if (grainsize_veldhuijsen) then
+                IntRgrain(ind_int) = IntRgrain(ind_int) + (1000.*(rgrain2(ind_orig)**0.5)) * (DZ_mod(ind_orig) / detthick)
+                IntYear(ind_int) = IntYear(ind_int) + Year(ind_orig) * (DZ_mod(ind_orig) / detthick)
+            endif
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
             ind_int = ind_int + 1
@@ -216,7 +232,11 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
             part = (detthick * ind_int) - dist
             IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (part / detthick)
             IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (part / detthick)
-            IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (part / DZ(ind_orig))        
+            IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (part / DZ(ind_orig))
+            if (grainsize_veldhuijsen) then
+                IntRgrain(ind_int) = IntRgrain(ind_int) + (1000.*(rgrain2(ind_orig)**0.5)) * (part / detthick)
+                IntYear(ind_int) = IntYear(ind_int) + Year(ind_orig) * (part / detthick)
+            endif        
             dist = dist + part
             DZ_mod(ind_orig) = DZ_mod(ind_orig) - part
             ind_int = ind_int + 1
@@ -254,6 +274,10 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     out_2D_det_dens(ind_t_out,:) = REAL(IntRho)
     out_2D_det_temp(ind_t_out,:) = REAL(IntT)
     out_2D_det_lwc(ind_t_out,:) = REAL(IntMlwc)
+    if (grainsize_veldhuijsen) then
+        out_2D_det_rgrain(ind_t_out,:) = REAL(IntRgrain)
+        out_2D_det_year(ind_t_out,:) = REAL(IntYear)
+    endif
     out_2D_det_refreeze(ind_t_out,:) = REAL(IntRefreeze)
 
     Refreeze(:) = 0.
@@ -480,13 +504,13 @@ end subroutine Save_out_1D
 ! *******************************************************
 
 
-subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
+subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain, writeinprof)
     !*** Write the 2D output variables to a netcdf file !***
 
     ! declare arguments
     integer, intent(in) :: outputProf, proflayers, writeinprof
     double precision, dimension((outputProf),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+        out_2D_depth, out_2D_dRho, out_2D_year, out_2D_rgrain
 
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
@@ -529,6 +553,11 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     status = nf90_def_var(ncid(31),"dRho",nf90_real,(/IDs(31,1),IDs(31,2)/), &
         varID(31,6))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
+    if (grainsize_veldhuijsen) then
+        status = nf90_def_var(ncid(31), "rgrain", nf90_real,(/IDs(31,1),IDs(31,2)/), &
+            varID(31,7))
+        if(status /= nf90_noerr) call Handle_Error(status, 'nf_def_var7')
+    endif 
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
     status = nf90_put_att(ncid(31),varID(31,1),"missing_value",9.96921e+36)
@@ -543,7 +572,11 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
     status = nf90_put_att(ncid(31),varID(31,6),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
-
+    if (grainsize_veldhuijsen) then
+        status = nf90_put_att(ncid(31),varID(31,7),"missing_value",9.96921e+36)
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_7')
+    endif
+    
     ! DEFINE GLOBAL ATTRIBUTES
     status = nf90_put_att(ncid(31),nf90_global,"title","IMAU-FDM 2D profile output file")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_title')
@@ -593,7 +626,12 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     status = nf90_put_var(ncid(31),varID(31,6),out_2D_dRho,start=(/1,1/), &
         count=(/(outputProf),proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid6')
-    
+    if (grainsize_veldhuijsen) then
+        status = nf90_put_var(ncid(31),varID(31,7),out_2D_rgrain,start=(/1,1/), &
+            count=(/(outputProf), proflayers/))
+        if(status /= nf90_noerr) call Handle_Error(status, 'nf_put_var_grid7')
+    endif
+
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(31))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_close')
@@ -604,7 +642,7 @@ end subroutine Save_out_2D
 ! *******************************************************
 
 
-subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
+subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, writeindetail)
     !*** Write the 2Ddetail output variables to a netcdf file !***
     
     ! declare arguments
@@ -612,7 +650,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     double precision, intent(in) :: detthick
     double precision, dimension(detlayers) :: DetDepth, DetDZ
     double precision, dimension((outputDetail),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
-        out_2D_det_lwc, out_2D_det_refreeze
+        out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year
 
     ! declare local arguments
     integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
@@ -659,8 +697,16 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var5')
     status = nf90_def_var(ncid(33),"refreeze",nf90_real,(/IDs(33,1),IDs(33,2)/), & 
         varID(33,6))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
-    
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
+    if (grainsize_veldhuijsen) then
+        status = nf90_def_var(ncid(33),"rgrain",nf90_real,(/IDs(33,1),IDs(33,2)/), & 
+            varID(33,7))
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var7')
+        status = nf90_def_var(ncid(33),"year",nf90_real,(/IDs(33,1),IDs(33,2)/), & 
+            varID(33,8))
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var8')
+    endif
+
     ! DEFINE ATTRIBUTES
     status = nf90_put_att(ncid(33),varID(33,1),"missing_value",9.96921e+36)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
@@ -686,6 +732,16 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
     status = nf90_put_att(ncid(33),varID(33,6),"units","")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_6')
+    if (grainsize_veldhuijsen) then
+        status = nf90_put_att(ncid(33),varID(33,7),"missing_value",9.96921e+36)
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_7')
+        status = nf90_put_att(ncid(33),varID(33,7),"units","")
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_7')
+        status = nf90_put_att(ncid(33),varID(33,8),"missing_value",9.96921e+36)
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_8')
+        status = nf90_put_att(ncid(33),varID(33,8),"units","")
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_8')
+    endif
 
     ! DEFINE GLOBAL ATTRIBUTES
     status = nf90_put_att(ncid(33),nf90_global,"title","IMAU-FDM 2D profile output file")
@@ -736,6 +792,14 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     status = nf90_put_var(ncid(33),varID(33,6),out_2D_det_refreeze, &
         start=(/1,1/),count=(/(outputDetail),detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail6')
+    if (grainsize_veldhuijsen) then
+        status = nf90_put_var(ncid(33),varID(33,7),out_2D_det_rgrain, &
+            start=(/1,1/),count=(/(outputDetail),detlayers/))
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail7')
+        status = nf90_put_var(ncid(33),varID(33,8),out_2D_det_year, &
+            start=(/1,1/),count=(/(outputDetail),detlayers/))
+        if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail8')
+    endif               
 
     ! CLOSE NETCDF-FILE
     status = nf90_close(ncid(33))

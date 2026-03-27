@@ -55,13 +55,15 @@ subroutine Define_Settings()
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
-    grainsize_veldhuijsen = .false. ! if true, densification based on Veldhuijsen et al., 2024
+    grainsize_veldhuijsen = .true. ! if true, densification based on Veldhuijsen et al., 2024
 
     if (grainsize_veldhuijsen) then
         three_layer_grid_routines = .true. 
     else 
         three_layer_grid_routines = .false. !requires a range for the surface layer, does not work without grainsize_veldhuijsen, as rgrain2 is required 
     endif
+
+    print *, 'test 1, grainsize_veldhuijsen =', grainsize_veldhuijsen, 'three_layer_grid_routines=', three_layer_grid_routines
 
 end subroutine Define_Settings
 

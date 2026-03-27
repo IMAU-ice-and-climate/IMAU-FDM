@@ -16,13 +16,13 @@ contains
 ! *******************************************************
 
 
-subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
+subroutine Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer, h_surf, vice, vmelt, vacc, vsub, &
     vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc, Refreeze, rgrain2, Year, &
     ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
     !*** Add and remove mass to the surface layer and calculate the velocity components ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max, dtmodel, ImpExp, IceShelf
+    integer, intent(in) :: ind_z_max, dtmodel, ImpExp, IceShelf, ind_t
     integer, intent(inout) :: ind_z_surf
     double precision, intent(in) :: rho0, rhoi, acav, Lh, rgrain2_fresh, dzmax_upper_layer
     double precision, intent(inout) :: Ts, Psol, Pliq, Su, Sd, Me
@@ -70,17 +70,21 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
 
     !Add mass to upper layer
     if (grainsize_veldhuijsen) then
+        if (mod(ind_t, 200000) == 0) print *, 'test 9: Update_Surface' !remove ind_t when removing test
         accumulation = Psol + Su - Sd
         if (accumulation >= 0.) then !positive accumulation, so add to surface
             M(ind_z_surf) = M(ind_z_surf) + accumulation
+            print*, 'accu>0, after adding accumulation M=', M(ind_z_surf)
         else
             negative_accumulation = -accumulation !negative accumulation, so subtract from surface
-            do while (negative_accumulation > 0.) 
+            do while (negative_accumulation > 0.000005) 
                 if (M(ind_z_surf) >= negative_accumulation) then !subtract if there is more mass in the surface layer than the mass that is removed
                     M(ind_z_surf) = M(ind_z_surf) - negative_accumulation
+                    print*, 'update_surface, m>neg_accu, negative_accumulation=', negative_accumulation
                     negative_accumulation = 0.
                 else
                     negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
+                    print*, 'update_surface, m<neg_accu, negative_accumulation=', negative_accumulation
                     call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
                 endif
             enddo
@@ -122,8 +126,8 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, rhoi, acav, Lh, 
 
     ! Calculate the liquid water content
     if (ImpExp == 1) then
-        call Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper_layer, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
-        call LWrefreeze(ind_z_max, ind_z_surf, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
+        call Bucket_Method(ind_z_max, ind_z_surf, ind_t, rhoi, Lh, Me, rgrain2_refreeze, dzmax_upper_layer, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze, rgrain2, DenRho, Year)
+        call LWrefreeze(ind_z_max, ind_z_surf, ind_t, Lh, rgrain2_refreeze, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze, rgrain2)
     endif
 
     ! If ice Shelf = on, vbouy has to be calculated
@@ -307,17 +311,26 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg
     double precision, dimension(ind_z_max) :: Sigm
 
     if (grainsize_veldhuijsen) then
+        if (mod(ind_t, 200000) == 0) print *, 'test 10: Densific'
         Year(:) = Year(:)+dtmodel                   ! age of the layer 
+        print*, 'year ind_z_surf =', Year(ind_z_surf), 'year bottom layer=', Year(1) 
         kc_low =  kcgL * kg                         ! constant with low density
         kc_high = kcgH * kg                         ! constant with high density
        
         do ind_z = 1, ind_z_surf
-            Sigm(ind_z) = g*(SUM(M(ind_z+1:ind_z_surf))+0.5*M(ind_z))    ! overburden pressure
+            if (ind_z < ind_z_surf) then
+                Sigm(ind_z) = g*(SUM(M(ind_z+1:ind_z_surf)) + 0.5*M(ind_z))
+            else
+                Sigm(ind_z) = g*(0.5*M(ind_z))
+            endif    ! overburden pressure
+            if (ind_z == ind_z_surf) print*, 'sigm=', Sigm(ind_z_surf)
+            if (ind_z == 1) print*, 'sigm=', Sigm(1)
         enddo 
 
         do ind_z = 1, ind_z_surf
             b_loc = Sigm(ind_z)*3600*24*365/(g*Year(ind_z))
-            
+            if (ind_z == ind_z_surf) print*, 'bloc=', b_loc
+            if (ind_z == 1) print*, 'bloc=', b_loc
             !low density
             if (do_MO_fit) then
                 MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90
@@ -345,19 +358,25 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, kcgL, kcgH, kg
                 corr = kc_low*MO_low
                 part1 = exp(-Ec/(R*T(ind_z)))
                 Krate = corr * part1 * Sigm(ind_z)/rgrain2(ind_z)
+                if (ind_z == ind_z_surf) print*, 'krate=', krate
+                if (ind_z == 1) print*, 'krate=', krate
             else
                 corr = kc_high*MO_high
                 part1 = exp(-Ec/(R*T(ind_z)))
                 Krate = corr*acav*g*part1
+                if (ind_z == ind_z_surf) print*, 'krate=', krate
+                if (ind_z == 1) print*, 'krate=', krate
             endif
 
             Rho(ind_z) = Rho(ind_z)+(rhoi-Rho(ind_z))*krate*dtmodel
+            if (ind_z == ind_z_surf) print*, 'Rho(ind_z_surf)=', Rho(ind_z_surf)
+            if (ind_z == 1) print*, 'Rho(1)=', Rho(1)
             if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
 
         enddo
 
     else       !so if grainsize_veldhuijsen is not used
-
+    print*, 'this should not print'
     !low density
     if (do_MO_fit) then
         MO_low = 1.0 ! makes doing MO fits easier - set in model_settings.f90

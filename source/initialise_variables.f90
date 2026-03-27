@@ -188,14 +188,18 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     DZ(:) = 0.
     DenRho(:) = 0.
     Refreeze(:) = 0.
-    Year(:) = 0.
     if (grainsize_veldhuijsen) then
+        Year(:) = 0.
+        print*, 'test 2, Init_Prof_Var works'
         rgrain2(:) = 0
+    else
+        Year(:) = 0.
+        Year(1:ind_z_surf) = -999.
     endif
     
     DZ(1:ind_z_surf) = DZ_max
 
-    Year(1:ind_z_surf) = -999.
+    
     Depth(ind_z_surf) = 0.5*DZ_max
     do ind_z = (ind_z_surf-1), 1, -1
         Depth(ind_z) = Depth(ind_z+1) + 0.5*DZ(ind_z+1) + 0.5*DZ(ind_z)
@@ -208,14 +212,14 @@ end subroutine Init_Prof_Var
 
 
 subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
+        out_2D_rgrain, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year, outputSpeed, outputProf, outputDetail, &
         proflayers, detlayers)
     !*** Initialise output variables with NaNs ***!
 
     ! declare arguments
     integer, intent(in) :: outputSpeed, outputProf, outputDetail, proflayers, detlayers
-    double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
-        out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_rgrain, &
+        out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, out_2D_det_rgrain, out_2D_det_year
 
     ! allocate memory to variables
     allocate(out_1D((outputSpeed), 18))
@@ -225,10 +229,19 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
     allocate(out_2D_depth((outputProf), proflayers))
     allocate(out_2D_dRho((outputProf), proflayers))
     allocate(out_2D_year((outputProf), proflayers))
+    if (grainsize_veldhuijsen) then
+        print*, 'test 3: Init_Output_Var 2D works'
+        allocate(out_2D_rgrain((outputProf), proflayers))
+    endif
     allocate(out_2D_det_dens((outputDetail), detlayers))
     allocate(out_2D_det_temp((outputDetail), detlayers))
     allocate(out_2D_det_lwc((outputDetail), detlayers))
     allocate(out_2D_det_refreeze((outputDetail), detlayers))
+    if (grainsize_veldhuijsen) then
+        print*, 'test 4: Init_Output_Var 2Ddetail works'
+        allocate(out_2D_det_rgrain((outputDetail), detlayers))
+        allocate(out_2D_det_year((outputDetail), detlayers))
+    endif
     
     ! Set missing value
     out_1D(:,:) = NaN_value
@@ -242,6 +255,11 @@ subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_
     out_2D_det_temp(:,:) = NaN_value
     out_2D_det_lwc(:,:) = NaN_value
     out_2D_det_refreeze(:,:) = NaN_value
+    if (grainsize_veldhuijsen) then
+        print*, 'test 5: Init_Output_Var setting missing value works'
+        out_2D_det_rgrain(:,:) = NaN_value
+        out_2D_det_year(:,:) = NaN_value
+    endif
 
 end subroutine Init_Output_Var
 
