@@ -36,15 +36,15 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, ind_t, rhoi, Lh, Me, rgrain2_ref
         remove_mass = Me
         do while (remove_mass > 0.000005)
             if (M(ind_z_surf) >= remove_mass) then
-                print*, 'remove_mass>0.05, before substraction, M(ind_z_surf)=', M(ind_z_surf), 'remove_mass =', remove_mass, 'Me=', Me
+                !print*, 'remove_mass>0.05, before substraction, M(ind_z_surf)=', M(ind_z_surf), 'remove_mass =', remove_mass, 'Me=', Me
                 M(ind_z_surf) = M(ind_z_surf) - remove_mass          !Substract melted snow from upper layer
                 DZ(ind_z_surf) = DZ(ind_z_surf) - (remove_mass/Rho(ind_z_surf))   !Recalculate the height of the upper layer
-                print*, 'melt routine: after subtraction removemass > 0.05, removemass =', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
+                !print*, 'melt routine: after subtraction removemass > 0.05, removemass =', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 remove_mass = 0.
             else 
-                print*, 'melt routine: M<removemass, removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
+                !print*, 'melt routine: M<removemass, removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 remove_mass = remove_mass - M(ind_z_surf)
-                print*, 'melt routine: M<removemass, new removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
+                !print*, 'melt routine: M<removemass, new removemass=', remove_mass, 'M(ind_z_surf)=', M(ind_z_surf)
                 call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
             endif
         enddo
@@ -71,7 +71,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, ind_t, rhoi, Lh, Me, rgrain2_ref
                 Mmelt = 0.
                 T(ind_z) = T(ind_z) + ((Madd*Lh) / (M(ind_z)*cp0))
                 if (grainsize_veldhuijsen) then
-                    if (mod(ind_t, 200000) == 0) print *, 'test 12: grain size calc in Bucket_Method'
+                    !if (mod(ind_t, 200000) == 0) print *, 'test 12: grain size calc in Bucket_Method'
                     if (rgrain2(ind_z) .lt. rgrain2_refreeze) then
                         rgrain2(ind_z) = (rgrain2(ind_z)*M(ind_z)+rgrain2_refreeze*Madd)/(M(ind_z)+Madd)
                     endif

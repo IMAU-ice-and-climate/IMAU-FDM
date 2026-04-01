@@ -198,15 +198,15 @@ end subroutine Add_Layers
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
     ! declare local variables
-    integer :: DZ_to_second_layer, M_to_second_layer
+    double precision :: DZ_to_second_layer, M_to_second_layer
   
-    print*, 'start Split_Surface_Layer_By_Thickness_Range'
+    !print*, 'start Split_Surface_Layer_By_Thickness_Range'
 
     DZ_to_second_layer = DZ(ind_z_surf) - dzmax_upper_layer
     M_to_second_layer = DZ_to_second_layer * Rho(ind_z_surf)
+    !print*, 'DZ_to_second_layer=', DZ_to_second_layer, 'M_to_second_layer', M_to_second_layer
 
     T(ind_z_surf-1) = (T(ind_z_surf-1)*M(ind_z_surf-1) + T(ind_z_surf)*M_to_second_layer)/(M(ind_z_surf-1)+M_to_second_layer)
-    Rho(ind_z_surf-1) = (Rho(ind_z_surf-1)*M(ind_z_surf-1) + Rho(ind_z_surf)*M_to_second_layer)/(M(ind_z_surf-1)+M_to_second_layer)
     Year(ind_z_surf-1) = (Year(ind_z_surf-1)*M(ind_z_surf-1) + Year(ind_z_surf)*M_to_second_layer)/(M(ind_z_surf-1)+M_to_second_layer)
     rgrain2(ind_z_surf-1) = (rgrain2(ind_z_surf-1)*M(ind_z_surf-1) + rgrain2(ind_z_surf)*M_to_second_layer)/(M(ind_z_surf-1)+M_to_second_layer)
     Mlwc(ind_z_surf-1) = Mlwc(ind_z_surf-1) + (Mlwc(ind_z_surf) * DZ_to_second_layer / DZ(ind_z_surf))
@@ -214,6 +214,7 @@ end subroutine Add_Layers
     Refreeze(ind_z_surf-1) =  Refreeze(ind_z_surf-1) + (Refreeze(ind_z_surf) * DZ_to_second_layer / DZ(ind_z_surf))
     DZ(ind_z_surf-1) = DZ(ind_z_surf-1)+ DZ_to_second_layer
     M(ind_z_surf-1) = M(ind_z_surf-1) + M_to_second_layer
+    Rho(ind_z_surf-1) = M(ind_z_surf-1)/DZ(ind_z_surf-1)
 
     Mlwc(ind_z_surf) = Mlwc(ind_z_surf) * dzmax_upper_layer/DZ(ind_z_surf)
     DenRho(ind_z_surf) = DenRho(ind_z_surf) * dzmax_upper_layer/DZ(ind_z_surf)
@@ -235,23 +236,24 @@ end subroutine Add_Layers
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
     ! declare local variables
-    integer :: dz_merge, m_merge
+    double precision :: dz_merge, m_merge
 
 
-    print*, 'start Merge_Surface_Layer_By_Thickness_Range'
+    !print*, 'start Merge_Surface_Layer_By_Thickness_Range'
 
     dz_merge = dzmax_upper_layer - DZ(ind_z_surf) 
     m_merge = M(ind_z_surf-1)*dz_merge/DZ(ind_z_surf-1)
+    !print*,'dz_merge=', dz_merge, 'm_merge=', m_merge
 
     T(ind_z_surf) = (T(ind_z_surf-1)*m_merge + T(ind_z_surf)*M(ind_z_surf)) / (m_merge+M(ind_z_surf))
     Year(ind_z_surf) =  (Year(ind_z_surf-1)*m_merge + Year(ind_z_surf)*M(ind_z_surf))/(m_merge+M(ind_z_surf))
     rgrain2(ind_z_surf) = (rgrain2(ind_z_surf-1)*m_merge + rgrain2(ind_z_surf)*M(ind_z_surf)) / (m_merge+M(ind_z_surf)) 
-    Rho(Ind_z_surf) = (Rho(ind_z_surf-1)*m_merge + rgrain2(ind_z_surf)*M(ind_z_surf)) / (m_merge+M(ind_z_surf))
     DenRho(ind_z_surf) = DenRho(ind_z_surf-1)*dz_merge/DZ(ind_z_surf-1) + DenRho(ind_z_surf)
     Mlwc(ind_z_surf) = Mlwc(ind_z_surf-1)*dz_merge/DZ(ind_z_surf-1) + Mlwc(ind_z_surf)
     Refreeze(ind_z_surf) = Refreeze(ind_z_surf-1)*dz_merge/DZ(ind_z_surf-1) + Refreeze(ind_z_surf)
     M(ind_z_surf) = M(ind_z_surf)+m_merge
     DZ(ind_z_surf) = DZ(ind_z_surf)+dz_merge
+    Rho(ind_z_surf) = M(ind_z_surf)/DZ(ind_z_surf)
    
     DenRho(ind_z_surf-1) = DenRho(ind_z_surf-1)*(M(ind_z_surf-1)-m_merge)/M(ind_z_surf-1)
     Mlwc(ind_z_surf-1) = Mlwc(ind_z_surf-1)*(M(ind_z_surf-1)-m_merge)/M(ind_z_surf-1)
@@ -270,7 +272,7 @@ end subroutine Add_Layers
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
-    print*, 'start Split_Second_Layer_By_Threshold'
+    !print*, 'start Split_Second_Layer_By_Threshold'
 
     ! Create the new uppermost layer
     T(ind_z_surf+1) = T(ind_z_surf)
@@ -314,7 +316,7 @@ end subroutine Add_Layers
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
-    print*, 'start Merge_Second_Layer_By_Threshold'
+    !print*, 'start Merge_Second_Layer_By_Threshold'
 
     ! Add the second layer into the third layer
     T(ind_z_surf-2) = (T(ind_z_surf-2)*M(ind_z_surf-2) + T(ind_z_surf-1)*M(ind_z_surf-1)) / (M(ind_z_surf-2)+M(ind_z_surf-1))
@@ -362,8 +364,8 @@ end subroutine Add_Layers
     integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2
 
-    print*, 'start Remove_Surface_Layer'
-    print*, 'ind_z_surf=', ind_z_surf
+    !print*, 'start Remove_Surface_Layer'
+    !print*, 'ind_z_surf=', ind_z_surf
     ! Add liquid water from surface layer into new surface layer
     Mlwc(ind_z_surf-1) = Mlwc(ind_z_surf) + Mlwc(ind_z_surf - 1)
     

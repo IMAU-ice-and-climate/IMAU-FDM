@@ -55,7 +55,7 @@ subroutine Define_Settings()
     ! Model physics
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
-    grainsize_veldhuijsen = .false. ! if true, densification based on Veldhuijsen et al., 2024
+    grainsize_veldhuijsen = .true. ! if true, densification based on Veldhuijsen et al., 2024
 
     if (grainsize_veldhuijsen) then
         three_layer_grid_routines = .true. 
@@ -204,8 +204,8 @@ subroutine Define_Constants()
     seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
     NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
     rgrain2_fresh = (0.001_8 * 0.032715_8)**2 !squared grain size fresh snow
-    rgrain2_refreeze = (0.00025_8)**2 !squared grain size after refreezing
-    kg = 2.6D-7 
+    rgrain2_refreeze = (0.001_8)**2 !(0.00025_8)**2 !squared grain size after refreezing
+    kg = 1.3D-7 !2.6D-7 
     kcgH = 0.03_8
     kcgL = 0.07_8
     dzmax_upper_layer = 0.01 ! maximum upper layer [m], only when three_layer_grid_routines = .true. dzmax/3 should always be larger than dzmax_upper_layer
