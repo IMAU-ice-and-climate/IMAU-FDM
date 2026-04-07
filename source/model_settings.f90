@@ -8,6 +8,22 @@ module model_settings
     private
     
 
+    type, public :: Constants
+        real :: R  ! gas constant [J mole-1 K-1]
+        real :: g  ! gravitational acceleration [m s-2]
+        real :: rhoi  ! density of ice [kg m-3]
+        real :: rho_ocean  ! density of ocean water [kg m-3]
+        real :: Tmelt  ! melting point of ice [K]
+        real :: Ec  ! activation energy for creep [J mole-1]
+        real :: Eg  ! activation energy for grain growth [J mole-1]
+        real :: Lh  ! latent heat of fusion [J kg-1]
+        real :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
+        real :: NaN_value  ! missing value for doubles as used in the NCL scripts
+    end type Constants
+
+
+
+
     public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg
 
     ! Module-level variables that can be accessed by other modules
@@ -117,6 +133,31 @@ subroutine Define_Settings()
 end subroutine Define_Settings
 
 
+subroutine read_constants(table, const)
+
+    type(toml_table), allocatable, intent(inout) :: table
+    type(toml_table), pointer :: child
+    type(Constants), intent(out), allocatable :: const
+
+    call get_value(table, "constants", child, requested=.false.)
+    if (.not. associated(child)) then
+        write(stderr, '("Cannot find section constants in toml file.")')
+        stop
+    end if
+
+    call get_value(child, "R", const%R)
+    call get_value(child, "g", const%g)
+    call get_value(child, "rhoi", const%rhoi)
+    call get_value(child, "rho_ocean", const%rho_ocean)
+    call get_value(child, "Tmelt", const%Tmelt)
+    call get_value(child, "Ec", const%Ec)
+    call get_value(child, "Eg", const%Eg)
+    call get_value(child, "Lh", const%Lh)
+    call get_value(child, "days_per_year", const%days_per_year)
+    call get_value(child, "NaN_value", const%NaN_value)
+end subroutine
+
+    
 ! *******************************************************
 
 
