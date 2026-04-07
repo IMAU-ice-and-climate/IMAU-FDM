@@ -63,7 +63,7 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
     call Get_All_Command_Line_Arg()
 
     ! Define model settings and physics, runs first because decides whether or not to run as an example point
-    call Define_Settings() 
+    ! call read_settings() 
     
     ! Defines paths - edit if not using ecmwf or if changing file structure of input, output, restart, or code
     call Define_Paths()
