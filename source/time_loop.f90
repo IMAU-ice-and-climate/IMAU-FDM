@@ -78,7 +78,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             Sd = DrifFM(ind_t)
             
             ! Calculate the densification	  
-            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t, do_MO_fit)
+            call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t, config%model_physics%do_MO_fit)
             
             ! Re-calculate the Temp-profile (explicit or implicit)		  
             if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)
@@ -192,7 +192,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         Sd = DrifFM(ind_t)
         
         ! Calculate the density profile      
-        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t, do_MO_fit)
+        call Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ffav, Rho, T, domain, ind_t, config%model_physics%do_MO_fit)
         
         ! Calculate the temperature profile (explicit or implicit)         
         if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ, rhoi)

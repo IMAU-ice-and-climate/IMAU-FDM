@@ -225,7 +225,7 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     end do
 
     refreeze_sum = SUM(Refreeze)
-    if (refreeze_sum > det2d_minimum) then
+    if (refreeze_sum > config%minimum_values%det2d_minimum) then
         DZ_mod = DZ
         dist = 0.
         ind_orig = ind_z_surf

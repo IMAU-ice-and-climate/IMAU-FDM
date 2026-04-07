@@ -29,15 +29,21 @@ module model_settings
 
     type, public :: general_settings_t
         character(len=:), allocatable :: restart_type
+        integer :: save_output
     end type general_settings_t
+
+    type, public :: model_physics_t
+        logical :: do_MO_fit
+    end type model_physics_t
 
     type, public :: Settings
         type(minimum_values_t)  :: minimum_values
         type(general_settings_t):: general_settings
+        type(model_physics_t):: model_physics
     end type Settings
 
 
-    public :: Define_Paths, Define_Constants, read_settings, Get_All_Command_Line_Arg, read_constants
+    public :: Define_Paths, Define_Constants, read_settings, Get_All_Command_Line_Arg, read_constants, Load_Model_Settings
 
     ! Module-level variables that can be accessed by other modules
     
@@ -49,12 +55,9 @@ module model_settings
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
-    public :: save_output
+    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year
+    public :: config
     public :: model_first_timestep, model_last_timestep
-    
-    ! Parameterization options
-    public :: do_MO_fit
 
     ! Declare the module variables
     ! note
@@ -69,48 +72,92 @@ module model_settings
     character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
     character(len=512) :: model_first_timestep, model_last_timestep
-    logical :: do_MO_fit
-    integer :: save_output
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
+    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, days_per_year
     character(len=:), allocatable :: path_restart, restart_type, model_settings_file
+    type(Settings), allocatable :: config
 contains
 
 
-subroutine read_settings(table, config)
+subroutine read_settings(table, settings_out)
     !*** Define model settings and physics ***!
 
     ! Local variables toml tables
 
     type(toml_table), allocatable, intent(inout) :: table
     type(toml_table), pointer :: child
-    type(Settings), intent(out), allocatable :: config
+    type(Settings), intent(out), allocatable :: settings_out
 
-    allocate(config)
+    allocate(settings_out)
 
     ! ---- [minimum_values] ----
     nullify(child)
     call get_value(table, 'minimum_values', child, requested=.false.)
     if (associated(child)) then
-        call get_value(child, 'ts_minimum',    config%minimum_values%ts_minimum)
-        call get_value(child, 'det2d_minimum', config%minimum_values%det2d_minimum)
+        call get_value(child, 'ts_minimum',    settings_out%minimum_values%ts_minimum)
+        call get_value(child, 'det2d_minimum', settings_out%minimum_values%det2d_minimum)
     end if
 
     ! ---- [general_settings] ----
     nullify(child)
     call get_value(table, 'general_settings', child, requested=.false.)
     if (associated(child)) then
-        call get_value(child, 'restart_type', config%general_settings%restart_type)
+        call get_value(child, 'restart_type', settings_out%general_settings%restart_type)
+        call get_value(child, 'save_output', settings_out%general_settings%save_output)
     end if
+
+    ! ---- [model physics] ----
+    nullify(child)
+    call get_value(table, 'model_physics', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'DO_MO_FIT', settings_out%model_physics%do_MO_fit)
+    end if
+end subroutine read_settings
+
+
+subroutine Load_Model_Settings()
+    !*** Read runtime model settings from TOML and expose commonly used values ***!
+
+    integer :: fu, rc
+    logical :: file_exists
+    type(toml_error), allocatable :: parse_error
+    type(toml_table), allocatable :: table
+
+    inquire(file=model_settings_file, exist=file_exists)
+
+    if (.not. file_exists) then
+        write(stderr, '("Error: TOML file ", a, " not found")') model_settings_file
+        stop
+    end if
+
+    open(action='read', file=model_settings_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write(stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
+        stop
+    end if
+
+    call toml_parse(table, fu, parse_error)
+    close(fu)
+
+    if (.not. allocated(table)) then
+        if (allocated(parse_error)) then
+            write(stderr, '("Error: TOML parsing failed for ", a)') model_settings_file
+            write(stderr, '(a)') parse_error%message
+        else
+        write(stderr, '("Error: Parsing failed")')
+        end if
+        stop
+    end if
+
+    if (allocated(config)) then
+        deallocate(config)
+    end if
+
+    call read_settings(table, config)
 
     deallocate(table)
 
-    save_output = 10 ! save output every 10 years
-
-    ! Model physics
-
-    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
-
-end subroutine read_settings
+end subroutine Load_Model_Settings
 
 
 subroutine read_constants(table, const)

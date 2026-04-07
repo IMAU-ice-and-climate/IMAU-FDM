@@ -62,8 +62,8 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
     ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
     call Get_All_Command_Line_Arg()
 
-    ! Define model settings and physics, runs first because decides whether or not to run as an example point
-    ! call read_settings() 
+    ! Load runtime settings from TOML before modules consume threshold values.
+    call Load_Model_Settings()
     
     ! Defines paths - edit if not using ecmwf or if changing file structure of input, output, restart, or code
     call Define_Paths()

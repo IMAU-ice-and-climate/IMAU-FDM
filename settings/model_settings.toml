@@ -5,12 +5,13 @@
 [general_settings]
 run_location = "ecmwf" #ecmwf - run on ecmwf; offline - run on home computer; add other options as necessary; used for compiling in launch_job.sc
 restart_type = "none" # none -> do spinup; spinup -> start post-spinup; run -> start from end of last run
+save_output = 10 # save output every 10 years
 
 domain = "FGRN055" # domain name, used in naming conventions #TODO: HERE or in paths??
 forcing = "era055" # forcing name, used in naming conventions #TODO: HERE or in paths??
 
-[[model_physics]]
-DO_MO_FIT = "true"
+[model_physics]
+DO_MO_FIT = true # if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
 
 #DEFAULT
 
