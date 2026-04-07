@@ -2,19 +2,35 @@ module openNetCDF
     !*** subroutines for loading forcing data
 
     use netcdf, only : nf90_open,nf90_inq_varid, nf90_inq_dimid, nf90_inquire_dimension, & 
-        nf90_close,nf90_get_var,nf90_noerr, nf90_strerror
+        nf90_close,nf90_get_var,nf90_noerr, nf90_strerror, nf90_max_name
     
     use model_settings
 
     implicit none
     private
 
-    public :: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Handle_Error, Restart_From_Spinup, Restart_From_Run
-
+    public :: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Handle_Error, Restart_From_Spinup, Restart_From_Run, read_avg_dimensions
+    ! public :: read_avg_dimensions, Handle_Error
 contains
 
 
 ! *******************************************************
+
+subroutine read_avg_dimensions(netcdf_file, n_lon, n_lat)
+
+    integer :: status, ncid, dim_id
+    integer, intent(out) :: n_lon, n_lat
+    character(len = *), intent(in) :: netcdf_file
+    character(len=nf90_max_name) :: dim_name
+
+    call handle_error(nf90_open(netcdf_file, 0, ncid), "open_avg_file")
+    call handle_error(nf90_inq_dimid(ncid, "rlat", dim_id), "find_rlat")
+    call handle_error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lat), "get_nlat")
+    call handle_error(nf90_inq_dimid(ncid, "rlon", dim_id), "find_rlon")
+    call handle_error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lon), "get_nlon")
+end subroutine read_avg_dimensions
+
+
 
 subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     
