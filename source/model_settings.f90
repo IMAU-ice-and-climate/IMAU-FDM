@@ -9,22 +9,22 @@ module model_settings
     
 
     type, public :: Constants
-        real :: R  ! gas constant [J mole-1 K-1]
-        real :: g  ! gravitational acceleration [m s-2]
-        real :: rhoi  ! density of ice [kg m-3]
-        real :: rho_ocean  ! density of ocean water [kg m-3]
-        real :: Tmelt  ! melting point of ice [K]
-        real :: Ec  ! activation energy for creep [J mole-1]
-        real :: Eg  ! activation energy for grain growth [J mole-1]
-        real :: Lh  ! latent heat of fusion [J kg-1]
-        real :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
-        real :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        double precision :: R  ! gas constant [J mole-1 K-1]
+        double precision :: g  ! gravitational acceleration [m s-2]
+        double precision :: rhoi  ! density of ice [kg m-3]
+        double precision :: rho_ocean  ! density of ocean water [kg m-3]
+        double precision :: Tmelt  ! melting point of ice [K]
+        double precision :: Ec  ! activation energy for creep [J mole-1]
+        double precision :: Eg  ! activation energy for grain growth [J mole-1]
+        double precision :: Lh  ! latent heat of fusion [J kg-1]
+        double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
+        double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
     end type Constants
 
 
 
 
-    public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg
+    public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg, read_constants
 
     ! Module-level variables that can be accessed by other modules
     
@@ -144,6 +144,8 @@ subroutine read_constants(table, const)
         write(stderr, '("Cannot find section constants in toml file.")')
         stop
     end if
+
+    allocate(const)
 
     call get_value(child, "R", const%R)
     call get_value(child, "g", const%g)
