@@ -22,9 +22,22 @@ module model_settings
     end type Constants
 
 
+    type, public :: minimum_values_t
+        double precision :: ts_minimum
+        double precision :: det2d_minimum
+    end type minimum_values_t
+
+    type, public :: general_settings_t
+        character(len=:), allocatable :: restart_type
+    end type general_settings_t
+
+    type, public :: Settings
+        type(minimum_values_t)  :: minimum_values
+        type(general_settings_t):: general_settings
+    end type Settings
 
 
-    public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg, read_constants
+    public :: Define_Paths, Define_Constants, read_settings, Get_All_Command_Line_Arg, read_constants
 
     ! Module-level variables that can be accessed by other modules
     
@@ -62,65 +75,34 @@ module model_settings
     character(len=:), allocatable :: path_restart, restart_type, model_settings_file
 contains
 
-subroutine Define_Settings()
-    !*** Under construction ***!
+
+subroutine read_settings(table, config)
     !*** Define model settings and physics ***!
 
     ! Local variables toml tables
 
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
-    type(toml_table), allocatable :: table
-    type(toml_table), pointer     :: child
+    type(toml_table), allocatable, intent(inout) :: table
+    type(toml_table), pointer :: child
+    type(Settings), intent(out), allocatable :: config
 
-    ! Model settings
+    allocate(config)
 
-    inquire (file=model_settings_file, exist=file_exists)
-    
-    if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
-        stop
-    end if
-
-    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
-
-    if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
-        stop
-    end if
-
-    call toml_parse(table, fu)
-    close (fu)
-
-    if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
-        stop
-    end if
-
-    ! find section.
-    
+    ! ---- [minimum_values] ----
+    nullify(child)
     call get_value(table, 'minimum_values', child, requested=.false.)
-    
     if (associated(child)) then
-
-        call get_value(child, 'ts_minimum', ts_minimum)
-        call get_value(child, 'det2d_minimum', det2d_minimum)
-
-        print *, " "
-        print *, "ts_minimum: ", ts_minimum
-
+        call get_value(child, 'ts_minimum',    config%minimum_values%ts_minimum)
+        call get_value(child, 'det2d_minimum', config%minimum_values%det2d_minimum)
     end if
 
+    ! ---- [general_settings] ----
+    nullify(child)
     call get_value(table, 'general_settings', child, requested=.false.)
-
     if (associated(child)) then
-
-        call get_value(child, 'restart_type', restart_type)
-
-        print *, " "
-        print *, "restart_type: ", restart_type
-
+        call get_value(child, 'restart_type', config%general_settings%restart_type)
     end if
+
+    deallocate(table)
 
     save_output = 10 ! save output every 10 years
 
@@ -128,9 +110,7 @@ subroutine Define_Settings()
 
     do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
 
-    deallocate(table)
-
-end subroutine Define_Settings
+end subroutine read_settings
 
 
 subroutine read_constants(table, const)
@@ -353,9 +333,6 @@ subroutine Define_Constants()
     days_per_year = 365.25    ! days per year [days]
     seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
     NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-    
-!    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
-!    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
 
     ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
     ! Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
