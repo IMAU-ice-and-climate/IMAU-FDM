@@ -6,18 +6,18 @@ This script processes 2D profile files (time × depth) to create gridded output,
 such as the depth of critical density levels (z550, z830, z917).
 
 Usage:
-    python make_2d_maps.py --output-dir /path/to/output/ --var dens --threshold 830 --output-var z830
-    python make_2d_maps.py --output-dir /path/to/output/ --var temp --depth 10 --output-var T10m
+    python make_2d_files.py --output-dir /path/to/output/ --var dens --threshold 830 --output-var z830
+    python make_2d_files.py --output-dir /path/to/output/ --var temp --depth 10 --output-var T10m
 
 Examples:
     # Find depth where density reaches 830 kg/m³
-    python make_2d_maps.py -o /scratch/run/output/ -v dens -t 830 --output-var z830
+    python make_2d_files.py -o /scratch/run/output/ -v dens -t 830 --output-var z830
 
     # Find depth where density reaches 550 kg/m³ (firn-ice transition)
-    python make_2d_maps.py -o /scratch/run/output/ -v dens -t 550 --output-var z550
+    python make_2d_files.py -o /scratch/run/output/ -v dens -t 550 --output-var z550
 
     # Get temperature at 10m depth
-    python make_2d_maps.py -o /scratch/run/output/ -v temp -d 10 --output-var T10m
+    python make_2d_files.py -o /scratch/run/output/ -v temp -d 10 --output-var T10m
 """
 
 import argparse

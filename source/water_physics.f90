@@ -246,6 +246,8 @@ end subroutine LWrefreeze
 
 function Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ) result(Mavail)
     !*** Calculate how much pore space can be stored inside of the current layer ***!
+    !*** Wm_percent = equation from line plotted in Figure 4 of Coleou (1998); eq in text is wrong!***!
+
 
     ! declare arguments
     integer, intent(in) :: ind_z, ind_z_max
@@ -253,20 +255,20 @@ function Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ) result(Mavail)
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
 
     ! declare local variables
-    double precision :: poro, maxpore, MavailCol, MavailMax, Mavail
+    double precision :: poro, Wm_percent, MavailCol, MavailMax, Mavail
     logical :: test_coleau_fix
 
     test_coleau_fix = .False.
 
     ! Maximum available capacity for liquid water according to Coleou, 1998
     poro = (rhoi-Rho(ind_z))/rhoi
-    maxpore = 0.017 + 0.057 * (poro/(1.-poro))
+    Wm_percent = 0.017 + 0.057 * (poro/(1.-poro))
 
     if (test_coleau_fix) then
-        maxpore = maxpore / ( 1 - maxpore )
+        Wm_percent = Wm_percent / ( 1 - Wm_percent )
     endif
 
-    MavailCol = maxpore * M(ind_z)
+    MavailCol = Wm_percent * M(ind_z)
 
     ! Maximum available capacity for liquid water for high density firn
     ! Coleou, 1998 parameterization still has 1.7% of water for the density of ice...

@@ -1,0 +1,123 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 53801, mtime: Tue Nov 25 12:31:30 2025
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed Mar 25 13:06:17 2026 (1774443977.5696719) on ac6-100.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate/submit_racmo_monthly.sh
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH --job-name=racmo_monthly
+[ECMWF-INFO -sbatch] - #SBATCH --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - #SBATCH --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - #SBATCH --time=04:00:00
+[ECMWF-INFO -sbatch] - #SBATCH --mem=8G
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks=1
+[ECMWF-INFO -sbatch] - #SBATCH --cpus-per-task=1
+[ECMWF-INFO -sbatch] - #SBATCH --array=0-6
+[ECMWF-INFO -sbatch] - #SBATCH --qos=nf
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - ARG --array=0-6
+[ECMWF-INFO -sbatch] - ARG --cpus_per_task=1
+[ECMWF-INFO -sbatch] - ARG --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - ARG --job_name=racmo_monthly
+[ECMWF-INFO -sbatch] - ARG --ntasks=1
+[ECMWF-INFO -sbatch] - ARG --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=04:00:00
+[ECMWF-INFO -sbatch] - ARG --mem=8G
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: nld4814-racmo_monthly-1x2-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMOclimate/logs/racmo_monthly____JOBID_.out
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--array=0-6', '--cpus-per-task=1', '--error=logs/racmo_monthly_%a_%j.err', '--job-name=racmo_monthly', '--ntasks=1', '--output=logs/racmo_monthly_%a_%j.out', '--qos=nf', '--time=04:00:00', '--mem=8G', '--licenses=h2resw01', '--export=EC_user_time_limit=04:00:00', '/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO', 'climate/submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-ERROR-sbatch] - ac: sbatch: error: Unable to open file /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 53801, mtime: Tue Nov 25 12:31:30 2025
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed Mar 25 13:06:23 2026 (1774443983.0607579) on ac6-100.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate/submit_racmo_monthly.sh
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH --job-name=racmo_monthly
+[ECMWF-INFO -sbatch] - #SBATCH --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - #SBATCH --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - #SBATCH --time=04:00:00
+[ECMWF-INFO -sbatch] - #SBATCH --mem=8G
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks=1
+[ECMWF-INFO -sbatch] - #SBATCH --cpus-per-task=1
+[ECMWF-INFO -sbatch] - #SBATCH --array=0-6
+[ECMWF-INFO -sbatch] - #SBATCH --qos=nf
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - ARG --array=0-6
+[ECMWF-INFO -sbatch] - ARG --cpus_per_task=1
+[ECMWF-INFO -sbatch] - ARG --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - ARG --job_name=racmo_monthly
+[ECMWF-INFO -sbatch] - ARG --ntasks=1
+[ECMWF-INFO -sbatch] - ARG --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=04:00:00
+[ECMWF-INFO -sbatch] - ARG --mem=8G
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: nld4814-racmo_monthly-1x2-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMOclimate/logs/racmo_monthly____JOBID_.out
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--array=0-6', '--cpus-per-task=1', '--error=logs/racmo_monthly_%a_%j.err', '--job-name=racmo_monthly', '--ntasks=1', '--output=logs/racmo_monthly_%a_%j.out', '--qos=nf', '--time=04:00:00', '--mem=8G', '--licenses=h2resw01', '--export=EC_user_time_limit=04:00:00', '/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO', 'climate/submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-ERROR-sbatch] - ac: sbatch: error: Unable to open file /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 53801, mtime: Tue Nov 25 12:31:30 2025
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed Mar 25 13:06:28 2026 (1774443988.4658608) on ac6-100.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO climate/submit_racmo_monthly.sh
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH --job-name=racmo_monthly
+[ECMWF-INFO -sbatch] - #SBATCH --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - #SBATCH --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - #SBATCH --time=04:00:00
+[ECMWF-INFO -sbatch] - #SBATCH --mem=8G
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks=1
+[ECMWF-INFO -sbatch] - #SBATCH --cpus-per-task=1
+[ECMWF-INFO -sbatch] - #SBATCH --array=0-6
+[ECMWF-INFO -sbatch] - #SBATCH --qos=nf
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['./submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - ARG --array=0-6
+[ECMWF-INFO -sbatch] - ARG --cpus_per_task=1
+[ECMWF-INFO -sbatch] - ARG --error=logs/racmo_monthly_%a_%j.err
+[ECMWF-INFO -sbatch] - ARG --job_name=racmo_monthly
+[ECMWF-INFO -sbatch] - ARG --ntasks=1
+[ECMWF-INFO -sbatch] - ARG --output=logs/racmo_monthly_%a_%j.out
+[ECMWF-INFO -sbatch] - ARG --qos=nf
+[ECMWF-INFO -sbatch] - ARG --time=04:00:00
+[ECMWF-INFO -sbatch] - ARG --mem=8G
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - jobtag: nld4814-racmo_monthly-1x2-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMOclimate/logs/racmo_monthly____JOBID_.out
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--array=0-6', '--cpus-per-task=1', '--error=logs/racmo_monthly_%a_%j.err', '--job-name=racmo_monthly', '--ntasks=1', '--output=logs/racmo_monthly_%a_%j.out', '--qos=nf', '--time=04:00:00', '--mem=8G', '--licenses=h2resw01', '--export=EC_user_time_limit=04:00:00', '/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO', 'climate/submit_racmo_monthly.sh']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-ERROR-sbatch] - ac: sbatch: error: Unable to open file /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/research/RACMO

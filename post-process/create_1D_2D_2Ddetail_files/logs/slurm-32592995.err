@@ -1,0 +1,33 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-140 at 20260324_091809.666, PID: 3541400, JOBID: 32592995
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.32592995
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/3/32592995
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-03-24T09:28:06 on ac
+[ECMWF-INFO -ecepilog] JobName                   : fdm_FirnAir_monthly
+[ECMWF-INFO -ecepilog] JobID                     : 32592995
+[ECMWF-INFO -ecepilog] Submit                    : 2026-03-24T09:17:44
+[ECMWF-INFO -ecepilog] Start                     : 2026-03-24T09:18:01
+[ECMWF-INFO -ecepilog] End                       : 2026-03-24T09:28:06
+[ECMWF-INFO -ecepilog] QueuedTime                : 17.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 605
+[ECMWF-INFO -ecepilog] ExitCode                  : 0:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : COMPLETED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-32592995.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-32592995.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 16
+[ECMWF-INFO -ecepilog] SBU                       : 22.941
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-fdm_FirnAir_monthly-1x16-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-_JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+

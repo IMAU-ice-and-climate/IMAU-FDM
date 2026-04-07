@@ -13,16 +13,16 @@ Features:
 
 Usage:
     # Process single variable
-    python make_1d_maps.py --var h_surf
+    python make_1d_files.py --var h_surf
 
     # Process all variables with parallel processing
-    python make_1d_maps.py --var all --workers 16
+    python make_1d_files.py --var all --workers 16
 
     # Customize options
-    python make_1d_maps.py --var h_surf --timestep monthly --spinup-end 1975
+    python make_1d_files.py --var h_surf --timestep monthly --spinup-end 1975
 
     # List available variables
-    python make_1d_maps.py --list-vars
+    python make_1d_files.py --list-vars
 
 Author: Generated for IMAU-FDM post-processing
 """
@@ -355,10 +355,10 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python make_1d_maps.py --var h_surf
-  python make_1d_maps.py --var all --workers 16
-  python make_1d_maps.py --var h_surf FirnAir Runoff --timestep monthly
-  python make_1d_maps.py --list-vars
+  python make_1d_files.py --var h_surf
+  python make_1d_files.py --var all --workers 16
+  python make_1d_files.py --var h_surf FirnAir Runoff --timestep monthly
+  python make_1d_files.py --list-vars
         """
     )
 

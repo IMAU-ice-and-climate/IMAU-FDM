@@ -479,6 +479,38 @@ def compute_firn_ice_content_column(nc_file):
     return _compute_firn_ice_content(dens, depth)
 
 
+def compute_t10m_column(nc_file, target_depth=10.0):
+    """
+    Compute the firn temperature at a target depth for one per-column 2D output file.
+
+    For each time step the layer whose cumulative depth is closest to target_depth
+    is selected and its temperature (converted from K to °C) is returned.
+
+    Returns
+    -------
+    (n_time,) float32 — temperature at target_depth in °C; NaN where depth < target_depth
+    """
+    FILL    = 9.9e35
+    nc_file = Path(nc_file)
+    ds      = xr.open_dataset(nc_file, decode_times=False)
+    temp    = ds['temp'].values.astype(np.float64)   # (layer, time), Kelvin
+    depth   = ds['depth'].values.astype(np.float64)  # (layer, time), metres
+    ds.close()
+
+    temp  = np.where(np.abs(temp)  > FILL, np.nan, temp)
+    depth = np.where(np.abs(depth) > FILL, np.nan, depth)
+
+    n_time = temp.shape[1]
+    t10m   = np.full(n_time, np.nan, dtype=np.float32)
+    for t in range(n_time):
+        d = depth[:, t]
+        if np.nanmax(d) < target_depth:
+            continue  # column shallower than target — leave NaN
+        idx      = np.nanargmin(np.abs(d - target_depth))
+        t10m[t]  = temp[idx, t] - 273.15  # K → °C
+    return t10m
+
+
 def create_gridded_firn_ice_content(
     output_file,
     output_dir=None,

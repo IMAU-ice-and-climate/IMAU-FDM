@@ -1,0 +1,86 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-118 at 20260324_091904.796, PID: 3601151, JOBID: 32593392
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.32593392
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/0/32593392
+Traceback (most recent call last):
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/file_manager.py", line 219, in _acquire_with_cache_info
+    file = self._cache[self._key]
+           ~~~~~~~~~~~^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/lru_cache.py", line 56, in __getitem__
+    value = self._cache[key]
+            ~~~~~~~~~~~^^^^^
+KeyError: [<class 'netCDF4._netCDF4.Dataset'>, ('/home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/FDM_FirnAir_FGRN055_1939-2023_monthly_detrended.nc',), 'a', (('clobber', True), ('diskless', False), ('format', 'NETCDF4'), ('persist', False)), '4fe9b396-0762-437b-a549-8351826de6c8']
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 497, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 462, in main
+    output_path = process_variable(
+                  ^^^^^^^^^^^^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 276, in process_variable
+    ds.to_netcdf(output_path, format='NETCDF4', engine='netcdf4')
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/core/dataset.py", line 2104, in to_netcdf
+    return to_netcdf(  # type: ignore[return-value]  # mypy cannot resolve the overloads:(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/writers.py", line 422, in to_netcdf
+    store = get_writable_netcdf_store(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/writers.py", line 78, in get_writable_netcdf_store
+    return store_open(target, mode=mode, format=format, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/netCDF4_.py", line 524, in open
+    return cls(manager, group=group, mode=mode, lock=lock, autoclose=autoclose)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/netCDF4_.py", line 428, in __init__
+    self.format = self.ds.data_model
+                  ^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/netCDF4_.py", line 533, in ds
+    return self._acquire()
+           ^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/netCDF4_.py", line 527, in _acquire
+    with self._manager.acquire_context(needs_lock) as root:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/file_manager.py", line 207, in acquire_context
+    file, cached = self._acquire_with_cache_info(needs_lock)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/file_manager.py", line 225, in _acquire_with_cache_info
+    file = self._opener(*self._args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "src/netCDF4/_netCDF4.pyx", line 2517, in netCDF4._netCDF4.Dataset.__init__
+  File "src/netCDF4/_netCDF4.pyx", line 2154, in netCDF4._netCDF4._ensure_nc_success
+PermissionError: [Errno 13] Permission denied: '/home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/FDM_FirnAir_FGRN055_1939-2023_monthly_detrended.nc'
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-03-24T09:28:05 on ac
+[ECMWF-INFO -ecepilog] JobName                   : fdm_FirnAir_monthly
+[ECMWF-INFO -ecepilog] JobID                     : 32593392
+[ECMWF-INFO -ecepilog] Submit                    : 2026-03-24T09:18:54
+[ECMWF-INFO -ecepilog] Start                     : 2026-03-24T09:18:57
+[ECMWF-INFO -ecepilog] End                       : 2026-03-24T09:28:05
+[ECMWF-INFO -ecepilog] QueuedTime                : 3.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 548
+[ECMWF-INFO -ecepilog] ExitCode                  : 1:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : FAILED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-32593392.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-32593392.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 16
+[ECMWF-INFO -ecepilog] SBU                       : 20.780
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-fdm_FirnAir_monthly-1x16-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-_JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+

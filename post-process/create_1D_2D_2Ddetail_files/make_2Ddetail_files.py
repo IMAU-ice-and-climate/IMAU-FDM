@@ -13,19 +13,19 @@ Three modes for specifying depth:
 
 Examples:
     # Surface snow density using layer indices (layers 0-12 = upper ~52cm)
-    python make_2Ddetail_maps.py -o /scratch/run/output/ -v dens --z-begin 0 --z-end 13 --output-var SSN
+    python make_2Ddetail_files.py -o /scratch/run/output/ -v dens --z-begin 0 --z-end 13 --output-var SSN
 
     # Surface snow density using depth range (0 to 0.5m)
-    python make_2Ddetail_maps.py -o /scratch/run/output/ -v dens --depth-begin 0 --depth-end 0.5 --output-var SSN
+    python make_2Ddetail_files.py -o /scratch/run/output/ -v dens --depth-begin 0 --depth-end 0.5 --output-var SSN
 
     # Average density in upper 2m (using depth range)
-    python make_2Ddetail_maps.py -o /scratch/run/output/ -v dens --depth-begin 0 --depth-end 2 --output-var rho_2m
+    python make_2Ddetail_files.py -o /scratch/run/output/ -v dens --depth-begin 0 --depth-end 2 --output-var rho_2m
 
     # Temperature at 10m depth (single point)
-    python make_2Ddetail_maps.py -o /scratch/run/output/ -v temp -d 10 --output-var T10m
+    python make_2Ddetail_files.py -o /scratch/run/output/ -v temp -d 10 --output-var T10m
 
     # Surface liquid water content (upper 20cm)
-    python make_2Ddetail_maps.py -o /scratch/run/output/ -v lwc --depth-begin 0 --depth-end 0.2 --output-var LWC_surf
+    python make_2Ddetail_files.py -o /scratch/run/output/ -v lwc --depth-begin 0 --depth-end 0.2 --output-var LWC_surf
 """
 
 import argparse

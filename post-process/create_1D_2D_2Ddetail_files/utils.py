@@ -303,7 +303,7 @@ def get_output_time_axis(start_date, end_date, method='10day'):
         # Create 10-day means starting from start_date
         output_times = []
         current = start_date
-        while current <= end_date:
+        while current + timedelta(days=5) <= end_date:
             output_times.append(current + timedelta(days=5))  # Center of 10-day window
             current += timedelta(days=10)
         output_times = np.array(output_times)
