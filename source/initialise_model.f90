@@ -238,24 +238,16 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
 
         part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
 
-        ! TKTKTK: cons never called
+        ! based on Arthern et al. 2010
+        ! drho/dt = C_i*b_ave*g*rho*(rho_i-rho)*exp(...)
+        ! drho = C_i*g*rho*(rho_i-rho)*exp(...)*b_ave*dt
+        ! drho = C_i*g*rho*(rho_i-rho)*exp(...)*dzmax
+
         if (Rho(ind_z+1) <= 550.) then
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 0.8147 - 0.0275*log(acav)        ! r2>0.8
-            else
-                cons = 1.435 - 0.151*log(acav)
-            endif
             drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
         else
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 3.9192 * (acav**(-0.2617)) - 0.2781        ! r2>0.8
-            else
-                cons = 2.366 - 0.293*log(acav)
-            endif
-            if (cons < 0.25) cons = 0.25
             drho = 0.03*dzmax*Rho(ind_z+1)*g*part1
         endif
-
 
         Rho(ind_z) = drho + Rho(ind_z+1)
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
