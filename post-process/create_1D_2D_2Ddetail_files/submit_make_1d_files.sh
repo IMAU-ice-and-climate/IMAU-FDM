@@ -3,7 +3,7 @@
 #SBATCH --output=logs/slurm-%j.out
 #SBATCH --error=logs/slurm-%j.err
 #SBATCH --time=48:00:00
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --cpus-per-task=16
 #SBATCH --qos=nf
 
@@ -15,8 +15,7 @@
 # each variable. Output files are written to the post-process directory.
 #
 # Usage:
-#   sbatch submit_make_1d_files.sh                    # Process all variables
-#   sbatch submit_make_1d_files.sh h_surf FirnAir    # Process specific variables
+#   sbatch submit_make_1d_files.sh    # Variables read from VARIABLES_TO_PROCESS in config.py
 #
 # Output location: /home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/
 # =============================================================================
@@ -27,11 +26,7 @@ set -e
 # -----------------------------------------------------------------------------
 # Configuration
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WORKERS=${SLURM_CPUS_PER_TASK:-16}
-TIMESTEP="10day"
-SPINUP_START=1940
-SPINUP_END=1970
+SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files"
 
 # -----------------------------------------------------------------------------
 # Load required modules (adjust for your ECMWF environment)
@@ -69,39 +64,18 @@ echo "Python:       $(which python3)"
 echo "Version:      $(python3 --version)"
 echo "=================================================="
 
-# -----------------------------------------------------------------------------
-# Determine which variables to process
-# -----------------------------------------------------------------------------
-cd "${SCRIPT_DIR}"
-
-if [ $# -eq 0 ]; then
-    # No arguments: process all variables
-    VARS="all"
-    echo "Processing: ALL variables"
-else
-    # Process specified variables
-    VARS="$@"
-    echo "Processing: ${VARS}"
-fi
-
-echo "Timestep:     ${TIMESTEP}"
-echo "Spinup:       ${SPINUP_START}-${SPINUP_END}"
-echo "Workers:      ${WORKERS}"
+echo "Settings:     from config.py"
 echo "=================================================="
 
 # -----------------------------------------------------------------------------
 # Run the processing script
 # -----------------------------------------------------------------------------
+cd "${SCRIPT_DIR}"
 echo ""
 echo "Starting processing at $(date)"
 echo ""
 
-python3 make_1d_files.py \
-    --var ${VARS} \
-    --timestep ${TIMESTEP} \
-    --spinup-start ${SPINUP_START} \
-    --spinup-end ${SPINUP_END} \
-    --workers ${WORKERS}
+python3 "${SCRIPT_DIR}/make_1d_files.py"
 
 EXIT_CODE=$?
 

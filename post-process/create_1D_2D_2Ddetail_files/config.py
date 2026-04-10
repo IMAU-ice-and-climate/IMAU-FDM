@@ -5,6 +5,7 @@ This module contains all configurable paths, parameters, and variable metadata.
 Users can modify the settings below or override them via command-line arguments.
 """
 
+import os
 from pathlib import Path
 from datetime import datetime
 
@@ -14,12 +15,17 @@ from datetime import datetime
 
 # Time aggregation for 1D output (daily input files are resampled to this):
 # 'daily', '10day', or 'monthly'
-TIME_AGGREGATION_1D = '10day'
+TIME_AGGREGATION_1D = 'daily'
 
-# Time aggregation for 2D and 2Ddetail output — these are fixed by the model
-# output timestep and cannot be changed without re-running the model.
+# Time aggregation for 2D and 2Ddetail output — these commented timesteps are output
+# by the model, so larger timesteps are possible but smaller are not
 TIME_AGGREGATION_2D = 'monthly'        # 2D profile files: 30-day steps
 TIME_AGGREGATION_2Ddetail = '10day'    # 2Ddetail files: 10-day steps
+
+# Output period — slice the timeseries to this range before saving.
+# Set to None to output the full model period.
+OUTPUT_START = datetime(1958,1,1)  # NONE or e.g. datetime(1958, 1, 1)
+OUTPUT_END = datetime(2023,12,31)    # NONE or e.g. datetime(2023, 12, 31)
 
 # Spinup period for detrending (h_surf and FirnAir only)
 # The model runs repeated forcing during this period
@@ -28,13 +34,14 @@ SPINUP_END = datetime(1970, 1, 1)
 
 # Variables to process (None = all variables)
 # Example: ['h_surf', 'FirnAir', 'Runoff']
-VARIABLES_TO_PROCESS = None
+VARIABLES_TO_PROCESS = ['FirnAir','TotLwc']
 
 # Variables that require detrending
 DETREND_VARIABLES = ['h_surf', 'FirnAir']
 
-# Number of parallel workers (None = use all available CPUs)
-NUM_WORKERS = None
+# Number of parallel workers — reads SLURM_CPUS_PER_TASK if available,
+# otherwise uses all available CPUs.
+NUM_WORKERS = int(os.environ["SLURM_CPUS_PER_TASK"]) if "SLURM_CPUS_PER_TASK" in os.environ else None
 
 # =============================================================================
 # PATHS - Adjust these for your environment
@@ -66,7 +73,7 @@ OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
 # File naming pattern for input 1D files
 INPUT_FILENAME_PATTERN = f'{DOMAIN}_era055_1D_{{point_id}}.nc'
 
-# Model run period
+# Model run period — must match the actual simulation; used to read input files.
 MODEL_START = datetime(1939, 9, 1)
 MODEL_END = datetime(2023, 12, 31)
 

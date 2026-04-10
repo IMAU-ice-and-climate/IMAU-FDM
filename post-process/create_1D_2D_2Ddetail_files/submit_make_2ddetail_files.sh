@@ -26,9 +26,8 @@ set -e
 # -----------------------------------------------------------------------------
 # Default configuration
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files"
 OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era055_1939-2023/output"
-WORKERS=${SLURM_CPUS_PER_TASK:-8}
 
 # Default: Surface snow density (upper 50cm)
 # DEFAULT_VAR="dens"
@@ -80,17 +79,16 @@ cd "${SCRIPT_DIR}"
 if [ $# -eq 0 ]; then
     # No arguments: use defaults (SSN)
     echo "Using defaults: SSN (density 0-0.5m)"
-    python3 make_2Ddetail_files.py \
+    python3 "${SCRIPT_DIR}/make_2Ddetail_files.py" \
         -o "${OUTPUT_DIR}" \
         -v "${DEFAULT_VAR}" \
         --depth-begin "${DEFAULT_DEPTH_BEGIN}" \
         --depth-end "${DEFAULT_DEPTH_END}" \
-        --output-var "${DEFAULT_OUTPUT_VAR}" \
-        -n "${WORKERS}"
+        --output-var "${DEFAULT_OUTPUT_VAR}"
 else
     # Pass all arguments through
     echo "Arguments: $@"
-    python3 make_2Ddetail_files.py -o "${OUTPUT_DIR}" -n "${WORKERS}" "$@"
+    python3 "${SCRIPT_DIR}/make_2Ddetail_files.py" -o "${OUTPUT_DIR}" "$@"
 fi
 
 EXIT_CODE=$?

@@ -262,6 +262,14 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         timestep=timestep,
     )
 
+    # Slice to output period if configured
+    if config.OUTPUT_START is not None or config.OUTPUT_END is not None:
+        t_start = str(config.OUTPUT_START.date()) if config.OUTPUT_START else None
+        t_end   = str(config.OUTPUT_END.date())   if config.OUTPUT_END   else None
+        ds = ds.sel(time=slice(t_start, t_end))
+        if verbose:
+            print(f"  Output period: {ds.time.values[0]} to {ds.time.values[-1]}")
+
     # Create output directory if needed
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -368,7 +376,9 @@ Examples:
     parser.add_argument(
         '--var', '-v',
         nargs='+',
-        help='Variable(s) to process. Use "all" for all variables.'
+        default=None,
+        help='Variable(s) to process. Use "all" for all variables. '
+             'Default: VARIABLES_TO_PROCESS from config.py'
     )
     parser.add_argument(
         '--timestep', '-t',
@@ -424,12 +434,6 @@ Examples:
         list_variables()
         return 0
 
-    # Require --var unless listing variables
-    if not args.var:
-        parser.print_help()
-        print("\nError: --var is required. Use --list-vars to see available variables.")
-        return 1
-
     # Parse spinup dates
     spinup_start = datetime(args.spinup_start, 1, 1) if args.spinup_start else None
     spinup_end = datetime(args.spinup_end, 1, 1) if args.spinup_end else None
@@ -440,7 +444,10 @@ Examples:
     # Process variables
     verbose = not args.quiet
 
-    if 'all' in args.var:
+    if args.var is None:
+        # No --var given: use config.VARIABLES_TO_PROCESS (None means all)
+        variables = config.VARIABLES_TO_PROCESS
+    elif 'all' in args.var:
         variables = None  # All variables
     else:
         variables = args.var

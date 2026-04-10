@@ -213,8 +213,8 @@ def main():
                         help='Directory containing reference files (mask, pointlist)')
     parser.add_argument('--processed-dir',
                         help='Output directory for processed files')
-    parser.add_argument('-n', '--num-workers', type=int, default=None,
-                        help='Number of parallel workers (default: all CPUs)')
+    parser.add_argument('-n', '--num-workers', type=int, default=post_config.NUM_WORKERS,
+                        help='Number of parallel workers (default: from config/SLURM_CPUS_PER_TASK)')
     parser.add_argument('--start-year', type=float,
                         help='Start year for output (default: auto-detect)')
     parser.add_argument('--end-year', type=float,
@@ -375,6 +375,13 @@ def main():
         ds[args.output_var].attrs['threshold'] = args.threshold
     elif args.depth is not None:
         ds[args.output_var].attrs['depth'] = args.depth
+
+    # Slice to output period if configured
+    if post_config.OUTPUT_START is not None or post_config.OUTPUT_END is not None:
+        t_start = str(post_config.OUTPUT_START.date()) if post_config.OUTPUT_START else None
+        t_end   = str(post_config.OUTPUT_END.date())   if post_config.OUTPUT_END   else None
+        ds = ds.sel(time=slice(t_start, t_end))
+        print(f"Output period: {ds.time.values[0]} to {ds.time.values[-1]}")
 
     # Save output
     config.processed_output_dir.mkdir(parents=True, exist_ok=True)
