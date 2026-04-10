@@ -386,15 +386,14 @@ end subroutine Restart_From_Spinup
 
 ! *******************************************************
 
-subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, prefix_output, project_name)
+subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
         
     integer :: ind_z_max, ind_z_surf, prev_nt
     integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
     
-    character*255 :: pad, username, point_numb, project_name, prefix_output
+    character*255 :: pad
     
     pad = trim(path_restart)//trim(fname_restart_from_previous_run)
     
@@ -464,10 +463,6 @@ subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Ml
     do ind_z = (ind_z_surf-1), 1, -1
         DZ(ind_z) = (Depth(ind_z) - Depth(ind_z+1) - 0.5*DZ(ind_z+1)) * 2.
     end do
-
-    ! Reset profiles that need to start at zero after the spin-up
-    ! DenRho(:) = 0.
-    ! Refreeze(:) = 0.
     
 end subroutine Restart_From_Run
 

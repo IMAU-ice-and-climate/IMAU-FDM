@@ -234,6 +234,7 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
     Rho(ind_z_surf) = rho0 ! rho0 set by Rho0FM in Interpol_Forcing
     M(ind_z_surf) = Rho(ind_z_surf) * DZ(ind_z_surf)
 
+    
     do ind_z = (ind_z_surf-1), 1, -1
 
         part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
@@ -242,6 +243,7 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
         ! drho/dt = C_i*b_ave*g*rho*(rho_i-rho)*exp(...)
         ! drho = C_i*g*rho*(rho_i-rho)*exp(...)*b_ave*dt
         ! drho = C_i*g*rho*(rho_i-rho)*exp(...)*dzmax
+        ! TKTKTK instead of dzmax, could update to dz = acav * dt
 
         if (Rho(ind_z+1) <= 550.) then
             drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
