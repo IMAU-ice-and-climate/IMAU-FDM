@@ -102,7 +102,7 @@ fi
 log_fname=${p2logs}/log_IMAU-FDM_${ccab}_${cpoint}.out
 echo "$(date +%c) ${EC_FARM_ID}: We launch the model for ${cpoint} with:"
 
-echo "$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname}"
+echo "$exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type $load_ &> ${log_fname}"
 $exe_id $usern $cpoint $domain $filename_part1 $project_name $restart_type &> ${log_fname} 
 
 echo "$(date +%c) ${EC_FARM_ID}: Model run complete, report back..."

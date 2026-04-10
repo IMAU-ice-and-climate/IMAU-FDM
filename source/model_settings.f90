@@ -156,6 +156,7 @@ subroutine Define_Paths()
     fname_restart_from_spinup = trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     prefix_fname_ini = trim(prefix_output)//"_initialize_from_"
     suffix_fname_ini = "_run_"//trim(point_numb)//".nc"
+    !fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
     fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
     fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"
     fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
