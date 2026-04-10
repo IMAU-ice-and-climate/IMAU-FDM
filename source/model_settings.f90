@@ -9,12 +9,12 @@ module model_settings
 
     ! Module-level variables that can be accessed by other modules
     
-    public :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name
+    public :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name, load_restart_end_year
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_save_restart, path_load_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
-    public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
+    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
+    public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_load_restart_from_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
     public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
     public :: save_output
@@ -25,12 +25,12 @@ module model_settings
 
     ! Declare the module variables
 
-    character(len=255) :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name
+    character(len=255) :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name, load_restart_end_year
     character(len=255) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     character(len=255) :: path_forcing_timeseries, path_save_restart, path_load_restart, path_out_1d, path_out_2d, path_out_2ddet
     character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
-    character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
+    character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_load_restart_from_run, fname_out_1d
     character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var
     character(len=255) :: model_first_timestep, model_last_timestep
     logical :: do_MO_fit
@@ -62,15 +62,17 @@ end subroutine Define_Settings
 subroutine Get_All_Command_Line_Arg()
     !*** Get all command line arguments ***!
 
-    ! 1: ECMWF username 
+    ! 1: ECMWF username
     ! 2: Simulation number, corresponding to the line number in the IN-file.
     ! 3: Domain name, similar to the RACMO forcing (e.g. ANT27) - set to global in define_paths_and_constants
     ! 4: General part of output filename
     ! 5: Project name, for defining file paths
-    ! 6: Restart type, where none= do spinup; spinup = restart from spinup
+    ! 6: Restart type, where none= do spinup; spinup = restart from spinup; run = restart from previous run
+    ! 7: Project name to load restart from (optional; defaults to project_name if empty)
+    ! 8: End year of the run to load restart from (optional; defaults to end_ts_year if empty)
 
     print *, "Getting command line arguments..."
-    
+
     call get_command_argument(1, username)
     call get_command_argument(2, point_numb)
     call get_command_argument(3, domain)
@@ -78,6 +80,7 @@ subroutine Get_All_Command_Line_Arg()
     call get_command_argument(5, project_name)
     call get_command_argument(6, restart_type)
     call get_command_argument(7, load_restart_project_name)
+    call get_command_argument(8, load_restart_end_year)
 
     if (trim(project_name) == "example") then
 
@@ -116,7 +119,8 @@ subroutine Define_Paths()
         code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
         output_dir = trim(code_dir)//"example/"
         input_dir =  trim(code_dir)//"example/input/"
-        path_restart =  trim(code_dir)//"example/restart/"
+        path_save_restart = trim(code_dir)//"example/restart/"
+        path_load_restart = path_save_restart
 
         prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
         suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
@@ -127,7 +131,11 @@ subroutine Define_Paths()
         output_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/"
         input_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain)//"_"//trim(forcing)//"/input/"
         path_save_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-        path_load_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(restart_project_name)//"/"
+        if (len_trim(load_restart_project_name) == 0) then
+            path_load_restart = path_save_restart
+        else
+            path_load_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(load_restart_project_name)//"/"
+        end if
 
         prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
         suffix_forcing_timeseries = ".nc"
@@ -137,7 +145,8 @@ subroutine Define_Paths()
     print *, "Path to IMAU-FDM: ", code_dir
     print *, "Path to output directory: ", output_dir
     print *, "Path to input directory: ", input_dir
-    print *, "Path to restart directory: ", path_restart
+    print *, "Path to save restart directory: ", trim(path_save_restart)
+    print *, "Path to load restart directory: ", trim(path_load_restart)
 
     path_settings = trim(output_dir)//"ms_files/"
     path_forcing_dims =  trim(code_dir)//"reference/"//trim(domain)//"/"
@@ -156,8 +165,12 @@ subroutine Define_Paths()
     fname_restart_from_spinup = trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     prefix_fname_ini = trim(prefix_output)//"_initialize_from_"
     suffix_fname_ini = "_run_"//trim(point_numb)//".nc"
-    !fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
     fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
+    if (len_trim(load_restart_end_year) == 0) then
+        fname_load_restart_from_run = fname_restart_from_previous_run
+    else
+        fname_load_restart_from_run = trim(prefix_fname_ini)//trim(load_restart_end_year)//trim(suffix_fname_ini)
+    end if
     fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"
     fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
     fname_out_2ddet = trim(prefix_output)//"_2Ddetail_"//trim(point_numb)//".nc"

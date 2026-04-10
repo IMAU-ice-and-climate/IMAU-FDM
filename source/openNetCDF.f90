@@ -328,8 +328,8 @@ subroutine Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ
     
     character*255 :: pad
     
-    pad = trim(path_restart)//trim(fname_restart_from_spinup)
-    
+    pad = trim(path_load_restart)//trim(fname_restart_from_spinup)
+
     print *, "Path of spinup restart file: "
     print *, trim(pad)
     print *, ' '
@@ -395,9 +395,9 @@ subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Ml
     
     character*255 :: pad
     
-    pad = trim(path_restart)//trim(fname_restart_from_previous_run)
-    
-    print *, 'Path of run restart files: :'
+    pad = trim(path_load_restart)//trim(fname_load_restart_from_run)
+
+    print *, 'Path of run restart file: '
     print *, trim(pad)
     print *, ' '
 

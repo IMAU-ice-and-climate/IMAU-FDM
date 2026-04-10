@@ -96,6 +96,8 @@ export p2exe="$p2exe"
 export FDM_executable="$FDM_executable"
 export project_name="$project_name"
 export restart_type="$restart_type"
+export load_restart_project_name="$load_restart_project_name"
+export load_restart_end_year="$load_restart_end_year"
 
 # other FDM input
 export p2ms="$p2ms"

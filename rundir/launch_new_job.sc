@@ -34,21 +34,24 @@ else
   exit 1
 fi
 
-export restart_type="run" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
+export restart_type="run" # none - do spinup; spinup - restart from spinup; run - restart from previous run
+export load_restart_project_name="run_FGRN055-era055_1939-2023" # project_name of run to load restart from (arg 7; leave empty to use project_name)
+export load_restart_end_year="2023"                             # end year of run to load restart from  (arg 8; leave empty to use end_ts_year)
+export load_restart_exe="${SCRATCH}/run_FGRN055-era055_1939-2023/LocalCode/imau-fdm.x" # path to executable to use (leave empty to use $p2exe/$FDM_executable)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}"
 
 export p2exe="${PERM}/code/IMAU-FDM"
 export workdir="${SCRATCH}/${project_name}"
-export save_restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export load_restartdir="${SCRATCH}/restart/run-FGRN055-era055_1939-2023" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export save_restartdir="${SCRATCH}/restart/${project_name}"
+export load_restartdir="${SCRATCH}/restart/${load_restart_project_name}"
 export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/" 
 
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$p2exe/rundir/pointlists/pointlist_one_point.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_for_testing.txt"
 
 export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
@@ -129,7 +132,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   mkdir -p $save_restartdir
   mkdir -p $p2logs
 
-  cp "$p2exe/$FDM_executable" "$workexe/$FDM_executable"
+  if [[ -n "$load_restart_exe" ]]; then
+    echo "Using executable from load_restart_exe: $load_restart_exe"
+    cp "$load_restart_exe" "$workexe/$FDM_executable"
+  else
+    cp "$p2exe/$FDM_executable" "$workexe/$FDM_executable"
+  fi
 
   if [[ ! -r $gridpointlist ]]; then
     echo "The grid point list is missing!"

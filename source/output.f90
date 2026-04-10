@@ -757,7 +757,7 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
 
     call fdate(current_datetime)
     
-    pad = trim(path_restart)//trim(fname_restart_from_spinup)
+    pad = trim(path_save_restart)//trim(fname_restart_from_spinup)
 
     print *, "Saving out after spinup for restarting at: "
     print *, trim(pad)
@@ -855,7 +855,7 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
 
-    pad = trim(path_restart)//trim(fname_restart_from_previous_run)
+    pad = trim(path_save_restart)//trim(fname_restart_from_previous_run)
 
     print *, "Saving out run for restarting at: "
     print *, trim(pad)
