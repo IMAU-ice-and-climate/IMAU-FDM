@@ -15,7 +15,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="FGRN055-era055_1939-2023" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="test-extend-FGRN055-era055_1939-2023" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
@@ -34,22 +34,21 @@ else
   exit 1
 fi
 
-export restart_type="none" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
+export restart_type="run" # none - do spinup; spinup - restart from spinup; (testing -> run - restart from run)
 
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}"
 
 export p2exe="${PERM}/code/IMAU-FDM"
 export workdir="${SCRATCH}/${project_name}"
-export restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export save_restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
+export load_restartdir="${SCRATCH}/restart/run-FGRN055-era055_1939-2023" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
 export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/" 
 
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-#gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
-#gridpointlist="$p2exe/rundir/pointlists/pointlist_run_1939-2023_FGRN055-era055.txt"
-gridpointlist="$p2exe/rundir/pointlists/pointlist_FGRN055-era055_1939-2023.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_one_point.txt"
 
 export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
@@ -64,7 +63,7 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 export usern=$USER
 
 # SBATCH options
-export nnodes_max=16 #update to 8 if doing full run, otherwise use 1 for smaller runs
+export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export FDMs_per_node=128 #128 # play around for the optimal performance 
@@ -127,7 +126,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   mkdir -p $readydir_base
   mkdir -p $p2ms
   mkdir -p $outputdir
-  mkdir -p $restartdir
+  mkdir -p $save_restartdir
   mkdir -p $p2logs
 
   cp "$p2exe/$FDM_executable" "$workexe/$FDM_executable"

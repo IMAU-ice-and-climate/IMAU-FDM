@@ -9,9 +9,9 @@ module model_settings
 
     ! Module-level variables that can be accessed by other modules
     
-    public :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing
+    public :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
+    public :: path_forcing_timeseries, path_save_restart, path_load_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
@@ -25,9 +25,9 @@ module model_settings
 
     ! Declare the module variables
 
-    character(len=255) :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing
+    character(len=255) :: domain, username, point_numb, prefix_output, project_name, restart_type, forcing, load_restart_project_name
     character(len=255) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    character(len=255) :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
+    character(len=255) :: path_forcing_timeseries, path_save_restart, path_load_restart, path_out_1d, path_out_2d, path_out_2ddet
     character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
     character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
@@ -77,6 +77,7 @@ subroutine Get_All_Command_Line_Arg()
     call get_command_argument(4, prefix_output)
     call get_command_argument(5, project_name)
     call get_command_argument(6, restart_type)
+    call get_command_argument(7, load_restart_project_name)
 
     if (trim(project_name) == "example") then
 
@@ -103,12 +104,12 @@ subroutine Define_Paths()
 
     forcing = "era055"
     start_ts_year = "1939"
-    end_ts_year = "2023"
+    end_ts_year = "2025"
     start_ave_year = "1940"
     end_ave_year = "1970"
 
     model_first_timestep = "1939-09-01T00:00:00"
-    model_last_timestep = "2023-12-31T21:00:00"
+    model_last_timestep = "2025-12-31T21:00:00"
 
     if (trim(project_name) == "example") then 
 
@@ -125,7 +126,8 @@ subroutine Define_Paths()
         code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
         output_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/"
         input_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain)//"_"//trim(forcing)//"/input/"
-        path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+        path_save_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
+        path_load_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(restart_project_name)//"/"
 
         prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
         suffix_forcing_timeseries = ".nc"

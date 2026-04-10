@@ -79,7 +79,8 @@ export readydir_base=$readydir_base
 export nplogdir=$nplogdir
 export workexe=$workexe
 export requestdir=$requestdir
-export restartdir=$restartdir
+export save_restartdir=$save_restartdir
+export load_restartdir=$load_restartdir
 export hostname="$hostname"
 
 export readpointexe=$readpointexe

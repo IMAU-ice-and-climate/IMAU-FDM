@@ -1,0 +1,134 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-132 at 20260409_145214.117, PID: 2671489, JOBID: 37720876
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.37720876
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/4/37720876
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL:           __  __ _____ __  __ _  _____ _     _         
+EC_MEMKILL:     __/\_|  \/  | ____|  \/  | |/ /_ _| |   | |  __/\__
+EC_MEMKILL:     \    / |\/| |  _| | |\/| | ' / | || |   | |  \    /
+EC_MEMKILL:     /_  _\ |  | | |___| |  | | . \ | || |___| |__/_  _\
+EC_MEMKILL:       \/ |_|  |_|_____|_|  |_|_|\_\___|_____|_____|\/  
+EC_MEMKILL: 
+EC_MEMKILL:               BEGIN OF ECMWF MEMKILL REPORT
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: [ECMWF_MEMORY_SUPERVISOR:JOB_OR_SESSION_OUT_OF_MEMORY,ac6-132.bullx:/usr/local/sbin/watch_cgroup:l799:Thu Apr  9 15:05:48 2026]
+EC_MEMKILL: 
+EC_MEMKILL: [summary]
+EC_MEMKILL: job/session: 37720876
+EC_MEMKILL: requested/default memory limit for job/session: 65536MiB
+EC_MEMKILL: sum of shmem, active and inactive anonymous memory of job/session: 65697MiB
+EC_MEMKILL: ACTION: about to issue: 'kill -SIGKILL' to pid: 2672358
+EC_MEMKILL: to-be-killed process: "python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", with resident-segment-size: 36301MiB
+EC_MEMKILL: 
+EC_MEMKILL: [status of to-be-killed process as per /proc/2672358/status]
+EC_MEMKILL: Name:	python3
+EC_MEMKILL: VmPeak:	69284564 kB
+EC_MEMKILL: VmSize:	39328460 kB
+EC_MEMKILL: VmHWM:	67097376 kB
+EC_MEMKILL: VmRSS:	37173900 kB
+EC_MEMKILL: VmData:	38237336 kB
+EC_MEMKILL: VmStk:	     216 kB
+EC_MEMKILL: VmLib:	  272164 kB
+EC_MEMKILL: VmPTE:	   74052 kB
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: [list of processes in cgroup]
+EC_MEMKILL: pid:   2672358  ppid:   2671489  vsize:   38406MiB  rss:   36301MiB  starttime: Thu Apr  9 14:52:16 2026 (age:    812s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err  <=== TO-BE-KILLED
+EC_MEMKILL: pid:   2930699  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2931335  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2931540  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2932024  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2932259  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2932406  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2932967  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2933230  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2933495  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:14 2026 (age:    274s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2933785  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:16 2026 (age:    272s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2934000  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:16 2026 (age:    272s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2934432  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:16 2026 (age:    272s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2934824  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:05:48 2026 (age:      0s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2934895  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:18 2026 (age:    270s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2935276  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:18 2026 (age:    270s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2935333  ppid:   2672358  vsize:   38459MiB  rss:   36267MiB  starttime: Thu Apr  9 15:01:18 2026 (age:    270s)  comm: python3 /home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py [envvar: !SLURM_JOB_NAME=fdm_1d_files] /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err 
+EC_MEMKILL: pid:   2667988  ppid:   2667982  vsize:     216MiB  rss:       0MiB  starttime: Thu Apr  9 14:52:06 2026 (age:    822s)  comm: sleep 100000000  /dev/null 
+EC_MEMKILL: 
+EC_MEMKILL: Contributions to job-cgroup-shmem footprint from tmpfs use (namespace of PID 2672358):
+EC_MEMKILL: space use:
+EC_MEMKILL: 0M	/dev/shm
+EC_MEMKILL: 0M	/var/tmp
+EC_MEMKILL: 0M	/tmp
+EC_MEMKILL: 0M	total
+EC_MEMKILL: 
+EC_MEMKILL: inodes:
+EC_MEMKILL: 1	/dev/shm
+EC_MEMKILL: 1	/var/tmp
+EC_MEMKILL: 1	/tmp
+EC_MEMKILL: 3	total
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL: [cgroup memory stats]
+EC_MEMKILL: process_cgroup.cgroup: /sys/fs/cgroup/memory/slurm/uid_26513/job_37720876
+EC_MEMKILL: process_cgroup.memory.kmem.max_usage_in_bytes: 1413373952
+EC_MEMKILL: process_cgroup.memory.kmem.usage_in_bytes: 1309233152
+EC_MEMKILL: process_cgroup.memory.limit_in_bytes: 503316480000
+EC_MEMKILL: process_cgroup.memory.max_usage_in_bytes: 72045309952
+EC_MEMKILL: process_cgroup.memory.soft_limit_in_bytes: 68719476736
+EC_MEMKILL: process_cgroup.memory.stat.total_active_anon: 176128
+EC_MEMKILL: process_cgroup.memory.stat.total_active_file: 9609216
+EC_MEMKILL: process_cgroup.memory.stat.total_cache: 44019712
+EC_MEMKILL: process_cgroup.memory.stat.total_dirty: 0
+EC_MEMKILL: process_cgroup.memory.stat.total_inactive_anon: 68889341952
+EC_MEMKILL: process_cgroup.memory.stat.total_inactive_file: 34152448
+EC_MEMKILL: process_cgroup.memory.stat.total_mapped_file: 475136
+EC_MEMKILL: process_cgroup.memory.stat.total_pgfault: 38070857
+EC_MEMKILL: process_cgroup.memory.stat.total_pgmajfault: 389
+EC_MEMKILL: process_cgroup.memory.stat.total_pgpgin: 107886117
+EC_MEMKILL: process_cgroup.memory.stat.total_pgpgout: 91056642
+EC_MEMKILL: process_cgroup.memory.stat.total_rss: 68889509888
+EC_MEMKILL: process_cgroup.memory.stat.total_rss_huge: 0
+EC_MEMKILL: process_cgroup.memory.stat.total_shmem: 40960
+EC_MEMKILL: process_cgroup.memory.usage_in_bytes: 70240169984
+EC_MEMKILL: process_cgroup.uid: 26513
+EC_MEMKILL: 
+EC_MEMKILL: 
+EC_MEMKILL:                END OF ECMWF MEMKILL REPORT
+EC_MEMKILL:           __  __ _____ __  __ _  _____ _     _         
+EC_MEMKILL:     __/\_|  \/  | ____|  \/  | |/ /_ _| |   | |  __/\__
+EC_MEMKILL:     \    / |\/| |  _| | |\/| | ' / | || |   | |  \    /
+EC_MEMKILL:     /_  _\ |  | | |___| |  | | . \ | || |___| |__/_  _\
+EC_MEMKILL:       \/ |_|  |_|_____|_|  |_|_|\_\___|_____|_____|\/  
+/var/spool/slurmd/job37720876/slurm_script: line 78: 2672358 Killed                  python3 "${SCRIPT_DIR}/make_1d_files.py"
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-04-09T15:05:53 on ac
+[ECMWF-INFO -ecepilog] JobName                   : fdm_1d_files
+[ECMWF-INFO -ecepilog] JobID                     : 37720876
+[ECMWF-INFO -ecepilog] Submit                    : 2026-04-09T14:51:58
+[ECMWF-INFO -ecepilog] Start                     : 2026-04-09T14:52:05
+[ECMWF-INFO -ecepilog] End                       : 2026-04-09T15:05:53
+[ECMWF-INFO -ecepilog] QueuedTime                : 7.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 828
+[ECMWF-INFO -ecepilog] ExitCode                  : 9:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : FAILED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-37720876.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 16
+[ECMWF-INFO -ecepilog] SBU                       : 31.397
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-fdm_1d_files-1x16-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-_JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+

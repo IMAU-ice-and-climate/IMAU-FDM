@@ -1,0 +1,24 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 53801, mtime: Tue Nov 25 12:31:30 2025
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Thu Apr  9 14:43:12 2026 (1775745792.2934697) on ac6-100.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript: /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --positional=['make_1d_files.py']
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - No qos requested, assuming qos=nf
+[ECMWF-INFO -sbatch] - jobtag: nld4814-make_1d_files.py-1x2-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/slurm-_JOBID_.out
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--qos=nf', '--licenses=h2resw01', '--time=1-00:00:00', '/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-INFO -sbatch] - Submitted batch job 37718556
