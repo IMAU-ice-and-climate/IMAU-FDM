@@ -746,13 +746,13 @@ end subroutine Save_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
     !*** Write a netcdf file containing the firn profile after the spin-up ***!
     
     integer :: status, ncid, dimID, varID(10), ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
-    character*255 :: pad, point_numb, prefix_output, username, project_name
+    character*255 :: pad
     character*24 :: current_datetime
 
     call fdate(current_datetime)

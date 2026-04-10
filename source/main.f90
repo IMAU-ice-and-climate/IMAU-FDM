@@ -136,11 +136,10 @@ program main
             IceShelf, ImpExp, nyears, nyearsSU)
 
         ! Write intitial profile to NetCDF-file and prepare output arrays
-        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
         prev_nt=1
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
-        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, prefix_output, project_name)
+        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
     else
         print *, "Restart type not recognized: ", restart_type
     endif
