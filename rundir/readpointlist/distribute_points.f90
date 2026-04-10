@@ -242,7 +242,7 @@ do while ( count(threadok).ge.mintreads )
   &             ipoint, npoints, ntimesort, itact, sortedlist, &
   &             ngridpointsmax, pointlist, expruntime)
             
-            if ( itact > 1 ) then
+            if ( itact >= 1 ) then
   	          
               call get_point_list(ntimesort, itact, sortedlist, &
   &                               ngridpointsmax, pointlist, expruntime, nsecleft, itodo)
