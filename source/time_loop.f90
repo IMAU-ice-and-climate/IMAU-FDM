@@ -176,7 +176,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
 
     ! start from last time step if restarting from loaded run
     if ( restart_type=="run" ) then
-        ind_t_i = prev_nt
+        ind_t_i = prev_nt + 1
     else
         ind_t_i = 1
     endif
