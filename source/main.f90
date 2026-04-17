@@ -126,9 +126,9 @@ program main
     else if ( restart_type == "none" ) then ! do spinup
         ! Construct an initial firn layer (T-, rho-, dz-, and M-profile)
         rho0_init = Rho0FM(1)
-        call Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0_init, acav, tsav, DZ, Rho, M)
+        call Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0_init, acav, tsav, rgrain2_fresh, DZ, Rho, M, Year, rgrain2)
 
-        call Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi, rgrain2_fresh, rgrain2, Year, dtmodel)
+        call Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
     
         ! Spin up the model to a 'steady state'
         call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, th, dzmax, rgrain2_fresh, rgrain2_refreeze, M, T, DZ, Rho, &

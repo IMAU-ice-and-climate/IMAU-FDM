@@ -218,13 +218,13 @@ end subroutine Index_Ave_Forcing
 ! *******************************************************
 
 
-subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ, Rho, M)
+subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, rgrain2_fresh, DZ, Rho, M, Year, rgrain2)
     !*** Initialise the density profile ***!
         
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf    
-    double precision, intent(in) :: dzmax, rho0, acav, tsav
-    double precision, dimension(ind_z_max), intent(inout) :: DZ, Rho
+    double precision, intent(in) :: dzmax, rho0, acav, tsav, rgrain2_fresh
+    double precision, dimension(ind_z_max), intent(inout) :: DZ, Rho, Year, rgrain2
     double precision, dimension(ind_z_max), intent(out) :: M
 
     ! declare local variables
@@ -233,6 +233,10 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
         
     Rho(ind_z_surf) = rho0 ! rho0 set by Rho0FM in Interpol_Forcing
     M(ind_z_surf) = Rho(ind_z_surf) * DZ(ind_z_surf)
+    if (grainsize_veldhuijsen) then
+        Year(ind_z_surf) = 0
+        rgrain2(ind_z_surf) = rgrain2_fresh
+    endif
 
     do ind_z = (ind_z_surf-1), 1, -1
 
@@ -261,11 +265,21 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
         if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
 
         M(ind_z) = Rho(ind_z) * DZ(ind_z)
+        if (grainsize_veldhuijsen) then
+            Year(ind_z) = Year(ind_z + 1) + (Rho(ind_z) * DZ(ind_z)) / (acav/(365.25 * 24 * 3600))
+            rgrain2(ind_z) = rgrain2(ind_z + 1) + kg * exp(-Eg/(R*tsav)) * Year(ind_z)
+        endif
 
     enddo
     
     print *, 'Initial density 10 lowermost layers:'
     print *, Rho(1:10)
+    if (grainsize_veldhuijsen) then
+        print *, 'Initial age 10 lowermost layers:'
+        print *, Year(1:10)
+        print *, 'Initial grainsize 10 lowermost layers:'
+        print *, rgrain2(1:10)**0.5
+    endif
     print *, " "
 
 end subroutine Init_Density_Prof
@@ -274,14 +288,14 @@ end subroutine Init_Density_Prof
 ! *******************************************************
 
 
-subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi, rgrain2_fresh, rgrain2, Year, dtmodel)
+subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
     !*** Initialise the temperature profile ***!
     
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, beginT, dtmodel
-    double precision, intent(in) :: tsav, pi, rhoi, rgrain2_fresh
+    integer, intent(in) :: ind_z_max, ind_z_surf, beginT
+    double precision, intent(in) :: tsav, pi, rhoi
     double precision, dimension(ind_z_max), intent(in) :: Depth, Rho
-    double precision, dimension(ind_z_max), intent(out) :: T, rgrain2, Year
+    double precision, dimension(ind_z_max), intent(out) :: T
 
     ! declare local variables
     integer :: ind_z
@@ -322,23 +336,10 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
             endif
             if (T(ind_z) > 272.15) T(ind_z) = 272.15
         endif
-
-        if (grainsize_veldhuijsen) then
-            if (ind_z == ind_z_surf) print*, 'test 6: Init_Temp_Prof works, inital year and rgrain profile'
-            Year(ind_z) = dtmodel
-            rgrain2(ind_z) = (0.001*0.03)**2
-        endif
-
     enddo
-
-    if (grainsize_veldhuijsen) then
-        print*, 'test 7: Init_Temp_Prof, fresh grain size works'
-        rgrain2(ind_z_surf) = rgrain2_fresh
-    endif
 
     print *, 'Initial temperature 10 lowermost layers:'
     print *, T(1:10)
-    print *, Year(1:20)
     print *, " "
     
 end subroutine Init_Temp_Prof

@@ -32,7 +32,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, aca
 
     ! declare local variables
     integer :: ind_z
-    double precision :: mdiff, macc, mice, mrun, Mmelt, oldDZ, accumulation, negative_accumulation
+    double precision :: mdiff, macc, mice, mrun, Mmelt, oldDZ, accumulation, negative_accumulation, Madded, Mremoved
 
     ! Prepare climate input for time step
     if (ImpExp == 1) then
@@ -70,27 +70,66 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, ind_t, dtmodel, rho0, rhoi, aca
 
     !Add mass to upper layer
     if (grainsize_veldhuijsen) then
-        if (mod(ind_t, 200000) == 0) print *, 'test 9: Update_Surface' !remove ind_t when removing test
-        accumulation = Psol + Su - Sd
-        if (accumulation >= 0.) then !positive accumulation, so add to surface
-            M(ind_z_surf) = M(ind_z_surf) + accumulation
-            !print*, 'accu>0, after adding accumulation M=', M(ind_z_surf)
+        !accumulation = Psol + Su - Sd not needed anymore
+        ! New snow has a grain size squared equal to rgrain2_new, removed firn has grain size rgrain2(ind_z_surf)
+        if (Su > 0.) then
+            if (Sd > 0.) then
+                ! Riming and diverging snow drift
+                Madded = Psol + Su
+                Mremoved = Sd
+            else
+                ! Riming and converging snow drift
+                Madded = Psol + Su - Sd
+                Mremoved = 0.
+            endif
         else
-            negative_accumulation = -accumulation !negative accumulation, so subtract from surface
-            do while (negative_accumulation > 0.000005) 
-                if (M(ind_z_surf) >= negative_accumulation) then !subtract if there is more mass in the surface layer than the mass that is removed
-                    M(ind_z_surf) = M(ind_z_surf) - negative_accumulation
-                    !print*, 'update_surface, m>neg_accu, negative_accumulation=', negative_accumulation
-                    negative_accumulation = 0.
-                else
-                    negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
-                    print*, 'update_surface, m<neg_accu, negative_accumulation=', negative_accumulation
-                    call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
-                endif
-            enddo
+            if (Sd > 0.) then
+                ! Sublimation / evaporation and diverging snow drift
+                Madded = Psol
+                Mremoved = -Su + Sd
+            else
+                ! Sublimation / evaporation and converging snow drift
+                Madded = Psol - Sd
+                Mremoved = -Su
+            endif
         endif
-        rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Psol) + rgrain2_fresh * (Psol))/M(ind_z_surf) 
-        Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Psol))/M(ind_z_surf)
+        
+        if (Mremoved <= M(ind_z_surf)) then 
+            M(ind_z_surf) = M(ind_z_surf) + Madded - Mremoved
+            rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Mremoved) + rgrain2_fresh*Madded) / (M(ind_z_surf)+Madded-Mremoved)
+            Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Madded))/M(ind_z_surf)
+        else
+            do while (Mremoved > M(ind_z_surf)) 
+                print*, 'Mremoved before deleting =', Mremoved, 'M(ind_z_surf) before deleting =', M(ind_z_surf)
+                Mremoved = Mremoved - M(ind_z_surf)
+                call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2)
+            enddo
+            print*, 'Mremoved after do loop =', Mremoved, 'M(ind_z_surf) after do loop =', M(ind_z_surf)
+            M(ind_z_surf) = M(ind_z_surf) + Madded - Mremoved
+            rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Mremoved) + rgrain2_fresh*Madded) / (M(ind_z_surf)+Madded-Mremoved)
+            Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Madded))/M(ind_z_surf)
+        endif
+
+
+        !if (accumulation >= 0.) then !positive accumulation, so add to surface
+        !    M(ind_z_surf) = M(ind_z_surf) + accumulation
+        !    !print*, 'accu>0, after adding accumulation M=', M(ind_z_surf)
+        !else
+        !    negative_accumulation = -accumulation !negative accumulation, so subtract from surface
+        !    do while (negative_accumulation > 0.000005) 
+        !        if (M(ind_z_surf) >= negative_accumulation) then !subtract if there is more mass in the surface layer than the mass that is removed
+        !            M(ind_z_surf) = M(ind_z_surf) - negative_accumulation
+        !            !print*, 'update_surface, m>neg_accu, negative_accumulation=', negative_accumulation
+        !            negative_accumulation = 0.
+        !        else
+        !            negative_accumulation = negative_accumulation - M(ind_z_surf) ! calculate how much mass can be removed from surface layer
+        !            print*, 'update_surface, m<neg_accu, negative_accumulation=', negative_accumulation
+        !            call Remove_Surface_Layer(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, rgrain2) ! remove surface layer, second layer becomes surface layer
+        !        endif
+        !    enddo
+        !endif
+        !rgrain2(ind_z_surf) = (rgrain2(ind_z_surf)*(M(ind_z_surf)-Madded) + rgrain2_fresh * Madded)/M(ind_z_surf) 
+        !Year(ind_z_surf) = (Year(ind_z_surf)*(M(ind_z_surf)-Psol))/M(ind_z_surf)
     else
         M(ind_z_surf) = M(ind_z_surf) + (Psol+Su-Sd)
     endif
