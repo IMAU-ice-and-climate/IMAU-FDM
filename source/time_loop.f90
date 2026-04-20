@@ -147,13 +147,16 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
     domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type, &
+    h_surf_init, h_surf_final)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
-    
+
     ! declare arguments
     integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, proflayers, detlayers, prev_nt
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
+    double precision, intent(in) :: h_surf_init
+    double precision, intent(out) :: h_surf_final
     integer, intent(inout) :: ind_z_surf
     double precision, intent(in) :: th, R, Ec, Eg, g, Lh, dzmax, rhoi, acav, ffav, detthick
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
@@ -167,14 +170,16 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     integer :: ind_z, ind_t, ind_t_i
     double precision :: rho0, Ts, Psol, Pliq, Su, Me, Sd
     double precision :: vice, vmelt, vacc, vsub, vsnd, vfc, vbouy, FirnAir, TotLwc, IceMass
-    double precision :: h_surf = 0., Totvice = 0., Totvfc = 0., Totvacc = 0., Totvsub = 0., Totvsnd = 0., Totvmelt = 0., Totvbouy = 0.
+    double precision :: h_surf, Totvice = 0., Totvfc = 0., Totvacc = 0., Totvsub = 0., Totvsnd = 0., Totvmelt = 0., Totvbouy = 0.
     double precision :: Mrunoff = 0., TotRunoff = 0., Mrefreeze = 0., TotRefreeze = 0.
     double precision :: Mrain = 0., TotRain = 0., Msurfmelt = 0., TotSurfmelt = 0., Msolin = 0., TotSolIn = 0., Rho0out = 0.
     
     ! Time integration
     print *, "Start of main time loop"
 
-    ! start from last time step if restarting from loaded run
+    h_surf = h_surf_init
+
+    ! start from next time step if restarting from loaded run
     if ( restart_type=="run" ) then
         ind_t_i = prev_nt + 1
     else
@@ -240,24 +245,26 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
                 Totvbouy, TotRunoff, FirnAir, TotLwc, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out, &
                 out_1D, outputSpeed)
         endif
-        
+
         if (mod(ind_t, numOutputProf) == 0.) then
             call To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, &
                 Rho, T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, &
                 out_2D_depth, out_2D_dRho, out_2D_year)
         endif
-        
+
         if (mod(ind_t, numOutputDetail) == 0.) then
             call To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, detlayers, detthick, numOutputDetail, &
                 outputDetail, Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, &
                 out_2D_det_lwc, out_2D_det_refreeze)
         endif
     enddo
-    
+
+    h_surf_final = h_surf
+
     ! Finished time loop
     print *, "End of time loop"
     print *, " "
-        
+
 end subroutine Time_Loop_Main
 
 

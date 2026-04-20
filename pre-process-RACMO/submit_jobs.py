@@ -40,10 +40,13 @@ Usage examples:
 """
 
 import argparse
+import os
 import re
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, os.getcwd())
 import config
 
 SCRIPT_DIR = Path(__file__).parent   # pre-process-RACMO/ — where scripts live

@@ -71,11 +71,11 @@ AVE_END_YEAR   = 2020
 
 # Longitude band parameters
 NUM_LONG_BANDS = 17
-CELL_WIDTH     = 6   # rlon indices per band
+CELL_WIDTH     = 15   # rlon indices per band
 
 # Raw RACMO file suffix 
 
-FNAME_SUFFIX = f"{DOMAIN}.ERA5-3H_RACMO2.3p2.3H.nc"
+FNAME_SUFFIX = f"{DOMAIN}.{FORCING}-3H_RACMO2.3p2.3H.nc"
 
 # Derived paths
 RAW_DIR     = BASE_DIR / "raw"

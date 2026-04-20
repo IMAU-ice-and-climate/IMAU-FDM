@@ -32,7 +32,7 @@ subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_open_icemask')
 
     ! import icemask, lat, lon, and ice shelves as needed
-    status = nf90_inq_varid(ncid(1),"LSM",ID(1))
+    status = nf90_inq_varid(ncid(1),icemask_var,ID(1))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_icemask')    
     status = nf90_inq_varid(ncid(1),"lat",ID(2))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_icemask_lat')
@@ -48,7 +48,7 @@ subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lon')
 
     if (domain == "ANT27") then
-        status = nf90_inq_varid(ncid(1),iceshelf_var,ID(5))
+        status = nf90_inq_varid(ncid(1),iceshelf_var,ID(6))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_iceshelf')
         status  = nf90_get_var(ncid(1),ID(6),ISM,start=(/1,1/), &
             count=(/Nlon,Nlat/))
@@ -386,11 +386,11 @@ end subroutine Restart_From_Spinup
 
 ! *******************************************************
 
-subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
-        
+subroutine Restart_From_Run(prev_nt, h_surf_init, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
+
     integer :: ind_z_max, ind_z_surf, prev_nt
     integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
-    
+    double precision, intent(out) :: h_surf_init
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
     
     character*255 :: pad
@@ -424,6 +424,8 @@ subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Ml
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid8')
     status = nf90_inq_varid(ncid(1),"prev_nt",ID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid9')
+    status = nf90_inq_varid(ncid(1),"h_surf",ID(10))
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid10')
 
     ! Get dimension of the array
     status = nf90_inq_dimid(ncid(1),"layer",LayerID(1))
@@ -452,10 +454,12 @@ subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Ml
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var7')
     status  = nf90_get_var(ncid(1),ID(8),DenRho(1:ind_z_surf),start=(/1/),count=(/ind_z_surf/))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var8')
-    status  = nf90_get_var(ncid(1),ID(9),prev_nt)!,start=1,count=1)
+    status  = nf90_get_var(ncid(1),ID(9),prev_nt)
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var9')
-    
-    ! Close all netCDF files    
+    status  = nf90_get_var(ncid(1),ID(10),h_surf_init)
+    if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_get_var10')
+
+    ! Close all netCDF files
     status = nf90_close(ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_close1')
 

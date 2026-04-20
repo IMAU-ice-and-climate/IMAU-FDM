@@ -12,10 +12,13 @@ Run from within the domain subdirectory (which contains config.py):
 import argparse
 import subprocess
 import sys
+import os
+import sys
 import numpy as np
 import xarray as xr
 from pathlib import Path
 
+sys.path.insert(0, os.getcwd())
 import config
 
 

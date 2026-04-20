@@ -31,8 +31,9 @@ program main
     integer :: nyears, nyearsSU
     integer :: prev_nt
     integer, parameter :: ind_z_max = 20000
-    
+
     double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, lon_current, lat_current, detthick
+    double precision :: h_surf_init, h_surf_final
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(:), allocatable :: SnowMelt, PreTot, PreSol, PreLiq
@@ -110,26 +111,27 @@ program main
     ! Get variables needed for outputting data
     call Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
-    
+
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
         out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
         proflayers, detlayers)
-    
+
     ! Interpolate the RACMO forcing data to firn model time step
     call Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, TempFM, PsolFM, PliqFM, SublFM, &
         MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtSnow, dtmodel, domain)
-    
+
 
     if ( restart_type == "spinup" ) then
         call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
         prev_nt=1
+        h_surf_init = 0.
     else if ( restart_type == "none" ) then ! do spinup
         ! Construct an initial firn layer (T-, rho-, dz-, and M-profile)
         rho0_init = Rho0FM(1)
         call Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0_init, acav, tsav, DZ, Rho, M)
 
         call Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
-    
+
         ! Spin up the model to a 'steady state'
         call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, &
             th, dzmax, M, T, DZ, Rho, DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
@@ -138,8 +140,9 @@ program main
         ! Write intitial profile to NetCDF-file and prepare output arrays
         call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
         prev_nt=1
+        h_surf_init = 0.
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
-        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
+        call Restart_From_Run(prev_nt, h_surf_init, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
     else
         print *, "Restart type not recognized: ", restart_type
     endif
@@ -149,13 +152,14 @@ program main
         outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
         TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
         domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type, &
+        h_surf_init, h_surf_final)
 
     ! Write output to netcdf files
     call Save_out_1D(outputSpeed, out_1D, writeinspeed)
     call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
     call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
-    call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
+    call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze, h_surf_final)
     
     print *, "Written output data to files"
     

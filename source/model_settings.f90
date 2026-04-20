@@ -15,7 +15,7 @@ module model_settings
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_load_restart_from_run, fname_out_1d
-    public :: fname_out_2d, fname_out_2ddet, iceshelf_var
+    public :: fname_out_2d, fname_out_2ddet, iceshelf_var, icemask_var
     public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
     public :: save_output
     public :: model_first_timestep, model_last_timestep
@@ -31,7 +31,7 @@ module model_settings
     character(len=255) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     character(len=255) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
     character(len=255) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_load_restart_from_run, fname_out_1d
-    character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var
+    character(len=255) :: fname_out_2d, fname_out_2ddet, iceshelf_var, icemask_var
     character(len=255) :: model_first_timestep, model_last_timestep
     logical :: do_MO_fit
     integer :: save_output
@@ -105,14 +105,36 @@ subroutine Define_Paths()
     ! define local variables
     character*255 :: forcing, code_dir, output_dir, input_dir, start_ts_year, end_ts_year, start_ave_year, end_ave_year
 
-    forcing = "era055"
-    start_ts_year = "1939"
-    end_ts_year = "2025"
-    start_ave_year = "1940"
-    end_ave_year = "1970"
+    if (domain=="FGRN055") then
+        forcing = "era055"
+        start_ts_year = "1939"
+        end_ts_year = "2025"
+        start_ave_year = "1940"
+        end_ave_year = "1970"
 
-    model_first_timestep = "1939-09-01T00:00:00"
-    model_last_timestep = "2025-12-31T21:00:00"
+        model_first_timestep = "1939-09-01T00:00:00"
+        model_last_timestep = "2025-12-31T21:00:00"
+
+        icemask_var = "LSM"
+        print *, "Ice shelf var not specified so not loading ice shelves"
+
+    elseif (domain=="ANT27") then
+        forcing = "ERA5"
+        start_ts_year = "1979"
+        end_ts_year = "2025"
+        start_ave_year = "1979"
+        end_ave_year = "2020"
+    
+        model_first_timestep = "1979-09-01T00:00:00"
+        model_last_timestep = "2025-12-31T21:00:00"
+
+        icemask_var = "IceMask"
+        iceshelf_var = "IceShelve"
+        
+    else
+        print *, "No domain forcing or datestamps specified in model_settings, aborting"
+    
+    end if
 
     if (trim(project_name) == "example") then 
 
@@ -175,12 +197,7 @@ subroutine Define_Paths()
     fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
     fname_out_2ddet = trim(prefix_output)//"_2Ddetail_"//trim(point_numb)//".nc"
 
-    if (domain == "ANT27") then
-        iceshelf_var = "IceShelve"
-    else
-        print *, "No iceshelf_var defined for domain, ", domain
-        print *, "so not loading ice shelf mask."
-    end if
+
 
     
 

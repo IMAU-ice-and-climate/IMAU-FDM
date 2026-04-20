@@ -29,14 +29,33 @@ Extending an existing timeseries with new RACMO years:
 """
 
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, os.getcwd())
 import config
 
 
-def _slice_years_into_parts(varname, year_range, parts_dir):
-    """Slice yearly files for years in year_range into parts_dir."""
+def _run_ncrcat(args):
+    """Run ncrcat, suppressing the benign time_bnds non-monotonicity warning."""
+    result = subprocess.run(args, capture_output=True, text=True)
+    filtered = "\n".join(
+        line for line in result.stderr.splitlines()
+        if "non-monotonicity" not in line
+    )
+    if filtered.strip():
+        print(filtered)
+    if result.returncode != 0:
+        raise subprocess.CalledProcessError(result.returncode, args, result.stderr)
+
+
+def _slice_years_into_parts(varname, year_range, parts_dir, parts_filter=None):
+    """Slice yearly files for years in year_range into parts_dir.
+
+    parts_filter: if given, a set of part numbers to process; others are skipped.
+    """
     years_dir = config.YEARS_DIR
     parts_dir.mkdir(parents=True, exist_ok=True)
 
@@ -49,6 +68,9 @@ def _slice_years_into_parts(varname, year_range, parts_dir):
         start_t = 0
         for part in range(1, config.NUM_LONG_BANDS + 1):
             end_t = start_t + config.CELL_WIDTH - 1
+            if parts_filter is not None and part not in parts_filter:
+                start_t = end_t + 1
+                continue
             fname_out = parts_dir / f"{varname}_{year}_part{part}.nc"
 
             if fname_out.exists():
@@ -62,7 +84,7 @@ def _slice_years_into_parts(varname, year_range, parts_dir):
             start_t = end_t + 1
 
 
-def make_timeseries(varname, do_parts=True):
+def make_timeseries(varname, do_parts=True, parts_filter=None):
     """Build full timeseries files from scratch (normal mode)."""
     years_dir = config.YEARS_DIR
     parts_dir = years_dir / "parts"
@@ -74,11 +96,14 @@ def make_timeseries(varname, do_parts=True):
             varname,
             range(config.TS_START_YEAR, config.TS_END_YEAR + 1),
             parts_dir,
+            parts_filter=parts_filter,
         )
 
     tmp_path = years_dir / f"{varname}_temp_timeseries.nc"
 
     for part in range(1, config.NUM_LONG_BANDS + 1):
+        if parts_filter is not None and part not in parts_filter:
+            continue
         fname_final = (
             files_dir
             / f"{varname}_{config.PROJECT_NAME}_{config.TS_START_YEAR}-{config.TS_END_YEAR}_p{part}.nc"
@@ -95,10 +120,7 @@ def make_timeseries(varname, do_parts=True):
 
         print(f"  Concatenating {len(part_files)} year files → part {part} timeseries")
         try:
-            subprocess.run(
-                ["ncrcat"] + [str(f) for f in part_files] + [str(tmp_path)],
-                check=True,
-            )
+            _run_ncrcat(["ncrcat"] + [str(f) for f in part_files] + [str(tmp_path)])
             subprocess.run(
                 ["nccopy", "-k", "classic", str(tmp_path), str(fname_final)],
                 check=True,
@@ -160,10 +182,7 @@ def extend_timeseries(varname, extend_start, extend_end, mode):
 
         print(f"  Appending {len(new_parts)} new year(s) to part {part} → {new_fname.name}")
         try:
-            subprocess.run(
-                ["ncrcat", str(existing)] + [str(f) for f in new_parts] + [str(tmp_path)],
-                check=True,
-            )
+            _run_ncrcat(["ncrcat", str(existing)] + [str(f) for f in new_parts] + [str(tmp_path)])
             subprocess.run(
                 ["nccopy", "-k", "classic", str(tmp_path), str(new_fname)],
                 check=True,
@@ -193,6 +212,13 @@ if __name__ == "__main__":
         help="(Normal mode) Skip slicing into parts; assume parts already exist",
     )
     parser.add_argument(
+        "--parts",
+        type=int,
+        nargs="+",
+        metavar="N",
+        help="Only process these longitude-band part numbers (e.g. --parts 10)",
+    )
+    parser.add_argument(
         "--extend-start",
         type=int,
         metavar="YEAR",
@@ -216,9 +242,11 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    parts_filter = set(args.parts) if args.parts else None
+
     if args.extend_start or args.extend_end:
         if not (args.extend_start and args.extend_end):
             parser.error("--extend-start and --extend-end must both be provided")
         extend_timeseries(args.varname, args.extend_start, args.extend_end, args.extend_mode)
     else:
-        make_timeseries(args.varname, do_parts=not args.no_parts)
+        make_timeseries(args.varname, do_parts=not args.no_parts, parts_filter=parts_filter)

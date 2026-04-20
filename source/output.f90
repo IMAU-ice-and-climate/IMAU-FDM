@@ -131,7 +131,7 @@ subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outpu
         T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year)
     !*** Write the 2D output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
@@ -172,10 +172,10 @@ end subroutine To_out_2D
 ! *******************************************************
 
 
-subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, numOutputDetail, outputDetail, &
+subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, detlayers, detthick, numOutputDetail, outputDetail, &
     Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, detlayers, numOutputDetail, outputDetail
     double precision, intent(in) :: detthick
@@ -250,7 +250,7 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     end if
 
     ind_t_out = ind_t/numOutputDetail
-    
+
     out_2D_det_dens(ind_t_out,:) = REAL(IntRho)
     out_2D_det_temp(ind_t_out,:) = REAL(IntT)
     out_2D_det_lwc(ind_t_out,:) = REAL(IntMlwc)
@@ -847,12 +847,13 @@ end subroutine Save_out_spinup
 
 
 subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, &
-    DenRho, Refreeze)
+    DenRho, Refreeze, h_surf)
     !*** Write a netcdf file containing the firn profile after the run ***!
-    
+
     integer :: status, ncid, dimID(2), varID(10), ind_z_max, ind_z_surf, Nt_model_tot
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc, DenRho, Refreeze
     double precision, dimension(ind_z_max) :: Rho, Year
+    double precision, intent(in) :: h_surf
     character*255 :: pad
 
     pad = trim(path_save_restart)//trim(fname_restart_from_previous_run)
@@ -889,7 +890,9 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var8')
     status = nf90_def_var(ncid,"prev_nt",nf90_real,dimID(2),varID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var9')
-    
+    status = nf90_def_var(ncid,"h_surf",nf90_real,dimID(2),varID(10))
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var10')
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_enddef')
@@ -913,7 +916,9 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var8')
     status = nf90_put_var(ncid,varID(9),Nt_model_tot)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var9')
-    
+    status = nf90_put_var(ncid,varID(10),h_surf)
+    if(status /= nf90_noerr) call Handle_Error(status,'restart_run_put_var10')
+
     ! CLOSE NETCDF FILE
     status = nf90_close(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_close')

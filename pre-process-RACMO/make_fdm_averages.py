@@ -12,9 +12,12 @@ Run from within the domain subdirectory (which contains config.py):
 """
 
 import argparse
+import os
 import subprocess
+import sys
 from pathlib import Path
 
+sys.path.insert(0, os.getcwd())
 import config
 
 
