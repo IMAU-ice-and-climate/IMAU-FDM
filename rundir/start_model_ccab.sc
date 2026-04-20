@@ -53,7 +53,7 @@ $lon    ! beginLat; indicates the begin latitude gridpoint
 262     ! numLons, number of longitude points
 240 	! numLats, number of latitude points
 15      ! num of longitude bands (set during input pre-processing)
-131488 	! numTimes, number of time points 122728 122696 128568
+131488 	! numTimes, number of time points 1979-2023=131488
 EOS
 
 fi
