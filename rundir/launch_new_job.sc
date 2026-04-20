@@ -15,20 +15,17 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="extend-FGRN055-era055_1939-2023_to_2025" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
-
-if [[ -z "$project_name" ]]; then
-  echo "project_name is empty; set before continuing"
-  exit 1
-fi
+#export project_name="test-ANT27" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="test-extend-FGRN055-era055_1939-2023_to_2025-2"
 
 # set domain and forcing
-export domain="FGRN055" #or ANT27
+#export domain="ANT27"
+export domain="FGRN055" #or FGRN055 or ANT27
 
 if [[ "${domain}" == "FGRN055" ]]; then
   forcing="era055"
 elif [[ "${domain}" == "ANT27" ]]; then
-  forcing="era027"
+  forcing="ERA5"
 else
   echo "must specify forcing for unrecognized domain"
   exit 1
@@ -37,7 +34,6 @@ fi
 export restart_type="run" # none - do spinup; spinup - restart from spinup; run - restart from previous run
 export load_restart_project_name="run_FGRN055-era055_1939-2023" # project_name of run to load restart from (arg 7; leave empty to use project_name)
 export load_restart_end_year="2023"                             # end year of run to load restart from  (arg 8; leave empty to use end_ts_year)
-#export load_restart_exe="${SCRATCH}/run_FGRN055-era055_1939-2023/LocalCode/imau-fdm.x" # path to executable to use (leave empty to use $p2exe/$FDM_executable)
 export load_restart_exe=""
 
 export outputname="${domain}_${forcing}"
@@ -47,12 +43,12 @@ export p2exe="${PERM}/code/IMAU-FDM"
 export workdir="${SCRATCH}/${project_name}"
 export save_restartdir="${SCRATCH}/restart/${project_name}"
 export load_restartdir="${SCRATCH}/restart/${load_restart_project_name}"
-export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/" 
+export outputdir="${workdir}/output" 
 
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-gridpointlist="$p2exe/rundir/pointlists/pointlist_run_1939-2023_FGRN055-era055.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_k_transect_line.txt"
 
 export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
 export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
@@ -67,7 +63,7 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 export usern=$USER
 
 # SBATCH options
-export nnodes_max=4 #update to 8 if doing full run, otherwise use 1 for smaller runs
+export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export FDMs_per_node=128 #128 # play around for the optimal performance 
