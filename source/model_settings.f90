@@ -18,7 +18,9 @@ module model_settings
         double precision :: Eg  ! activation energy for grain growth [J mole-1]
         double precision :: Lh  ! latent heat of fusion [J kg-1]
         double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
+        double precision :: seconds_per_year  ! days per year TKTKTK: remove once timestamps incorprated
         double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        double precision :: pi ! pi = 3.1415
     end type Constants
 
 
@@ -28,6 +30,7 @@ module model_settings
     end type minimum_values_t
 
     type, public :: general_settings_t
+        character(len=:), allocatable :: run_location
         character(len=:), allocatable :: restart_type
         integer :: save_output
     end type general_settings_t
@@ -36,10 +39,18 @@ module model_settings
         logical :: do_MO_fit
     end type model_physics_t
 
+    type, public :: output_dimensions_t
+        integer :: proflayers
+        integer :: writeindetail
+        integer :: detlayers
+        double precision :: detthick
+    end type output_dimensions_t
+
     type, public :: Settings
         type(minimum_values_t)  :: minimum_values
         type(general_settings_t):: general_settings
         type(model_physics_t):: model_physics
+        type(output_dimensions_t) :: output_dimensions
     end type Settings
 
 
@@ -48,15 +59,15 @@ module model_settings
     ! Module-level variables that can be accessed by other modules
     
     public :: point_numb
-    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, restart_type, forcing, data_dir
+    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, forcing, data_dir
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year
-    public :: config
+    public :: seconds_per_year
+    public :: config, const
     public :: model_first_timestep, model_last_timestep
 
     ! Declare the module variables
@@ -72,9 +83,10 @@ module model_settings
     character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
     character(len=512) :: model_first_timestep, model_last_timestep
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, days_per_year
+    double precision :: seconds_per_year
     character(len=:), allocatable :: path_restart, restart_type, model_settings_file
     type(Settings), allocatable :: config
+    type(Constants), allocatable :: const
 contains
 
 
@@ -89,7 +101,7 @@ subroutine read_settings(table, settings_out)
 
     allocate(settings_out)
 
-    ! ---- [minimum_values] ----
+    ! Minimum_values
     nullify(child)
     call get_value(table, 'minimum_values', child, requested=.false.)
     if (associated(child)) then
@@ -97,7 +109,7 @@ subroutine read_settings(table, settings_out)
         call get_value(child, 'det2d_minimum', settings_out%minimum_values%det2d_minimum)
     end if
 
-    ! ---- [general_settings] ----
+    ! General_settings
     nullify(child)
     call get_value(table, 'general_settings', child, requested=.false.)
     if (associated(child)) then
@@ -105,11 +117,21 @@ subroutine read_settings(table, settings_out)
         call get_value(child, 'save_output', settings_out%general_settings%save_output)
     end if
 
-    ! ---- [model physics] ----
+    ! Model physics
     nullify(child)
     call get_value(table, 'model_physics', child, requested=.false.)
     if (associated(child)) then
         call get_value(child, 'DO_MO_FIT', settings_out%model_physics%do_MO_fit)
+    end if
+
+    ! Output dimensions
+    nullify(child)
+    call get_value(table, 'output_dimensions', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'proflayers', settings_out%output_dimensions%proflayers)
+        call get_value(child, 'writeindetail', settings_out%output_dimensions%writeindetail)
+        call get_value(child, 'detlayers', settings_out%output_dimensions%detlayers)
+        call get_value(child, 'detthick', settings_out%output_dimensions%detthick)
     end if
 end subroutine read_settings
 
@@ -184,6 +206,11 @@ subroutine read_constants(table, const)
     call get_value(child, "Lh", const%Lh)
     call get_value(child, "days_per_year", const%days_per_year)
     call get_value(child, "NaN_value", const%NaN_value)
+
+    const%pi = asin(1.)*2 ! pi = 3.1415
+    const%seconds_per_year = 3600.*24.*const%days_per_year   ! seconds per year [s]
+
+
 end subroutine
 
     
@@ -368,18 +395,18 @@ end subroutine Define_Paths
 subroutine Define_Constants()
     !*** Define physical constants ***!
     
-    pi = asin(1.)*2         ! pi = 3.1415
-    R = 8.3145              ! gas constant [J mole-1 K-1]
-    g = 9.81                ! gravitational acceleration [m s-2]
-    rhoi = 917.             ! density of ice [kg m-3]
-    rho_ocean = 1027.       ! density of ocean water [kg m-3]
-    Tmelt = 273.15          ! melting point of ice [K]
-    Ec = 60000.             ! activation energy for creep [J mole-1]
-    Eg = 42400.             ! activation energy for grain growth [J mole-1]
-    Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365.25    ! days per year [days]
-    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
-    NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
+    ! pi = asin(1.)*2         ! pi = 3.1415
+    ! R = 8.3145              ! gas constant [J mole-1 K-1]
+    ! g = 9.81                ! gravitational acceleration [m s-2]
+    ! rhoi = 917.             ! density of ice [kg m-3]
+    ! rho_ocean = 1027.       ! density of ocean water [kg m-3]
+    ! Tmelt = 273.15          ! melting point of ice [K]
+    ! Ec = 60000.             ! activation energy for creep [J mole-1]
+    ! Eg = 42400.             ! activation energy for grain growth [J mole-1]
+    ! Lh = 333500.            ! latent heat of fusion [J kg-1]
+    ! days_per_year = 365.25    ! days per year [days]
+    ! seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
+    ! NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
 
     ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
     ! Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
