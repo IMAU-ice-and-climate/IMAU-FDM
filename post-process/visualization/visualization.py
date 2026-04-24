@@ -251,6 +251,148 @@ def plot_annual_mean(ds, var_name, year, ax=None, **kwargs):
     return plot_map(ds_plot, var_name, time_idx=0, ax=ax, **kwargs)
 
 
+def plot_temporal_mean(ds, var_name, year_start, year_end, ax=None, **kwargs):
+    """
+    Plot temporal mean of a variable over a given year range.
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset containing the variable
+    var_name : str
+        Variable name to plot
+    year_start : int or float
+        Start of averaging period (inclusive)
+    year_end : int or float
+        End of averaging period (inclusive)
+    ax : matplotlib axes, optional
+        Axes to plot on
+    **kwargs :
+        Additional arguments passed to plot_map (cmap, vmin, vmax, etc.)
+
+    Returns
+    -------
+    matplotlib axes
+
+    Examples
+    --------
+    >>> ds = load_gridded_data('FirnAir')
+    >>> plot_temporal_mean(ds, 'FirnAir', 1940, 1970)
+    >>> plot_temporal_mean(ds, 'FirnAir', 1990, 2020, cmap='Blues', vmin=0, vmax=30)
+    """
+    period_data = ds.sel(time=slice(year_start, year_end))
+    if len(period_data.time) == 0:
+        raise ValueError(f"No data found between {year_start} and {year_end}")
+
+    period_mean = period_data.mean(dim='time')
+
+    ds_plot = xr.Dataset()
+    ds_plot[var_name] = period_mean[var_name].expand_dims('time')
+    ds_plot['time'] = [(year_start + year_end) / 2.0]
+    ds_plot['lat'] = ds['lat']
+    ds_plot['lon'] = ds['lon']
+    ds_plot = ds_plot.assign_coords(rlat=ds['rlat'], rlon=ds['rlon'])
+    ds_plot[var_name].attrs = ds[var_name].attrs
+
+    ax = plot_map(ds_plot, var_name, time_idx=0, ax=ax, **kwargs)
+
+    long_name = ds[var_name].attrs.get('long_name', var_name)
+    ax.set_title(f"{long_name} ({year_start}–{year_end} mean)")
+
+    return ax
+
+
+def plot_temporal_mean_difference(ds, var_name, period1, period2, ax=None,
+                                  cmap='RdBu', vcenter=0.0, **kwargs):
+    """
+    Plot the difference between temporal means of two periods (period2 - period1).
+
+    Parameters
+    ----------
+    ds : xr.Dataset
+        Dataset containing the variable
+    var_name : str
+        Variable name to plot
+    period1 : tuple of (int or float, int or float)
+        (year_start, year_end) for the first (reference) period
+    period2 : tuple of (int or float, int or float)
+        (year_start, year_end) for the second period
+    ax : matplotlib axes, optional
+        Axes to plot on
+    cmap : str
+        Colormap. Default 'RdBu_r' (diverging).
+    vcenter : float
+        Value to center the colormap on. Default 0.0.
+    **kwargs :
+        Additional arguments passed to plot_map (vmin, vmax, add_colorbar, etc.)
+
+    Returns
+    -------
+    matplotlib axes
+
+    Examples
+    --------
+    >>> ds = load_gridded_data('FirnAir')
+    >>> plot_temporal_mean_difference(ds, 'FirnAir', (1940, 1970), (1995, 2023))
+    >>> plot_temporal_mean_difference(ds, 'FirnAir', (1940, 1970), (1995, 2023),
+    ...                              vmin=-5, vmax=5)
+    """
+    from matplotlib.colors import TwoSlopeNorm
+
+    def _period_mean(year_start, year_end):
+        data = ds.sel(time=slice(year_start, year_end))
+        if len(data.time) == 0:
+            raise ValueError(f"No data found between {year_start} and {year_end}")
+        return data[var_name].mean(dim='time')
+
+    mean1 = _period_mean(*period1)
+    mean2 = _period_mean(*period2)
+    diff = mean2 - mean1
+
+    # Build a minimal single-timestep dataset so plot_map handles axes/colorbar
+    mid_time = (period1[0] + period1[1] + period2[0] + period2[1]) / 4.0
+    ds_plot = xr.Dataset()
+    ds_plot[var_name] = diff.expand_dims('time')
+    ds_plot['time'] = [mid_time]
+    ds_plot['lat'] = ds['lat']
+    ds_plot['lon'] = ds['lon']
+    ds_plot = ds_plot.assign_coords(rlat=ds['rlat'], rlon=ds['rlon'])
+    ds_plot[var_name].attrs = ds[var_name].attrs
+
+    # Symmetric color limits around vcenter if not overridden
+    vmin = kwargs.pop('vmin', None)
+    vmax = kwargs.pop('vmax', None)
+    if vmin is None and vmax is None:
+        abs_max = float(np.nanmax(np.abs(diff.values)))
+        vmin, vmax = vcenter - abs_max, vcenter + abs_max
+
+    norm = TwoSlopeNorm(vmin=vmin, vcenter=vcenter, vmax=vmax)
+
+    # plot_map doesn't accept norm directly, so plot manually
+    if ax is None:
+        _, ax = plt.subplots(figsize=(8, 10))
+
+    units = ds[var_name].attrs.get('units', '')
+    cbar_kwargs = {'shrink': 0.6, 'aspect': 20, 'pad': 0.02}
+    if units:
+        cbar_kwargs['label'] = units
+
+    add_colorbar = kwargs.pop('add_colorbar', True)
+    diff.plot(ax=ax, cmap=cmap, norm=norm,
+              add_colorbar=add_colorbar,
+              cbar_kwargs=cbar_kwargs if add_colorbar else None)
+
+    long_name = ds[var_name].attrs.get('long_name', var_name)
+    ax.set_title(
+        f"{long_name}\n({period2[0]}–{period2[1]} mean) − ({period1[0]}–{period1[1]} mean)"
+    )
+    ax.set_aspect('equal')
+    ax.set_xlabel('rlon (grid index)')
+    ax.set_ylabel('rlat (grid index)')
+
+    return ax
+
+
 # =============================================================================
 # Multi-Variable Comparison
 # =============================================================================

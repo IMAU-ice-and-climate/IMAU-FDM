@@ -420,7 +420,7 @@ subroutine Restart_From_Run(prev_nt, h_surf_init, ind_z_max, ind_z_surf, Rho, M,
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid6')
     status = nf90_inq_varid(ncid(1),"refreeze",ID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid7')
-    status = nf90_inq_varid(ncid(1),"denrho",ID(8))
+    status = nf90_inq_varid(ncid(1),"drho",ID(8))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid8')
     status = nf90_inq_varid(ncid(1),"prev_nt",ID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'load_run_restart_inq_varid9')

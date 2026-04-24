@@ -886,7 +886,7 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var6')
     status = nf90_def_var(ncid,"refreeze",nf90_real,dimID(1),varID(7))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var7')
-    status = nf90_def_var(ncid,"denrho",nf90_real,dimID(1),varID(8))
+    status = nf90_def_var(ncid,"drho",nf90_real,dimID(1),varID(8))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var8')
     status = nf90_def_var(ncid,"prev_nt",nf90_real,dimID(2),varID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var9')

@@ -25,7 +25,7 @@ if [[ "$domain" == "ANT27" ]]; then
 cat << EOS > $MSscript
 !-	MODEL SETTINGS FOR THE FIRN DENSIFICATION MODEL
 !----------------------------------------------------
-45	! nyears; simulation time [yr]
+47	! nyears; simulation time [yr]
 42	! nyears; simulation time during the spin-up [yr]
 180	! dtmodelExp; timestep in model with explicit T-scheme [s] this could be changed to 3600 for dry locations in Antarctica, but should be renamed
 900	! dtmodelImp; timestep in model with implicit T-scheme [s]
@@ -52,8 +52,8 @@ $lon    ! beginLat; indicates the begin latitude gridpoint
 
 262     ! numLons, number of longitude points
 240 	! numLats, number of latitude points
-15      ! num of longitude bands (set during input pre-processing)
-131488 	! numTimes, number of time points 1979-2023=131488
+17      ! num of longitude bands (set during input pre-processing)
+137336 	! numTimes, number of time points 1979-2023=131488; 1979-2025=137336
 EOS
 
 fi
