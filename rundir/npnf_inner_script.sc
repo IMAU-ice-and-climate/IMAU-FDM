@@ -95,8 +95,9 @@ while [[ "$action" != "stop" ]]; do
       let "nlisten+=$sleeptime"
       if [[ $nlisten -gt $nlistmax ]]; then
         echo "$(date +%c): ${rankmss} The distributor did not respond within $nlistmax s. abort" >> $logfile
-        echo "$(date +%c): ${rankmss} The distributor did not respond within $nlistmax s. abort" 
-        action="stop"     
+        echo "$(date +%c): ${rankmss} The distributor did not respond within $nlistmax s. abort"
+        echo "nonew" > $requestfile
+        action="stop"
       fi
     
     elif [[ "$newaction" == "stop" ]]; then
