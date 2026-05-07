@@ -16,15 +16,14 @@ contains
 ! *******************************************************
 
 
-subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, acav, ffav, th, dzmax, M, T, DZ, Rho, &
-    DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, &
-    ImpExp, nyears, nyearsSU)
+subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, acav, ffav, M, T, DZ, Rho, &
+    DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, IceShelf, nyears)
     !*** Subroutine for repeatedly repeating the spin-up until a steady state is reached ***!
         
     ! declare arguments
-    integer, intent(in) :: Nt_model_tot, Nt_model_spinup, ind_z_max, dtmodel, nyears, nyearsSU, IceShelf, ImpExp
+    integer, intent(in) :: Nt_model_tot, Nt_model_spinup, ind_z_max, dtmodel, nyears, IceShelf
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: acav, ffav, th, dzmax
+    double precision, intent(in) :: acav, ffav
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(Nt_model_tot), intent(in) :: TempFM, PSolFM, PLiqFM, SublFM
     double precision, dimension(Nt_model_tot), intent(in) :: MeltFM, DrifFM, Rho0FM
@@ -81,26 +80,26 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
             call Densific(ind_z_max, ind_z_surf, dtmodel, acav, ffav, Rho, T, ind_t)
             
             ! Re-calculate the Temp-profile (explicit or implicit)		  
-            if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
-            if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
+            if (config%general_settings%ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
+            if (config%general_settings%ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
 
             ! Re-caluclate DZ/M-values according to new Rho-/T-values
             call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, acav, h_surf, vice, vmelt, vacc, vsub, &
                 vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
-                ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
+                IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
 
             ! Check if the vertical grid is still valid
-            if (DZ(ind_z_surf) > dzMAX) then
+            if (DZ(ind_z_surf) > config%general_settings%dzmax) then
                 call Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
             endif
-            if (DZ(ind_z_surf) <= dzMAX/3.) then
+            if (DZ(ind_z_surf) <= config%general_settings%dzmax/3.) then
                 call Merge_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
             endif
             if ((ind_z_surf > 2500) .and. (MINVAL(Rho(1:200)) >= (const%rhoi-7.))) then
                 call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
             endif
             if (ind_z_surf < 200) then
-                call Add_Layers(ind_z_max, ind_z_surf, dzmax, const%rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+                call Add_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
             endif
     
             ! Update the depth of each layer
@@ -118,7 +117,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
 
         enddo  ! time loop
 
-        Year(:) = Year(:) - DBLE(nyearsSU)
+        Year(:) = Year(:) - DBLE(config%general_settings%nyears_spinup)
         
         ! Calculate the firn air content, ice mass and total liquid water content of the firn column
         call Calc_Integrated_Var(ind_z_max, ind_z_surf, Rho, Mlwc, M, DZ, FirnAir, TotLwc, IceMass)
@@ -142,19 +141,19 @@ end subroutine Time_Loop_SpinUp
 ! *******************************************************
 
 
-subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
-    outputSpeed, outputProf, outputDetail, th, dzmax, acav, ffav, IceShelf, &
+subroutine Time_Loop_Main(dtmodel, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
+    outputSpeed, outputProf, outputDetail, acav, ffav, IceShelf, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
     out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
     out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt)
     !*** Subrouting for stepping through time after the spin-up is complete, meanwhile writing output to netcdf ***!
     
     ! declare arguments
-    integer, intent(in) :: dtmodel, ImpExp, IceShelf, ind_z_max, Nt_model_tot, nyears, prev_nt
+    integer, intent(in) :: dtmodel, IceShelf, ind_z_max, Nt_model_tot, nyears, prev_nt
     integer, intent(in) :: numOutputSpeed, numOutputProf, numOutputDetail
     integer, intent(in) :: outputSpeed, outputProf, outputDetail
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: th, dzmax, acav, ffav
+    double precision, intent(in) :: acav, ffav
     double precision,dimension(Nt_model_tot), intent(in) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
     double precision,dimension(ind_z_max), intent(inout) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension((outputSpeed), 18), intent(inout) :: out_1D
@@ -194,28 +193,28 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
         call Densific(ind_z_max, ind_z_surf, dtmodel, acav, ffav, Rho, T, ind_t)
         
         ! Calculate the temperature profile (explicit or implicit)         
-        if (ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
-        if (ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
+        if (config%general_settings%ImpExp == 1) call Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
+        if (config%general_settings%ImpExp == 2) call Solve_Temp_Exp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
                 
         ! Add/remove mass from the surface layer and the update the layer thickness
         call Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, acav, h_surf, vice, vmelt, vacc, vsub, &
             vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
-            ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
+            IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
         
         if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf
         
         ! Check if the vertical grid is still valid
-        if (DZ(ind_z_surf) > dzMAX) then
+        if (DZ(ind_z_surf) > config%general_settings%dzmax) then
             call Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
         endif
-        if (DZ(ind_z_surf) <= dzMAX/3.) then
+        if (DZ(ind_z_surf) <= config%general_settings%dzmax/3.) then
             call Merge_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
         endif
         if ((ind_z_surf > 2500) .and. (MINVAL(Rho(1:200)) >= (const%rhoi-7.))) then
             call Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
         endif
         if (ind_z_surf < 200) then
-            call Add_Layers(ind_z_max, ind_z_surf, dzmax, const%rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+            call Add_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
         endif
 
         ! Update the depth of each layer

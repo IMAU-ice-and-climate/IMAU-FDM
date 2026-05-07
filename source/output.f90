@@ -265,12 +265,12 @@ end subroutine To_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
+subroutine Save_out_1D(outputSpeed, out_1D)
     !*** Write the 1D output variables to a netcdf file !***
     
     ! declare arguments
 
-    integer, intent(in) :: outputSpeed, writeinspeed
+    integer, intent(in) :: outputSpeed
     double precision, dimension((outputSpeed),18), intent(in) :: out_1D
 
 
@@ -405,7 +405,7 @@ subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
     
     status = nf90_put_att(ncid(32),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_1')
-    write(writeinspeed_str, '(I0)') writeinspeed  ! Convert integer to string
+    write(writeinspeed_str, '(I0)') config%output_dimensions%writeinspeed  ! Convert integer to string
     status = nf90_put_att(ncid(32),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeinspeed_str))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_2')
     status = nf90_put_att(ncid(32),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
@@ -481,11 +481,10 @@ end subroutine Save_out_1D
 ! *******************************************************
 
 
-subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
+subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year)
     !*** Write the 2D output variables to a netcdf file !***
 
     ! declare arguments
-    integer, intent(in) :: writeinprof
     double precision, dimension(:,:), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local arguments
@@ -567,7 +566,7 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
     
     status = nf90_put_att(ncid(31),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_1')
-    write(writeinprof_str, '(I0)') writeinprof ! Convert integer to string
+    write(writeinprof_str, '(I0)') config%output_dimensions%writeinprof ! Convert integer to string
     status = nf90_put_att(ncid(31),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeinprof_str))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_2')
     status = nf90_put_att(ncid(31),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
