@@ -128,21 +128,22 @@ end subroutine To_out_1D
 ! *******************************************************
 
 
-subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, Rho, &
+subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, Rho, &
         T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year)
     !*** Write the 2D output variables to the variables that will be converted into a netcdf file after the time loop ***!
     
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers
+    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
     double precision, dimension(ind_z_max), intent(inout) :: DenRho
-    double precision, dimension(outputProf,proflayers), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension(:,:), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local variables
-    integer :: ind_t_out, ind_z_bot, ind_z_surf_out
+    integer :: ind_t_out, ind_z_bot, ind_z_surf_out, proflayers
     double precision :: factor
+
+    proflayers = config%output_dimensions%proflayers
     
     ! Determine indices for the output
     ind_t_out = ind_t/numOutputProf
@@ -173,22 +174,21 @@ end subroutine To_out_2D
 ! *******************************************************
 
 
-subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, numOutputDetail, outputDetail, &
+subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, numOutputDetail, outputDetail, &
     Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to the variables that will be converted into a netcdf file after the time loop ***!
     
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, detlayers, numOutputDetail, outputDetail
-    double precision, intent(in) :: detthick
+    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, numOutputDetail, outputDetail
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, DZ
     double precision, dimension(ind_z_max), intent(inout) :: Refreeze
-    double precision, dimension(outputDetail,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(outputDetail,config%output_dimensions%detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local arguments
     integer :: ind_t_out, ind_orig, ind_int
     double precision :: dist, part, refreeze_sum
     double precision, dimension(ind_z_max) :: DZ_mod
-    double precision, dimension(detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze
+    double precision, dimension(config%output_dimensions%detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze
         
     IntRho(:) = 0.
     IntT(:) = 0.
@@ -199,24 +199,24 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     dist = 0.
     ind_orig = ind_z_surf
     ind_int = 1
-    do while(ind_int <= detlayers)
-        if ((dist + DZ_mod(ind_orig)) < (detthick * ind_int)) then
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
+    do while(ind_int <= config%output_dimensions%detlayers)
+        if ((dist + DZ_mod(ind_orig)) < (config%output_dimensions%detthick * ind_int)) then
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
-        else if ((dist + DZ_mod(ind_orig)) == (detthick * ind_int)) then
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
+        else if ((dist + DZ_mod(ind_orig)) == (config%output_dimensions%detthick * ind_int)) then
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
             ind_int = ind_int + 1
         else
-            part = (detthick * ind_int) - dist
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (part / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (part / detthick)
+            part = (config%output_dimensions%detthick * ind_int) - dist
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (part / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (part / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (part / DZ(ind_orig))        
             dist = dist + part
             DZ_mod(ind_orig) = DZ_mod(ind_orig) - part
@@ -225,23 +225,23 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     end do
 
     refreeze_sum = SUM(Refreeze)
-    if (refreeze_sum > det2d_minimum) then
+    if (refreeze_sum > config%minimum_values%det2d_minimum) then
         DZ_mod = DZ
         dist = 0.
         ind_orig = ind_z_surf
         ind_int = 1
-        do while(ind_int <= detlayers)
-            if ((dist + DZ_mod(ind_orig)) < (detthick * ind_int)) then
+        do while(ind_int <= config%output_dimensions%detlayers)
+            if ((dist + DZ_mod(ind_orig)) < (config%output_dimensions%detthick * ind_int)) then
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
                 dist = dist + DZ_mod(ind_orig)
                 ind_orig = ind_orig - 1
-            else if ((dist + DZ_mod(ind_orig)) == (detthick * ind_int)) then
+            else if ((dist + DZ_mod(ind_orig)) == (config%output_dimensions%detthick * ind_int)) then
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
                 dist = dist + DZ_mod(ind_orig)
                 ind_orig = ind_orig - 1
                 ind_int = ind_int + 1
             else
-                part = (detthick * ind_int) - dist
+                part = (config%output_dimensions%detthick * ind_int) - dist
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (part / DZ(ind_orig))
                 dist = dist + part
                 DZ_mod(ind_orig) = DZ_mod(ind_orig) - part
@@ -481,18 +481,20 @@ end subroutine Save_out_1D
 ! *******************************************************
 
 
-subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
+subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
     !*** Write the 2D output variables to a netcdf file !***
 
     ! declare arguments
-    integer, intent(in) :: outputProf, proflayers, writeinprof
-    double precision, dimension((outputProf),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+    integer, intent(in) :: writeinprof
+    double precision, dimension(:,:), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local arguments
-    integer :: status, ncid(50), IDs(50,5), varID(50,20)
+    integer :: status, ncid(50), IDs(50,5), varID(50,20), outputProf, proflayers
     character*255 :: pad, writeinprof_str
     character*24 :: current_datetime
+
+    outputProf = size(out_2D_dens, 1)
+    proflayers = config%output_dimensions%proflayers
 
     call fdate(current_datetime)
 
@@ -605,20 +607,19 @@ end subroutine Save_out_2D
 ! *******************************************************
 
 
-subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
+subroutine Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to a netcdf file !***
     
     ! declare arguments
-    integer, intent(in) :: outputDetail, detlayers, writeindetail
-    double precision, intent(in) :: detthick
-    double precision, dimension(detlayers) :: DetDepth, DetDZ
-    double precision, dimension((outputDetail),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
-        out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(:,:), intent(in) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local arguments
-    integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
+    integer :: dd, status, ncid(50), IDs(50,5), varID(50,20), outputDetail
     character*255 :: pad, writeindetail_str
     character*24 :: current_datetime
+    double precision, dimension(config%output_dimensions%detlayers) :: DetDepth, DetDZ
+
+    outputDetail = size(out_2D_det_dens, 1)
 
     call fdate(current_datetime)
     
@@ -628,10 +629,10 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     IDs(:,:) = 0
     varID(:,:) = 0
 
-    DetDZ(1) = detthick
+        DetDZ(1) = config%output_dimensions%detthick
     DetDepth(1) = DetDZ(1) / 2.
-    do dd = 2, detlayers
-      DetDZ(dd) = detthick
+        do dd = 2, config%output_dimensions%detlayers
+            DetDZ(dd) = config%output_dimensions%detthick
       DetDepth(dd) = DetDepth(dd-1) + DetDZ(dd)
     end do  
 
@@ -641,7 +642,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(33),"ind_t",outputDetail,IDs(33,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim4')    
-    status = nf90_def_dim(ncid(33),"layer",detlayers,IDs(33,2))
+    status = nf90_def_dim(ncid(33),"layer",config%output_dimensions%detlayers,IDs(33,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim5')
 
     ! DEFINE VARIABLES
@@ -708,7 +709,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     
     status = nf90_put_att(ncid(33),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_dim_val_1')
-    write(writeindetail_str, '(I0)') writeindetail ! Convert integer to string
+    write(writeindetail_str, '(I0)') config%output_dimensions%writeindetail ! Convert integer to string
     status = nf90_put_att(ncid(33),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeindetail_str))
     if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_dim_val_2')
     status = nf90_put_att(ncid(33),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
@@ -726,16 +727,16 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     
     ! SAVE DATA
     status = nf90_put_var(ncid(33),varID(33,1),out_2D_det_dens, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail1')    
     status = nf90_put_var(ncid(33),varID(33,2),out_2D_det_temp, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail2')
     status = nf90_put_var(ncid(33),varID(33,3),out_2D_det_lwc, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail3')
     status = nf90_put_var(ncid(33),varID(33,6),out_2D_det_refreeze, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail6')
 
     ! CLOSE NETCDF-FILE

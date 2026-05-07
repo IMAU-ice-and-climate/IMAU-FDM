@@ -134,7 +134,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ! Use current temperature and wind speed for snow parameterisations
         if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             do step = 1, Nt_model_tot
-                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt) ! from Fausto et al. 2018 
+                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - const%Tmelt) ! from Fausto et al. 2018 
             end do
         else
             do step = 1, Nt_model_tot
@@ -148,11 +148,11 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             ! Greenland
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - const%Tmelt)
             end do
             do step = (numSnow+1), Nt_model_tot
                 TempSnow = sum( TempFM(step-numSnow:step) )/numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - const%Tmelt)
             end do
         else
             ! Not Greenland
@@ -199,7 +199,7 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
     if (acav < 0) acav = 0.1
     ffav = AveWind(ind_lon, ind_lat)
     tsav = AveTsurf(ind_lon, ind_lat)
-    if (tsav > Tmelt) tsav = Tmelt
+    if (tsav > const%Tmelt) tsav = const%Tmelt
 
     IceShelf = int(ISM(ind_lon, ind_lat))
 
@@ -236,7 +236,7 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
 
     do ind_z = (ind_z_surf-1), 1, -1
 
-        part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
+        part1 = (const%rhoi-Rho(ind_z+1))*exp((-const%Ec/(const%R*tsav))+(const%Eg/(const%R*tsav)))
 
         ! TKTKTK: cons never called
         if (Rho(ind_z+1) <= 550.) then
@@ -245,7 +245,7 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
             else
                 cons = 1.435 - 0.151*log(acav)
             endif
-            drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
+            drho = 0.07*dzmax*Rho(ind_z+1)*const%g*part1
         else
             if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
                 cons = 3.9192 * (acav**(-0.2617)) - 0.2781        ! r2>0.8
@@ -253,12 +253,12 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
                 cons = 2.366 - 0.293*log(acav)
             endif
             if (cons < 0.25) cons = 0.25
-            drho = 0.03*dzmax*Rho(ind_z+1)*g*part1
+            drho = 0.03*dzmax*Rho(ind_z+1)*const%g*part1
         endif
 
 
         Rho(ind_z) = drho + Rho(ind_z+1)
-        if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
+        if (Rho(ind_z) > const%rhoi) Rho(ind_z) = const%rhoi
 
         M(ind_z) = Rho(ind_z) * DZ(ind_z)
 

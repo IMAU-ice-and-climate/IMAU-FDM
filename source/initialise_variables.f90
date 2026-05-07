@@ -1,9 +1,6 @@
 module initialise_variables
     !*** Subroutines for allocating memory and assigning initial values to variables ***!
 
-    use, intrinsic :: iso_fortran_env, only: stderr => error_unit
-    use tomlf, only: toml_table, toml_parse, get_value
-
     use model_settings
 
     implicit none
@@ -20,65 +17,24 @@ contains
 
 
 subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
-    ind_z_surf, startasice, beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, &
+    ind_z_surf, startasice, beginT, writeinprof, writeinspeed, dzmax, &
     initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
 
-    !*** Load model settings from file ***!
-    
-    ! Local variables toml tables
-
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
-    type(toml_table), allocatable :: table
-    type(toml_table), pointer     :: child
+    !*** Load model settings from parsed config ***!
 
     ! declare arguments
-    integer, intent(out) :: writeinprof, writeinspeed, writeindetail, dtSnow, nyears, nyearsSU, dtmodelImp, &
-        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, proflayers, detlayers, Nlon, Nlat, Nlon_timeseries, &
+    integer, intent(out) :: writeinprof, writeinspeed, dtSnow, nyears, nyearsSU, dtmodelImp, &
+        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, Nlon, Nlat, Nlon_timeseries, &
         Nt_forcing
-    double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current, detthick
+    double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current
     ! declare local variables
     integer :: NoR
 
     print *, "Loaded model settings"
     print *, " "
 
-    inquire (file=model_settings_file, exist=file_exists)
-    
-    if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
-        stop
-    end if
-
-    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
-
-    if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
-        stop
-    end if
-
-    call toml_parse(table, fu)
-    close (fu)
-
-    if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
-        stop
-    end if
-
-    ! find section.
-    
-    call get_value(table, 'output_dimensions', child, requested=.false.)
-    
-    if (associated(child)) then
-
-        call get_value(child, 'proflayers', proflayers)
-        call get_value(child, 'writeindetail', writeindetail)
-        call get_value(child, 'detlayers', detlayers)
-        call get_value(child, 'detthick', detthick)
-
-        print *, " "
-        print *, "Proflayers: ", proflayers
-
+    if (.not. allocated(config)) then
+        error stop 'Model settings must be loaded before initializing variables'
     end if
 
     ! set default values
@@ -105,8 +61,6 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     Nt_forcing = 246424         ! Number of timesteps in forcing
      
     ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
-
-    deallocate(table)
 
 end subroutine Get_Model_Settings_and_Forcing_Dimensions
 
@@ -145,12 +99,12 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
 end subroutine Init_TimeStep_Var
 
 
-subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
+    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
@@ -165,12 +119,12 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, d
     dtobs_64 = int(dtobs, kind=8)
     writeinspeed_64 = int(writeinspeed, kind=8)
     writeinprof_64 = int(writeinprof, kind=8)
-    writeindetail_64 = int(writeindetail, kind=8)
+    writeindetail_64 = int(config%output_dimensions%writeindetail, kind=8)
 
     ! Calculate at what timestep output is produced
     numOutputProf = writeinprof / dtmodel
     numOutputSpeed = writeinspeed / dtmodel
-    numOutputDetail = writeindetail / dtmodel
+    numOutputDetail = config%output_dimensions%writeindetail / dtmodel
 
     ! Calculate outputs using 64-bit integers
     tempOutputProf = (Nt_forcing_64 * dtobs_64) / writeinprof_64
@@ -185,7 +139,7 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, d
     print *, " "
     print *, "Output variables"
     print *, "Prof, Speed, Detail"
-    print *, "writein...", writeinprof, writeinspeed, writeindetail
+    print *, "writein...", writeinprof, writeinspeed, config%output_dimensions%writeindetail
     print *, "numOutput...", numOutputProf, numOutputSpeed, numOutputDetail
     print *, "output...", outputProf, outputSpeed, outputDetail
     print *, " "
@@ -232,40 +186,39 @@ end subroutine Init_Prof_Var
 
 
 subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
-        proflayers, detlayers)
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail)
     !*** Initialise output variables with NaNs ***!
 
     ! declare arguments
-    integer, intent(in) :: outputSpeed, outputProf, outputDetail, proflayers, detlayers
+    integer, intent(in) :: outputSpeed, outputProf, outputDetail
     double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! allocate memory to variables
     allocate(out_1D((outputSpeed), 18))
-    allocate(out_2D_dens((outputProf), proflayers))
-    allocate(out_2D_temp((outputProf), proflayers))
-    allocate(out_2D_lwc((outputProf), proflayers))
-    allocate(out_2D_depth((outputProf), proflayers))
-    allocate(out_2D_dRho((outputProf), proflayers))
-    allocate(out_2D_year((outputProf), proflayers))
-    allocate(out_2D_det_dens((outputDetail), detlayers))
-    allocate(out_2D_det_temp((outputDetail), detlayers))
-    allocate(out_2D_det_lwc((outputDetail), detlayers))
-    allocate(out_2D_det_refreeze((outputDetail), detlayers))
+    allocate(out_2D_dens((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_temp((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_lwc((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_depth((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_dRho((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_year((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_det_dens((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_temp((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_lwc((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_refreeze((outputDetail), config%output_dimensions%detlayers))
     
     ! Set missing value
-    out_1D(:,:) = NaN_value
-    out_2D_dens(:,:) = NaN_value
-    out_2D_temp(:,:) = NaN_value
-    out_2D_lwc(:,:) = NaN_value
-    out_2D_depth(:,:) = NaN_value
-    out_2D_dRho(:,:) = NaN_value
-    out_2D_year(:,:) = NaN_value
-    out_2D_det_dens(:,:) = NaN_value
-    out_2D_det_temp(:,:) = NaN_value
-    out_2D_det_lwc(:,:) = NaN_value
-    out_2D_det_refreeze(:,:) = NaN_value
+    out_1D(:,:) = const%NaN_value
+    out_2D_dens(:,:) = const%NaN_value
+    out_2D_temp(:,:) = const%NaN_value
+    out_2D_lwc(:,:) = const%NaN_value
+    out_2D_depth(:,:) = const%NaN_value
+    out_2D_dRho(:,:) = const%NaN_value
+    out_2D_year(:,:) = const%NaN_value
+    out_2D_det_dens(:,:) = const%NaN_value
+    out_2D_det_temp(:,:) = const%NaN_value
+    out_2D_det_lwc(:,:) = const%NaN_value
+    out_2D_det_refreeze(:,:) = const%NaN_value
 
 end subroutine Init_Output_Var
 
