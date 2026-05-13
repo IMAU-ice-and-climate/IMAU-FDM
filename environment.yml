@@ -1,0 +1,11 @@
+name: imau-fdm
+channels:
+  - conda-forge
+dependencies:
+  - fpm>=0.12.0
+  - netcdf-fortran
+  - openmpi
+  - pkg-config
+variables:
+  LIBRARY_PATH: "$LIBRARY_PATH:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" # needed on OS X, LIBRARY_PATH should be unused on other systems
+  FPM_FFLAGS: -ffree-line-length-512
