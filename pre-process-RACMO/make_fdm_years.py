@@ -13,7 +13,6 @@ import argparse
 import subprocess
 import sys
 import os
-import sys
 import numpy as np
 import xarray as xr
 from pathlib import Path

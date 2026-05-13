@@ -10,7 +10,7 @@ run in the correct order without manual intervention.
 
 Run from within the domain subdirectory (which contains config.py):
 
-    cd FGRN055_era055
+    cd FGRN055_era5
     python3 ../submit_jobs.py all
 
 Usage examples:
