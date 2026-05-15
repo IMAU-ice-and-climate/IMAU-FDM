@@ -5,32 +5,127 @@ gridded NetCDF files and for extending existing gridded files to a later end dat
 
 ```
 post-process/
-├── create_1D_2D_2Ddetail_files/   # Initial gridded file creation (1939-2023)
-├── extend/                         # Extend existing gridded files (1939-2025)
+├── create_1D_2D_2Ddetail_files/   # Initial gridded file creation
+│   ├── config.py
+│   ├── run_config.py
+│   ├── utils.py
+│   ├── make_1d_files.py
+│   ├── make_2d_files.py
+│   ├── make_2Ddetail_files.py
+│   ├── submit_make_1d_files.sh
+│   ├── submit_make_2d_files.sh
+│   ├── submit_make_2ddetail_files.sh
+│   └── logs/
+├── extend/                         # Extend existing gridded files to a later end date
 ├── visualization/                  # Plotting and data-loading utilities
 └── README.md                       # This file
 ```
 
 ---
 
-## Part 1 — Creating gridded files from scratch
+## Output file structure
 
-Scripts live in `create_1D_2D_2Ddetail_files/`.
-All three scripts read per-column output from the FDM run directory and write one
-gridded NetCDF per variable to the post-process output directory.
-
-Output filename convention: `FDM_{variable}_{domain}_{date_range}_{timestep}.nc`
-e.g. `FDM_Runoff_FGRN055_1939-2023_10day.nc`
-
-### 1a. 1D variables (daily point output → gridded)
-
-These are scalar time series per point (runoff, surface melt, firn air content, etc.).
-The script can aggregate to 10-day or monthly means/sums and optionally detrend
-selected variables (h_surf, FirnAir) to remove the spinup drift.
-
-**Script:** `make_1d_files.py`
+All gridded files follow the naming convention:
 
 ```
+FDM_{variable}_{domain}_{date_range}_{timestep}.nc
+```
+
+Examples:
+- `FDM_Runoff_FGRN055_1939-2023_10day.nc`
+- `FDM_h_surf_FGRN055_1939-2025_10day_detrended.nc`
+- `FDM_z830_FGRN055_1939-2023_30day.nc`
+- `FDM_T10m_FGRN055_1939-2023_10day.nc`
+- `FDM_firn_memory_FGRN055_1939-2023_30day.nc`
+- `FDM_ice_lens_FGRN055_1939-2023_10day.nc`
+
+All output files share a common internal structure:
+
+```
+Dimensions:  time, rlat, rlon
+Coordinates: time (datetime), rlat (degrees), rlon (degrees)
+Data vars:   <variable>(time, rlat, rlon), lat(rlat,rlon), lon(rlat,rlon),
+             x(rlat,rlon), y(rlat,rlon), x_FDM(rlon), y_FDM(rlat),
+             rotated_pole, crs
+```
+
+- `rlat`/`rlon`: rotated-pole degree coordinates from the RACMO grid file
+- `x`/`y`: EPSG:3413 projection coordinates in metres
+- `x_FDM`/`y_FDM`: 0-based integer grid indices for cross-referencing model files
+- `time`: CF-compliant datetime (xarray encodes as `days since ...`)
+- CRS: EPSG:3413 (WGS 84 / NSIDC Sea Ice Polar Stereographic North)
+
+---
+
+## Part 1 — Creating gridded files from scratch
+
+Scripts live in `create_1D_2D_2Ddetail_files/`.  The model produces one file per
+grid column (~58,000 for FGRN055); this pipeline assembles them into 3D gridded
+files `(time, rlat, rlon)` in CF-1.8 compliant NetCDF4.
+
+Three types of per-column output are handled by separate scripts:
+
+| Input type | What it contains | Script |
+|---|---|---|
+| **1D** | Daily surface/integrated variables | `make_1d_files.py` |
+| **2D** | Monthly depth profiles (layer × time, ~122 m) | `make_2d_files.py` |
+| **2Ddetail** | 10-day high-res near-surface profiles (4 cm layers, upper 20 m) | `make_2Ddetail_files.py` |
+
+### Configuration (`config.py`)
+
+Edit before running. Key settings:
+
+```python
+BASE_DIR     = Path('/home/nld4814/perm/code/IMAU-FDM')
+SCRATCH_DIR  = Path('/home/nld4814/scratch')
+DOMAIN       = 'FGRN055'
+PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
+MODEL_START  = datetime(1939, 9, 1)
+MODEL_END    = datetime(2023, 12, 31)
+```
+
+Expected reference files:
+
+```
+<BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc
+<BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_grid.nc
+<BASE_DIR>/reference/<DOMAIN>/IN_ll_<DOMAIN>.txt
+```
+
+Full `config.py` settings reference:
+
+| Setting | Description |
+|---|---|
+| `BASE_DIR` | Root of the IMAU-FDM code/reference directory |
+| `SCRATCH_DIR` | Root of the model output directory |
+| `DOMAIN` | Domain name; controls mask/grid/pointlist file paths |
+| `PROJECT_NAME` | Run name; combined with `SCRATCH_DIR` to find output |
+| `MODEL_START` / `MODEL_END` | Simulation period |
+| `INPUT_TIMESTEP_SECONDS` | Timestep of 1D input files in seconds (default: 86400) |
+| `TIME_AGGREGATION_1D` | Output time aggregation for 1D resampling: `daily`, `10day`, `monthly` |
+| `TIME_AGGREGATION_2D` | Expected aggregation of 2D files (must match model output) |
+| `TIME_AGGREGATION_2Ddetail` | Expected aggregation of 2Ddetail files (must match model output) |
+| `SPINUP_START` / `SPINUP_END` | Period used for spinup detrending of `h_surf` and `FirnAir` |
+| `NUM_WORKERS` | Default number of parallel workers (`None` = all CPUs) |
+| `OUTPUT_START` / `OUTPUT_END` | Sub-period to save (set either to `None` to disable) |
+
+> **Note on time aggregation:** `TIME_AGGREGATION_1D` controls resampling and can be freely
+> changed. `TIME_AGGREGATION_2D` and `TIME_AGGREGATION_2Ddetail` are fixed by the model run —
+> changing them without re-running the model will raise an error at startup.
+
+> **Output period slicing:** `OUTPUT_START`/`OUTPUT_END` let you save only a sub-period of the
+> full model run (e.g. model covers 1939-2025, output only 1958-2023). For 2D and 2Ddetail
+> scripts the `--start-year`/`--end-year` CLI flags override config defaults.
+
+### 1a. 1D variables
+
+Daily surface/integrated scalar time series per point (runoff, surface melt, firn air
+content, etc.). Aggregates to 10-day or monthly means/sums; optionally detrends
+`h_surf` and `FirnAir` to remove spinup drift.
+
+**Script:** `make_1d_files.py` &nbsp; **SLURM:** `sbatch submit_make_1d_files.sh` (48 h, 64 GB, 16 CPUs)
+
+```bash
 # All variables, 10-day aggregation
 python3 make_1d_files.py --var all --timestep 10day \
     --spinup-start 1940 --spinup-end 1970 --workers 16
@@ -42,91 +137,121 @@ python3 make_1d_files.py --var Runoff surfmelt --timestep 10day --workers 8
 python3 make_1d_files.py --list-vars
 ```
 
-**SLURM:** `sbatch submit_make_1d_files.sh`
-(48 h wall time, 64 GB RAM, 16 CPUs)
-
-Key arguments:
-
-| Flag | Default | Description |
-|------|---------|-------------|
-| `--var` | required | Variable name(s), or `all` |
-| `--timestep` | `10day` | `daily`, `10day`, or `monthly` |
-| `--spinup-start` | 1940 | Year spinup detrend window starts |
-| `--spinup-end` | 1970 | Year spinup detrend window ends |
-| `--workers` | 16 | Parallel worker processes |
-| `--max-points` | — | Cap for testing (e.g. 500) |
-
-**Output period slicing:** set `OUTPUT_START` and `OUTPUT_END` in `config.py` to save
-only a sub-period of the full model run (e.g. model covers 1939-2025, output only 1958-2023).
-Set either to `None` to disable. Applies to all three file types; for 2D and 2Ddetail scripts
-the `--start-year`/`--end-year` CLI flags override the config defaults.
-
-### 1b. 2D variables (layered monthly profiles → scalar gridded)
-
-These files contain full depth profiles (3000 layers, ~122 m) at 30-day intervals.
-`make_2d_files.py` derives one scalar per timestep per point — typically the depth
-at which a density threshold is crossed (e.g. the firn–ice transition depth z830).
-
-**Script:** `make_2d_files.py`
+Arguments:
 
 ```
+--var, -v         Variable(s) to process, or "all"
+--timestep, -t    Output time aggregation: daily | 10day | monthly
+--spinup-start    Spinup start year for detrending (default: 1940)
+--spinup-end      Spinup end year for detrending (default: 1970)
+--workers, -w     Number of parallel workers
+--output-dir, -o  Output directory (default: from config.py)
+--max-points      Limit to N columns (useful for testing)
+--list-vars       Print available variables and exit
+--quiet, -q       Suppress progress output
+```
+
+Available variables:
+
+| Variable | Long name | Units | Aggregation |
+|---|---|---|---|
+| `h_surf` | Surface height | m | mean |
+| `FirnAir` | Firn air content | m | mean |
+| `Runoff` | Runoff | mm w.e. | sum |
+| `refreeze` | Refreezing | mm w.e. | sum |
+| `rain` | Rainfall | mm w.e. | sum |
+| `surfmelt` | Surface melt | mm w.e. | sum |
+| `TotLwc` | Total liquid water content | mm | mean |
+| `icemass` | Ice mass | kg/m² | mean |
+| `Rho0` | Surface density | kg/m³ | mean |
+| `solin` | Solar insolation | W/m² | mean |
+| `vice` | Ice velocity at base | m/yr | mean |
+| `vacc` | Accumulation velocity | m/yr | mean |
+| `vfc` | Firn compaction velocity | m/yr | mean |
+| `vmelt` | Melt velocity | m/yr | mean |
+| `vsub` | Sublimation velocity | m/yr | mean |
+| `vsnd` | Snowdrift velocity | m/yr | mean |
+| `vtotal` | Total velocity | m/yr | mean |
+| `vbouy` | Buoyancy velocity | m/yr | mean |
+
+### 1b. 2D variables
+
+Monthly depth profiles (3000 layers, ~122 m). `make_2d_files.py` derives one scalar per
+timestep per point — typically the depth at which a density threshold is crossed (e.g.
+the firn–ice transition depth z830).
+
+**Script:** `make_2d_files.py` &nbsp; **SLURM:** `sbatch submit_make_2d_files.sh` (24 h, 32 GB, 8 CPUs)
+
+```bash
 # Depth where density first reaches 830 kg/m³ (firn–ice transition)
-python3 make_2d_files.py --var dens --threshold 830 --output-var z830 \
-    -o /path/to/output --workers 8
+python3 make_2d_files.py -o OUTPUT_DIR -v dens -t 830 --output-var z830
 
 # Depth where density first reaches 550 kg/m³
-python3 make_2d_files.py --var dens --threshold 550 --output-var z550 \
-    -o /path/to/output --workers 8
+python3 make_2d_files.py -o OUTPUT_DIR -v dens -t 550 --output-var z550
+
+# Test on a single year
+python3 make_2d_files.py -o OUTPUT_DIR -v dens -t 830 --output-var z830 \
+    --start-year 2020 --end-year 2020
 ```
 
-**SLURM:** `sbatch submit_make_2d_files.sh`
-(24 h, 32 GB, 8 CPUs)
+Arguments:
 
-Key arguments:
+```
+-o, --output-dir    Directory containing model output files (required)
+-v, --var           Input variable: dens | temp | lwc | ... (default: dens)
+-t, --threshold     Find depth where variable crosses this value
+-d, --depth         Extract value at this depth in metres
+--output-var        Name for the output variable (required, e.g. z830)
+--reference-dir     Directory with mask and pointlist files
+--processed-dir     Output directory for gridded files
+--start-year        Only output timesteps >= this year
+--end-year          Only output timesteps <= this year
+-n, --num-workers   Number of parallel workers
+--dry-run           Print detected configuration and exit
+```
 
-| Flag | Description |
-|------|-------------|
-| `--var` | Variable in the 2D per-column file (`dens`, `temp`, etc.) |
-| `--threshold` | Density threshold (kg/m³) to find depth crossing |
-| `--output-var` | Name of the output variable (e.g. `z830`) |
-| `-o` | Output directory |
-| `-n` | Parallel workers |
+### 1c. 2Ddetail variables
 
-### 1c. 2Ddetail variables (high-res near-surface profiles → scalar gridded)
-
-These files contain the top 20 m at 4 cm resolution (500 layers), at 10-day intervals.
+High-resolution near-surface profiles (4 cm layers, upper ~20 m) at 10-day intervals.
 `make_2Ddetail_files.py` extracts a value at a target depth or averages over a depth
 range — used for near-surface temperature (T10m) and surface snow density (SSN).
 
-**Script:** `make_2Ddetail_files.py`
+**Script:** `make_2Ddetail_files.py` &nbsp; **SLURM:** `sbatch submit_make_2ddetail_files.sh` (24 h, 32 GB, 8 CPUs)
+
+```bash
+# Surface snow density (upper 50 cm)
+python3 make_2Ddetail_files.py -o OUTPUT_DIR -v dens \
+    --depth-begin 0 --depth-end 0.5 --output-var SSN
+
+# 10 m firn temperature
+python3 make_2Ddetail_files.py -o OUTPUT_DIR -v temp -d 10 --output-var T10m
+
+# Liquid water content in upper 20 cm
+python3 make_2Ddetail_files.py -o OUTPUT_DIR -v lwc \
+    --depth-begin 0 --depth-end 0.2 --output-var LWC_surf
+```
+
+Arguments:
 
 ```
-# 10 m temperature
-python3 make_2Ddetail_files.py --var temp --depth 10 --output-var T10m \
-    -o /path/to/output --workers 8
+-o, --output-dir    Directory containing model output files (required)
+-v, --var           Input variable: dens | temp | lwc | refreeze (required)
+--output-var        Name for the output variable (required)
 
-# Surface snow density (0–0.5 m mean)
-python3 make_2Ddetail_files.py --var dens --depth-begin 0 --depth-end 0.5 \
-    --output-var SSN -o /path/to/output --workers 8
+Depth selection (choose one):
+  --z-begin / --z-end         Layer indices (0-based from surface)
+  --depth-begin / --depth-end Depth range in metres
+  -d, --depth                 Single depth in metres
 
-# Near-surface liquid water content (0–0.2 m)
-python3 make_2Ddetail_files.py --var lwc --depth-begin 0 --depth-end 0.2 \
-    --output-var LWC_surf -o /path/to/output --workers 8
+--operation         Operation over depth range: average | sum (default: average)
+--layer-thickness   Layer thickness in metres (default: auto-detect from files)
+--reference-dir     Directory with mask and pointlist files
+--processed-dir     Output directory for gridded files
+--start-year        Only output timesteps >= this year
+--end-year          Only output timesteps <= this year
+-n, --num-workers   Number of parallel workers
+--dry-run           Print detected configuration and exit
 ```
-
-**SLURM:** `sbatch submit_make_2ddetail_files.sh`
-(24 h, 32 GB, 8 CPUs)
-
-Key arguments:
-
-| Flag | Description |
-|------|-------------|
-| `--var` | Variable in the 2Ddetail file (`temp`, `dens`, `lwc`, etc.) |
-| `--depth` | Single target depth in metres (e.g. `10` for T10m) |
-| `--depth-begin`, `--depth-end` | Depth range for averaging (m) |
-| `--output-var` | Name of the output variable |
-| `-o` | Output directory |
-| `-n` | Parallel workers |
 
 ---
 
@@ -154,7 +279,7 @@ runs into a single file per point covering the full 1939-2025 period.
 
 Configuration: `extend_pointfiles_config.py`
 
-```
+```bash
 # Run once (~1 h with 16 workers)
 sbatch submit_extend_pointfiles.sh
 
@@ -178,17 +303,14 @@ gridded file. Each timestep is independent (no resampling), so only the
 
 Configuration: `extend_variable_config.py`
 
-**Script:** `extend_variable_2d.py`
+**Script:** `extend_variable_2d.py` &nbsp; **SLURM:** `sbatch submit_extend_variable_2d.sh` (12 h, 32 GB, 16 CPUs)
 
-```
+```bash
 python3 extend_variable_2d.py --output-var z830 --var dens --threshold 830 --workers 16
 python3 extend_variable_2d.py --output-var z550 --var dens --threshold 550 --workers 16
 ```
 
-**SLURM:** `sbatch submit_extend_variable_2d.sh`
-(12 h, 32 GB, 16 CPUs)
-
-Key arguments:
+Arguments:
 
 | Flag | Description |
 |------|-------------|
@@ -201,18 +323,15 @@ Key arguments:
 
 Same approach as 2b — each 10-day timestep is independent.
 
-**Script:** `extend_variable_2ddetail.py`
+**Script:** `extend_variable_2ddetail.py` &nbsp; **SLURM:** `sbatch submit_extend_variable_2ddetail.sh` (12 h, 32 GB, 16 CPUs)
 
-```
+```bash
 python3 extend_variable_2ddetail.py --output-var T10m --var temp --depth 10 --workers 16
 python3 extend_variable_2ddetail.py --output-var SSN --var dens \
     --depth-begin 0 --depth-end 0.5 --workers 16
 python3 extend_variable_2ddetail.py --output-var LWC_surf --var lwc \
     --depth-begin 0 --depth-end 0.2 --workers 16
 ```
-
-**SLURM:** `sbatch submit_extend_variable_2ddetail.sh`
-(12 h, 32 GB, 16 CPUs)
 
 Key settings in `extend_variable_config.py`:
 
@@ -255,32 +374,32 @@ ds = load_gridded_data('h_surf', timestep='10day', detrended=True)
 | `output_dir` | `config.OUTPUT_DIR` | Directory containing the `.nc` file |
 | `date_tag` | `None` | Date string in filename; defaults to `config.DATE_TAG` (`'1939-2023'`) |
 
-### Filename convention
+### Inspect output
 
-All gridded files follow:
-```
-FDM_{variable}_{domain}_{date_range}_{timestep}.nc
-```
+```python
+import xarray as xr
 
-Examples:
-- `FDM_Runoff_FGRN055_1939-2023_10day.nc`
-- `FDM_h_surf_FGRN055_1939-2025_10day_detrended.nc`
-- `FDM_z830_FGRN055_1939-2023_30day.nc`
-- `FDM_T10m_FGRN055_1939-2023_10day.nc`
-- `FDM_firn_memory_FGRN055_1939-2023_30day.nc`
-- `FDM_ice_lens_FGRN055_1939-2023_10day.nc`
+ds = xr.open_dataset("path/to/output.nc")
+print(ds)
+
+# Select by year (time is datetime)
+ds_2022 = ds.sel(time="2022")
+
+# Select nearest timestep
+da = ds['FirnAir'].sel(time="2022-06", method="nearest")
+```
 
 ---
 
 ## Typical workflow for extending the model in time
 
-```
+```bash
 # 1. Create gridded files for the base run (1939-2023)
 cd create_1D_2D_2Ddetail_files/
 sbatch submit_make_2d_files.sh
 sbatch submit_make_2ddetail_files.sh
 
-# 2. Merge per-column output with extension years into full-period pointfilchkes
+# 2. Merge per-column output with extension years into full-period pointfiles
 cd ../extend/
 sbatch submit_extend_pointfiles.sh
 
