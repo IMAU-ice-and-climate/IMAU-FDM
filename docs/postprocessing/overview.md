@@ -43,7 +43,7 @@ from post-process.visualization.visualization import load_gridded_data
 ds = load_gridded_data('Runoff', timestep='10day')
 ds = load_gridded_data('h_surf', timestep='10day', detrended=True)
 ds = load_gridded_data('Runoff', timestep='10day',
-                       output_dir=Path('/path/to/1939-2025/post-process'),
+                       output_dir=Path('{OUTPUT_PATH}/post-process'),
                        date_tag='1939-2025')
 ```
 
@@ -55,16 +55,21 @@ cd create_1D_2D_2Ddetail_files/
 sbatch submit_make_1d_files.sh
 sbatch submit_make_2d_files.sh
 sbatch submit_make_2ddetail_files.sh
+```
 
-# 2. Merge per-column output into full-period pointfiles (1939-2025)
+## Typical extension workflow
+
+```bash
+
+#1 Merge per-column output into full-period pointfiles (1939-2025)
 cd ../extend/
 sbatch submit_extend_pointfiles.sh
 
-# 3a. Remake 1D files for 1939-2025 (full reprocess required)
+# 2a. Remake 1D files for 1939-2025 (full reprocess required)
 cd ../create_1D_2D_2Ddetail_files/
 sbatch submit_make_1d_files.sh   # point INPUT_DIR at merged files
 
-# 3b. Extend 2D/2Ddetail files (append 2024-2025 only)
+# 2b. Extend 2D/2Ddetail files (append 2024-2025 only)
 cd ../extend/
 sbatch submit_extend_variable_2d.sh
 sbatch submit_extend_variable_2ddetail.sh

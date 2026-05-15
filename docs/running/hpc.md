@@ -2,12 +2,12 @@
 
 ## Environment
 
-The model runs on ECMWF's HPC (Atos/Bologna). Key environment variables:
+The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it [offline](offline.md). Key environment variables:
 
 | Variable | Path |
 |----------|------|
-| `$PERM` | `/home/nld4814/perm` — persistent storage (code, reference files) |
-| `$SCRATCH` | `/home/nld4814/scratch` — fast scratch (model output) |
+| `$PERM` | `/home/$USER/perm` — persistent storage (code, reference files) |
+| `$SCRATCH` | `/home/$USER/scratch` — fast scratch (model output) |
 
 Load required modules before compiling or running:
 

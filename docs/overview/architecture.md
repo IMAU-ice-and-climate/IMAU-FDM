@@ -5,14 +5,12 @@
 ```
 IMAU-FDM/
 ├── source/             # Fortran source code (compiled to imau-fdm.x)
-├── settings/           # TOML configuration files
 ├── rundir/             # SLURM submission scripts and run setup
 ├── pre-process-RACMO/  # Convert RACMO/ERA5 NetCDF → model input
 ├── post-process/       # Convert per-column output → gridded NetCDF
 ├── MO_fit/             # Calibrate densification coefficients
 ├── QAQC/               # Run monitoring and log inspection
 ├── reference/          # Static grid files and point lists (per domain)
-├── distributor/        # Job distribution scripts (HPC)
 ├── example/            # Minimal worked example
 └── docs/               # This documentation (Jupyter Book)
 ```

@@ -6,20 +6,21 @@ interfaces in `modules/`.
 
 ## Module overview
 
-| Module | File | Description |
-|--------|------|-------------|
-| `model_settings` | `model_settings.f90` | Reads and stores all configuration (TOML files, namelist) |
-| `initialise_variables` | `initialise_variables.f90` | Allocates and zeroes all model arrays |
-| `initialise_model` | `initialise_model.f90` | Reads forcing files, sets up grid, applies spinup |
-| `grid_routines` | `grid_routines.f90` | Layer insertion/removal, mass redistribution |
-| `firn_physics` | `firn_physics.f90` | Densification, temperature diffusion, compaction |
-| `water_physics` | `water_physics.f90` | Melt, percolation, refreezing, liquid water transport |
-| `time_loop` | `time_loop.f90` | Outer time integration loop |
-| `output` | `output.f90` | Writes 1D, 2D, 2Ddetail output NetCDF files |
-| `openNetCDF` | `openNetCDF.f90` | NetCDF read/write wrappers |
-| `main` | `main.f90` | Entry point; MPI initialisation |
+| Module/file  | Description |
+|--------|-------------|
+| `model_settings`  | Reads and stores all configurations (pathnames, public constants, etc) |
+| `initialise_variables` | Allocates and zeroes all model arrays |
+| `initialise_model` |  Reads forcing files, sets up grid |
+| `grid_routines` |  Layer insertion/removal, mass redistribution |
+| `firn_physics` |  Densification, temperature diffusion |
+| `water_physics` |  Melt, percolation, refreezing, liquid water transport |
+| `time_loop` |  Spinup and model run |
+| `output` |  Writes 1D, 2D, 2Ddetail output NetCDF files |
+| `openNetCDF` | NetCDF read/write wrappers |
+| `main` | `main.f90` | Main program |
 
-## Build system
+## Compile
+(see [compiling](compiling.md) for more details)
 
 The model is built with [`fpm`](https://fpm.fortran-lang.org/):
 
@@ -47,11 +48,11 @@ On ECMWF HPC, use the provided wrapper:
 | `lwc` | `(proflayers)` | Liquid water content (m w.e.) |
 | `dRho` | `(proflayers)` | Density change per timestep |
 
-Layer 0 is the bottom of the column (~55–122 m); the surface layer has the
-highest index. New snow is inserted at the top each timestep.
+Layer 0 is the bottom of the column; the surface layer has the
+highest index.
 
 ## Adding a new output variable
 
-1. Declare the variable in `initialise_variables.f90`.
+1. Declare the variable in `initialise_variables.f90` and across any other modules.
 2. Compute it inside `time_loop.f90` (or the relevant physics module).
 3. Register it for output in `output.f90` and add it to `settings/model_variables.toml`.

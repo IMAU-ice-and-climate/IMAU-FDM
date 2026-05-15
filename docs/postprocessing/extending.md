@@ -1,7 +1,7 @@
 # Extending Gridded Files
 
 When the model run is extended to a later end date (e.g. 1939–2023 → 1939–2025),
-existing gridded files can be appended rather than reprocessed from scratch.
+existing gridded files can be appended rather than reprocessed from scratch for some file types.
 
 Source: `post-process/extend/`
 
