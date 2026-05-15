@@ -1,11 +1,10 @@
 """
-Configuration file to collect and process 1D, 2D, and 2D detail output into maps of single or multiple variables
+Configuration for IMAU-FDM 1D to gridded maps post-processing.
 
 This module contains all configurable paths, parameters, and variable metadata.
 Users can modify the settings below or override them via command-line arguments.
 """
 
-import os
 from pathlib import Path
 from datetime import datetime
 
@@ -13,19 +12,8 @@ from datetime import datetime
 # USER-CONFIGURABLE SETTINGS
 # =============================================================================
 
-# Time aggregation for 1D output (daily input files are resampled to this):
-# 'daily', '10day', or 'monthly'
-TIME_AGGREGATION_1D = 'daily'
-
-# Time aggregation for 2D and 2Ddetail output — these commented timesteps are output
-# by the model, so larger timesteps are possible but smaller are not
-TIME_AGGREGATION_2D = 'monthly'        # 2D profile files: 30-day steps
-TIME_AGGREGATION_2Ddetail = '10day'    # 2Ddetail files: 10-day steps
-
-# Output period — slice the timeseries to this range before saving.
-# Set to None to output the full model period.
-OUTPUT_START = datetime(1958,1,1)  # NONE or e.g. datetime(1958, 1, 1)
-OUTPUT_END = datetime(2023,12,31)    # NONE or e.g. datetime(2023, 12, 31)
+# Time aggregation: 'daily', '10day', or 'monthly'
+TIME_AGGREGATION = '10day'
 
 # Spinup period for detrending (h_surf and FirnAir only)
 # The model runs repeated forcing during this period
@@ -34,14 +22,11 @@ SPINUP_END = datetime(1970, 1, 1)
 
 # Variables to process (None = all variables)
 # Example: ['h_surf', 'FirnAir', 'Runoff']
-VARIABLES_TO_PROCESS = ['FirnAir','TotLwc']
+VARIABLES_TO_PROCESS = None
 
-# Variables that require detrending
-DETREND_VARIABLES = ['h_surf', 'FirnAir']
 
-# Number of parallel workers — reads SLURM_CPUS_PER_TASK if available,
-# otherwise uses all available CPUs.
-NUM_WORKERS = int(os.environ["SLURM_CPUS_PER_TASK"]) if "SLURM_CPUS_PER_TASK" in os.environ else None
+# Number of parallel workers (None = use all available CPUs)
+NUM_WORKERS = None
 
 # =============================================================================
 # PATHS - Adjust these for your environment
@@ -51,31 +36,30 @@ NUM_WORKERS = int(os.environ["SLURM_CPUS_PER_TASK"]) if "SLURM_CPUS_PER_TASK" in
 BASE_DIR = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 
+# Input files — merged per-column files covering full 1939-2025 period
+# (produced by extend/extend_pointfiles.py from original + extension runs)
+INPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output/output/points'
+POINTLIST_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'IN_ll_FGRN055.txt'
+MASK_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_Masks.nc'
+GRID_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_grid.nc'
+
+# Output directory
+OUTPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output/output/variables'
+
+# File naming pattern for input 1D files
+INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
+
 # =============================================================================
 # MODEL METADATA
 # =============================================================================
 
-# Domain name — also controls the expected mask/pointlist file locations:
-#   <BASE_DIR>/reference/<DOMAIN>/<DOMAIN>_Masks.nc
-#   <BASE_DIR>/reference/<DOMAIN>/IN_ll_<DOMAIN>.txt
+# Domain name
 DOMAIN = 'FGRN055'
 
-# Input files
-PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
-INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
-POINTLIST_FILE = BASE_DIR / 'reference' / DOMAIN / f'IN_ll_{DOMAIN}.txt'
-MASK_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_Masks.nc'
-GRID_FILE = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_grid.nc'
-
-# Output directory
-OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
-
-# File naming pattern for input 1D files
-INPUT_FILENAME_PATTERN = f'{DOMAIN}_era055_1D_{{point_id}}.nc'
-
-# Model run period — must match the actual simulation; used to read input files.
+# Model run period
 MODEL_START = datetime(1939, 9, 1)
-MODEL_END = datetime(2023, 12, 31)
+MODEL_END = datetime(2025, 12, 31)
+DATE_TAG = f"{MODEL_START.year}-{MODEL_END.year}"
 
 # Timestep in the input files (seconds)
 INPUT_TIMESTEP_SECONDS = 86400  # daily
@@ -114,53 +98,53 @@ VARIABLES = {
         'long_name': 'Ice velocity at model base',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate 
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vacc': {
         'long_name': 'Accumulation velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate 
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vfc': {
         'long_name': 'Firn compaction velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vmelt': {
         'long_name': 'Melt velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
-    'vbouy': {  
+    'vbouy': {  # Note: typo in original model output
         'long_name': 'Buoyancy velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vsub': {
         'long_name': 'Sublimation velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate 
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vsnd': {
         'long_name': 'Snowdrift velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate 
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'vtotal': {
         'long_name': 'Total velocity',
         'units': 'm/yr',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Rate
+        'aggregation': 'mean',  # Rate - already annualized in model
     },
     'Runoff': {
         'long_name': 'Runoff',
-        'units': 'mm w.e.',  
+        'units': 'mm w.e.',  # Total per output period
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
@@ -172,19 +156,19 @@ VARIABLES = {
     },
     'refreeze': {
         'long_name': 'Refreezing',
-        'units': 'mm w.e.',  
+        'units': 'mm w.e.',  # Total per output period
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
     'rain': {
         'long_name': 'Rainfall',
-        'units': 'mm w.e.', 
+        'units': 'mm w.e.',  # Total per output period
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
     'surfmelt': {
         'long_name': 'Surface melt',
-        'units': 'mm w.e.', 
+        'units': 'mm w.e.',  # Total per output period
         'needs_detrend': False,
         'aggregation': 'sum',  # Flux - sum daily totals
     },
@@ -192,7 +176,7 @@ VARIABLES = {
         'long_name': 'Solar insolation',
         'units': 'W/m2',
         'needs_detrend': False,
-        'aggregation': 'mean',  # Intensive variable 
+        'aggregation': 'mean',  # Intensive variable - mean is appropriate
     },
     'icemass': {
         'long_name': 'Ice mass',
@@ -207,6 +191,9 @@ VARIABLES = {
         'aggregation': 'mean',  # State variable - instantaneous
     },
 }
+
+
+DETREND_VARIABLES = [var for var, meta in VARIABLES.items() if meta.get('needs_detrend', False)]
 
 
 def get_variable_names():
@@ -238,7 +225,7 @@ def get_aggregation_method(var_name):
     return 'mean'  # Default to mean for unknown variables
 
 
-def get_output_filename(var_name, timestep='10day', detrended=False):
+def get_output_filename(var_name, timestep='10day', detrended=False, date_tag=None):
     """
     Generate output filename for a gridded variable.
 
@@ -250,11 +237,16 @@ def get_output_filename(var_name, timestep='10day', detrended=False):
         Time aggregation ('daily', '10day', 'monthly')
     detrended : bool
         Whether detrending was applied
+    date_tag : str, optional
+        Date range string to embed in the filename (e.g. '1939-2025').
+        Defaults to '1939-2023'.
 
     Returns
     -------
     str
         Output filename
     """
+    if date_tag is None:
+        date_tag = DATE_TAG
     detrend_suffix = '_detrended' if detrended else ''
-    return f'FDM_{var_name}_{DOMAIN}_1939-2023_{timestep}{detrend_suffix}.nc'
+    return f'FDM_{var_name}_{DOMAIN}_{date_tag}_{timestep}{detrend_suffix}.nc'

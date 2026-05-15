@@ -41,11 +41,13 @@ SCRATCH_DIR = Path('/home/nld4814/scratch')
 # Input files
 PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
 INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
+INPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output' / 'output' / 'variables'
 POINTLIST_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'IN_ll_FGRN055.txt'
 MASK_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_Masks.nc'
 
 # Output directory
 OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
+OUTPUT_DIR  = INPUT_DIR
 
 # File naming pattern for input 1D files
 INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
@@ -59,7 +61,11 @@ DOMAIN = 'FGRN055'
 
 # Model run period
 MODEL_START = datetime(1939, 9, 1)
-MODEL_END = datetime(2023, 12, 31)
+MODEL_END = datetime(2025, 12, 31)
+
+# Date tag used in gridded output filenames (e.g. '1939-2023').
+# Pass date_tag to get_output_filename() when loading extended (1939-2025) files.
+DATE_TAG = '1939-2025'
 
 # Timestep in the input files (seconds)
 INPUT_TIMESTEP_SECONDS = 86400  # daily
@@ -222,7 +228,7 @@ def get_aggregation_method(var_name):
     return 'mean'  # Default to mean for unknown variables
 
 
-def get_output_filename(var_name, timestep='10day', detrended=False):
+def get_output_filename(var_name, timestep='10day', detrended=False, date_tag=None):
     """
     Generate output filename for a gridded variable.
 
@@ -234,6 +240,9 @@ def get_output_filename(var_name, timestep='10day', detrended=False):
         Time aggregation ('daily', '10day', 'monthly')
     detrended : bool
         Whether detrending was applied
+    date_tag : str, optional
+        Date range string in the filename (e.g. '1939-2025').
+        Defaults to DATE_TAG ('1939-2023').
 
     Returns
     -------
@@ -241,4 +250,5 @@ def get_output_filename(var_name, timestep='10day', detrended=False):
         Output filename
     """
     detrend_suffix = '_detrended' if detrended else ''
-    return f'FDM_{var_name}_{DOMAIN}_1939-2023_{timestep}{detrend_suffix}.nc'
+    tag = date_tag if date_tag is not None else DATE_TAG
+    return f'FDM_{var_name}_{DOMAIN}_{tag}_{timestep}{detrend_suffix}.nc'

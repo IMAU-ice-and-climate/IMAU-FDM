@@ -25,8 +25,9 @@ set -e
 # -----------------------------------------------------------------------------
 # Default configuration - modify these or override via command line
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files"
+SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/python"
 OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era055_1939-2023/output"
+WORKERS=${SLURM_CPUS_PER_TASK:-8}
 
 # Default: find depth where density = 830 kg/m³
 DEFAULT_VAR="dens"
@@ -72,15 +73,16 @@ cd "${SCRIPT_DIR}"
 if [ $# -eq 0 ]; then
     # No arguments: use defaults
     echo "Using defaults: --var ${DEFAULT_VAR} --threshold ${DEFAULT_THRESHOLD} --output-var ${DEFAULT_OUTPUT_VAR}"
-    python3 "${SCRIPT_DIR}/make_2d_files.py" \
+    python3 make_2d_files.py \
         -o "${OUTPUT_DIR}" \
         -v "${DEFAULT_VAR}" \
         -t "${DEFAULT_THRESHOLD}" \
-        --output-var "${DEFAULT_OUTPUT_VAR}"
+        --output-var "${DEFAULT_OUTPUT_VAR}" \
+        -n "${WORKERS}"
 else
     # Pass all arguments through
     echo "Arguments: $@"
-    python3 "${SCRIPT_DIR}/make_2d_files.py" -o "${OUTPUT_DIR}" "$@"
+    python3 make_2d_files.py -o "${OUTPUT_DIR}" -n "${WORKERS}" "$@"
 fi
 
 EXIT_CODE=$?

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-IMAU-FDM 1D Post-Processing
+IMAU-FDM 1D to Gridded Maps Post-Processing
 
 This script converts individual 1D netCDF files (one per grid point) into
 gridded maps (3D: time, rlat, rlon) for visualization and analysis.
@@ -36,12 +36,12 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 
 # Import local modules
 import config
-from run_config import validate_time_aggregation
 from utils import (
     load_pointlist,
     load_mask,
@@ -53,6 +53,7 @@ from utils import (
     get_output_time_axis,
     create_output_dataset,
     read_1d_file,
+    datetime_to_fractional_year,
 )
 
 
@@ -139,14 +140,11 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         Path to the output file
     """
     # Use defaults from config if not specified
-    timestep = timestep or config.TIME_AGGREGATION_1D
+    timestep = timestep or config.TIME_AGGREGATION
     spinup_start = spinup_start or config.SPINUP_START
     spinup_end = spinup_end or config.SPINUP_END
     output_dir = Path(output_dir) if output_dir else config.OUTPUT_DIR
     workers = workers or config.NUM_WORKERS or mp.cpu_count()
-
-    # Validate that the requested aggregation is not finer than the input timestep
-    validate_time_aggregation(timestep, config.INPUT_TIMESTEP_SECONDS, context='1D files')
 
     # Check if variable exists
     if var_name not in config.VARIABLES:
@@ -167,11 +165,22 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
     pointlist = load_pointlist(config.POINTLIST_FILE)
     mask_ds = load_mask(config.MASK_FILE)
 
-    # Calculate time dimensions
+    # Calculate time dimensions.
+    # Use pandas resample on a dummy daily index — identical to what process_single_point
+    # does internally — so ntime_output always matches the actual worker output length.
+    # (get_output_time_axis uses a manual timedelta loop that can differ by ±1 step at
+    # period boundaries, causing a broadcast error when assigning worker results.)
     ntime_daily = len(create_time_array(config.MODEL_START, config.MODEL_END))
-    time_values = get_output_time_axis(
-        config.MODEL_START, config.MODEL_END, method=timestep
-    )
+    _dummy_idx = pd.date_range(config.MODEL_START, periods=ntime_daily, freq='D')
+    if timestep == 'daily':
+        time_datetimes = _dummy_idx.to_pydatetime()
+    elif timestep == '10day':
+        time_datetimes = (pd.Series(np.zeros(ntime_daily), index=_dummy_idx)
+                          .resample('10D').mean().dropna().index.to_pydatetime())
+    else:  # monthly
+        time_datetimes = (pd.Series(np.zeros(ntime_daily), index=_dummy_idx)
+                          .resample('ME').mean().dropna().index.to_pydatetime())
+    time_values = datetime_to_fractional_year(np.array(time_datetimes))
     ntime_output = len(time_values)
 
     if verbose:
@@ -238,9 +247,17 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         total_points = len(args_list)
         processed = 0
         for future in as_completed(futures):
-            rlat_idx, rlon_idx, data = future.result()
+            try:
+                rlat_idx, rlon_idx, data = future.result()
+            except Exception as e:
+                args = futures[future]
+                print(f"  Worker error point_id={args[0]}: {e}")
+                failed += 1
+                processed += 1
+                continue
             if data is not None:
-                output_data[:, rlat_idx, rlon_idx] = data
+                n = min(len(data), ntime_output)
+                output_data[:n, rlat_idx, rlon_idx] = data[:n]
                 completed += 1
             else:
                 failed += 1
@@ -258,17 +275,10 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
         time_values=time_values,
         mask_ds=mask_ds,
         var_metadata=var_metadata,
+        grid_file=config.GRID_FILE,
         detrended=needs_detrend,
         timestep=timestep,
     )
-
-    # Slice to output period if configured
-    if config.OUTPUT_START is not None or config.OUTPUT_END is not None:
-        t_start = str(config.OUTPUT_START.date()) if config.OUTPUT_START else None
-        t_end   = str(config.OUTPUT_END.date())   if config.OUTPUT_END   else None
-        ds = ds.sel(time=slice(t_start, t_end))
-        if verbose:
-            print(f"  Output period: {ds.time.values[0]} to {ds.time.values[-1]}")
 
     # Create output directory if needed
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -366,25 +376,23 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python make_1d_maps.py --var h_surf
-  python make_1d_maps.py --var all --workers 16
-  python make_1d_maps.py --var h_surf FirnAir Runoff --timestep monthly
-  python make_1d_maps.py --list-vars
+  python make_1d_files.py --var h_surf
+  python make_1d_files.py --var all --workers 16
+  python make_1d_files.py --var h_surf FirnAir Runoff --timestep monthly
+  python make_1d_files.py --list-vars
         """
     )
 
     parser.add_argument(
         '--var', '-v',
         nargs='+',
-        default=None,
-        help='Variable(s) to process. Use "all" for all variables. '
-             'Default: VARIABLES_TO_PROCESS from config.py'
+        help='Variable(s) to process. Use "all" for all variables.'
     )
     parser.add_argument(
         '--timestep', '-t',
         choices=['daily', '10day', 'monthly'],
         default=None,
-        help=f'Time aggregation for 1D resampling (default: {config.TIME_AGGREGATION_1D})'
+        help=f'Time aggregation (default: {config.TIME_AGGREGATION})'
     )
     parser.add_argument(
         '--spinup-start',
@@ -434,6 +442,12 @@ Examples:
         list_variables()
         return 0
 
+    # Require --var unless listing variables
+    if not args.var:
+        parser.print_help()
+        print("\nError: --var is required. Use --list-vars to see available variables.")
+        return 1
+
     # Parse spinup dates
     spinup_start = datetime(args.spinup_start, 1, 1) if args.spinup_start else None
     spinup_end = datetime(args.spinup_end, 1, 1) if args.spinup_end else None
@@ -444,10 +458,7 @@ Examples:
     # Process variables
     verbose = not args.quiet
 
-    if args.var is None:
-        # No --var given: use config.VARIABLES_TO_PROCESS (None means all)
-        variables = config.VARIABLES_TO_PROCESS
-    elif 'all' in args.var:
+    if 'all' in args.var:
         variables = None  # All variables
     else:
         variables = args.var

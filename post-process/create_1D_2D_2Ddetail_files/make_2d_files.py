@@ -26,15 +26,12 @@ from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import numpy as np
-import pandas as pd
 import xarray as xr
 from tqdm import tqdm
 
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
-import config as post_config
-from run_config import RunConfig, load_pointlist, load_mask, validate_time_aggregation
-from utils import create_output_dataset
+from run_config import RunConfig, load_pointlist, load_mask
 
 
 def find_depth_at_threshold(depth, values, threshold, direction='max'):
@@ -180,6 +177,86 @@ def process_point(args):
         return None
 
 
+def create_output_dataset(config, output_var, time_array, grid_data, mask_data):
+    """
+    Create output xarray Dataset with CF conventions.
+
+    Parameters
+    ----------
+    config : RunConfig
+        Run configuration
+    output_var : str
+        Output variable name
+    time_array : np.ndarray
+        Fractional year time values
+    grid_data : np.ndarray
+        3D data array [time, rlat, rlon]
+    mask_data : dict
+        Mask data with lat, lon
+
+    Returns
+    -------
+    xr.Dataset
+        Output dataset
+    """
+    nlat, nlon = config.grid_shape
+
+    # Load rotated pole grid coordinates from the grid reference file
+    grid_path = config.get_grid_path()
+    if grid_path is None:
+        raise FileNotFoundError(f"Grid file not found for domain {config.domain}")
+    with xr.open_dataset(grid_path) as grid_ds:
+        rlat_deg = grid_ds['rlat'].values
+        rlon_deg = grid_ds['rlon'].values
+        rotated_pole_attrs = grid_ds['rotated_pole'].attrs
+
+    ds = xr.Dataset(
+        {
+            output_var: (['time', 'rlat', 'rlon'], grid_data.astype(np.float32)),
+            'lat': (['rlat', 'rlon'], mask_data['lat'].astype(np.float32)),
+            'lon': (['rlat', 'rlon'], mask_data['lon'].astype(np.float32)),
+            'rotated_pole': ([], np.int32(0)),
+            'y_FDM': (['rlat'], np.arange(nlat, dtype=np.int32)),
+            'x_FDM': (['rlon'], np.arange(nlon, dtype=np.int32)),
+        },
+        coords={
+            'time': time_array,
+            'rlat': rlat_deg,
+            'rlon': rlon_deg,
+        }
+    )
+
+    ds['rotated_pole'].attrs = rotated_pole_attrs
+    ds[output_var].attrs = {
+        'missing_value': np.float32(9.96921e+36),
+        'grid_mapping': 'rotated_pole',
+        'coordinates': 'lon lat',
+    }
+    ds['rlat'].attrs = {
+        'axis': 'Y',
+        'long_name': 'latitude in rotated pole grid',
+        'standard_name': 'grid_latitude',
+        'units': 'degrees',
+    }
+    ds['rlon'].attrs = {
+        'axis': 'X',
+        'long_name': 'longitude in rotated pole grid',
+        'standard_name': 'grid_longitude',
+        'units': 'degrees',
+    }
+    ds['lat'].attrs = {'long_name': 'latitude', 'standard_name': 'latitude', 'units': 'degrees_north'}
+    ds['lon'].attrs = {'long_name': 'longitude', 'standard_name': 'longitude', 'units': 'degrees_east'}
+    ds['y_FDM'].attrs = {'long_name': 'row index in IMAU-FDM grid (0-based)', 'units': '1'}
+    ds['x_FDM'].attrs = {'long_name': 'column index in IMAU-FDM grid (0-based)', 'units': '1'}
+
+    ds.attrs['title'] = f'IMAU-FDM gridded output: {output_var}'
+    ds.attrs['source'] = 'IMAU-FDM version 1.2+'
+    ds.attrs['domain'] = config.domain
+    ds.attrs['institution'] = 'IMAU, Utrecht University'
+    ds.attrs['history'] = f'Created on {datetime.now().isoformat()}'
+    ds.attrs['Conventions'] = 'CF-1.6'
+
+    return ds
 
 
 def main():
@@ -213,8 +290,8 @@ def main():
                         help='Directory containing reference files (mask, pointlist)')
     parser.add_argument('--processed-dir',
                         help='Output directory for processed files')
-    parser.add_argument('-n', '--num-workers', type=int, default=post_config.NUM_WORKERS,
-                        help='Number of parallel workers (default: from config/SLURM_CPUS_PER_TASK)')
+    parser.add_argument('-n', '--num-workers', type=int, default=None,
+                        help='Number of parallel workers (default: all CPUs)')
     parser.add_argument('--start-year', type=float,
                         help='Start year for output (default: auto-detect)')
     parser.add_argument('--end-year', type=float,
@@ -237,13 +314,6 @@ def main():
         return
 
     print(config.summary())
-
-    # Validate that the configured aggregation is not finer than the model output timestep
-    validate_time_aggregation(
-        post_config.TIME_AGGREGATION_2D,
-        config.timestep_2d or 2592000,
-        context='2D files',
-    )
 
     # Check for required files
     mask_path = config.get_mask_path()
@@ -286,14 +356,14 @@ def main():
         print("ERROR: Could not determine number of timesteps")
         sys.exit(1)
 
-    # Create time array
-    time_array = pd.DatetimeIndex([config.get_datetime(t, '2D') for t in range(n_timesteps)])
+    # Create time array (fractional years)
+    time_array = np.array([config.get_fractional_year(t, '2D') for t in range(n_timesteps)])
 
     # Filter by year range if specified
     if args.start_year:
-        time_mask = time_array.year >= args.start_year
+        time_mask = time_array >= args.start_year
         if args.end_year:
-            time_mask &= time_array.year <= args.end_year
+            time_mask &= time_array <= args.end_year
         time_indices = np.where(time_mask)[0]
     else:
         time_indices = np.arange(n_timesteps)
@@ -301,7 +371,7 @@ def main():
     time_array = time_array[time_indices]
     n_times_output = len(time_array)
 
-    print(f"Output time range: {time_array[0]} to {time_array[-1]} ({n_times_output} timesteps)")
+    print(f"Output time range: {time_array[0]:.2f} to {time_array[-1]:.2f} ({n_times_output} timesteps)")
 
     # Initialize output grid
     nlat, nlon = config.grid_shape
@@ -344,44 +414,18 @@ def main():
 
     print(f"Completed: {completed}, Errors/Missing: {errors}")
 
-    # Build variable metadata from args
-    if args.threshold is not None:
-        var_metadata = {
-            'long_name': f'Depth where {args.var} = {args.threshold}',
-            'units': 'm',
-        }
-    elif args.depth is not None:
-        var_metadata = {
-            'long_name': f'{args.var} at {args.depth}m depth',
-            'units': '',
-        }
-    else:
-        var_metadata = {'long_name': args.output_var, 'units': ''}
-
     # Create output dataset
     print("Creating output dataset...")
-    ds = create_output_dataset(
-        var_name=args.output_var,
-        data=grid_data,
-        time_values=time_array,
-        mask_ds=mask_data,
-        var_metadata=var_metadata,
-        timestep=post_config.TIME_AGGREGATION_2D,
-        domain=config.domain,
-    )
+    ds = create_output_dataset(config, args.output_var, time_array, grid_data, mask_data)
 
-    # Add extra variable-specific attributes (threshold/depth values)
+    # Add variable-specific attributes
     if args.threshold is not None:
+        ds[args.output_var].attrs['long_name'] = f'Depth where {args.var} = {args.threshold}'
+        ds[args.output_var].attrs['units'] = 'm'
         ds[args.output_var].attrs['threshold'] = args.threshold
     elif args.depth is not None:
+        ds[args.output_var].attrs['long_name'] = f'{args.var} at {args.depth}m depth'
         ds[args.output_var].attrs['depth'] = args.depth
-
-    # Slice to output period if configured
-    if post_config.OUTPUT_START is not None or post_config.OUTPUT_END is not None:
-        t_start = str(post_config.OUTPUT_START.date()) if post_config.OUTPUT_START else None
-        t_end   = str(post_config.OUTPUT_END.date())   if post_config.OUTPUT_END   else None
-        ds = ds.sel(time=slice(t_start, t_end))
-        print(f"Output period: {ds.time.values[0]} to {ds.time.values[-1]}")
 
     # Save output
     config.processed_output_dir.mkdir(parents=True, exist_ok=True)
