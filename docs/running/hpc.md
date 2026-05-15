@@ -2,7 +2,7 @@
 
 ## Environment
 
-The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it [offline](offline.md). Key environment variables:
+The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it [offline](offline.md).Key environment variables:
 
 | Variable | Path |
 |----------|------|
@@ -13,7 +13,7 @@ Load required modules before compiling or running:
 
 ```bash
 module load netcdf4-fortran
-module load fpm              # if not installed locally
+module load fpm              # if not installed locally 
 ```
 
 ## Compiling
