@@ -1,0 +1,21 @@
+title: IMAU-FDM Documentation
+author: IMAU Ice and Climate, Utrecht University
+only_build_toc_files: true
+
+repository:
+  url: https://github.com/IMAU-ice-and-climate/IMAU-FDM
+  branch: main
+  path_to_book: docs
+
+html:
+  use_issues_button: true
+  use_repository_button: true
+  use_edit_page_button: false
+  home_page_in_navbar: false
+
+execute:
+  execute_notebooks: "off"
+
+sphinx:
+  config:
+    language: en
