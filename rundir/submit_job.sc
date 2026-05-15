@@ -179,37 +179,8 @@ EOFf
   sbatch $workdir/${jobname}.sc
 
 else
-  echo "submit_job: Create and launch $ntodo ns scripts."
-  
-  while [[ `head -1 ${workpointlist}.txt` != "Ready" ]]; do
-    gridpoint_c=`$readpointexe ${workpointlist}.txt`
-# this let ... is needed to remove the leading space (if it is there)
-    let "gridpoint=$gridpoint_c*1"
-    jobname="${jobname_base}${submission_iteration}_p${gridpoint}_ns"
-    echo "submit_job: Jobname: ${jobname}"
-cat << EOFs > $workdir/${jobname}.sc
-#!/bin/bash
-#SBATCH -q nf 
-#SBATCH -J $jobname 
-#SBATCH --time=$walltime
-#SBATCH -o $nplogdir/${myname}.log
-#SBATCH --cpus-per-task=1
-#SBATCH --ntasks-per-node=$tasks_per_node
-#SBATCH --mem-per-cpu=$memory_per_task
-#SBATCH --threads-per-core=1
-#SBATCH --time=$walltime
-
-# launch script
-$homedir/ns_script.sc $workdir/$envfile $gridpoint >& $nplogdir/${runlog}_p${gridpoint}.log
-
-exit 0
-EOFs
-     
-    # make it executalble
-    chmod u+x $workdir/${jobname}.sc
-     
-    sbatch $workdir/${jobname}.sc
-  done 
+  echo "job type specified incorrectly"
+ 
 fi
 
 # create a nicer abort script (so that distribute point creates an updated to-do list
