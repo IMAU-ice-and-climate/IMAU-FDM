@@ -15,6 +15,11 @@ from datetime import datetime
 # Time aggregation: 'daily', '10day', or 'monthly'
 TIME_AGGREGATION = '10day'
 
+# Output period — slice the timeseries to this range before saving.
+# Set to None to output the full model period.
+OUTPUT_START = datetime(1958, 1, 1)
+OUTPUT_END   = datetime(2023, 12, 31)
+
 # Spinup period for detrending (h_surf and FirnAir only)
 # The model runs repeated forcing during this period
 SPINUP_START = datetime(1940, 1, 1)

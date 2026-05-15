@@ -56,6 +56,11 @@ Key arguments:
 | `--workers` | 16 | Parallel worker processes |
 | `--max-points` | — | Cap for testing (e.g. 500) |
 
+**Output period slicing:** set `OUTPUT_START` and `OUTPUT_END` in `config.py` to save
+only a sub-period of the full model run (e.g. model covers 1939-2025, output only 1958-2023).
+Set either to `None` to disable. Applies to all three file types; for 2D and 2Ddetail scripts
+the `--start-year`/`--end-year` CLI flags override the config defaults.
+
 ### 1b. 2D variables (layered monthly profiles → scalar gridded)
 
 These files contain full depth profiles (3000 layers, ~122 m) at 30-day intervals.

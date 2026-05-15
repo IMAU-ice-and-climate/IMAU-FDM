@@ -32,6 +32,7 @@ from tqdm import tqdm
 # Add parent directory for imports
 sys.path.insert(0, str(Path(__file__).parent))
 from run_config import RunConfig, load_pointlist, load_mask
+import config as post_config
 
 
 def find_depth_at_threshold(depth, values, threshold, direction='max'):
@@ -359,11 +360,23 @@ def main():
     # Create time array (fractional years)
     time_array = np.array([config.get_fractional_year(t, '2D') for t in range(n_timesteps)])
 
-    # Filter by year range if specified
-    if args.start_year:
-        time_mask = time_array >= args.start_year
-        if args.end_year:
-            time_mask &= time_array <= args.end_year
+    # CLI args take precedence; fall back to OUTPUT_START/OUTPUT_END from config.py
+    def _to_frac(dt):
+        return dt.year + (dt.timetuple().tm_yday - 1) / 365.25
+
+    start_year = args.start_year
+    end_year   = args.end_year
+    if start_year is None and post_config.OUTPUT_START is not None:
+        start_year = _to_frac(post_config.OUTPUT_START)
+    if end_year is None and post_config.OUTPUT_END is not None:
+        end_year = _to_frac(post_config.OUTPUT_END)
+
+    if start_year is not None or end_year is not None:
+        time_mask = np.ones(len(time_array), dtype=bool)
+        if start_year is not None:
+            time_mask &= time_array >= start_year
+        if end_year is not None:
+            time_mask &= time_array <= end_year
         time_indices = np.where(time_mask)[0]
     else:
         time_indices = np.arange(n_timesteps)

@@ -268,6 +268,20 @@ def process_variable(var_name, timestep=None, spinup_start=None, spinup_end=None
     if verbose:
         print(f"  Completed: {completed}, Failed/Missing: {failed}")
 
+    # Slice to output period if configured
+    if config.OUTPUT_START is not None or config.OUTPUT_END is not None:
+        mask = np.ones(len(time_datetimes), dtype=bool)
+        if config.OUTPUT_START is not None:
+            mask &= time_datetimes >= config.OUTPUT_START
+        if config.OUTPUT_END is not None:
+            mask &= time_datetimes <= config.OUTPUT_END
+        idx = np.where(mask)[0]
+        i0, i1 = int(idx[0]), int(idx[-1])
+        time_values = time_values[i0:i1 + 1]
+        output_data = output_data[i0:i1 + 1]
+        if verbose:
+            print(f"  Output period: {time_datetimes[i0].date()} to {time_datetimes[i1].date()}")
+
     # Create output dataset
     ds = create_output_dataset(
         var_name=var_name,
