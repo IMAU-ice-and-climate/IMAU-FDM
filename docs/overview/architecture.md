@@ -20,27 +20,27 @@ IMAU-FDM/
 ## End-to-end data flow
 
 ```
-ERA5 / RACMO2.3p2 (raw decadal NetCDF)
+RACMO: raw decadal NetCDF files of 7 variables (10m wind speed, precipitation, snowfall, snowmelt, snowdrift, evaporation, skin temperature)
         │
         ▼  pre-process-RACMO/
 Yearly files → lon-band timeseries → spinup averages
         │
         ▼  rundir/ + source/
-Per-column output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface)
+Model output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface) for each cell
         │
         ▼  post-process/
-Gridded NetCDF maps  (FDM_{var}_{domain}_{years}_{timestep}.nc)
+Gridded NetCDF maps: specified variables across whole domain/timeseries (e.g., firn air content, integrated liquid water content, etc)
 ```
 
 ## Key configuration files
 
-| File | Purpose |
+| File | Contents |
 |------|---------|
-| `settings/model_settings.toml` | Domain, restart type, output layer counts |
-| `settings/run_settings.toml` | Submission iteration counter |
-| `settings/paths.toml` | All input/output directory paths |
-| `settings/ecmwf_settings.toml` | HPC-specific settings |
-| `settings/model_variables.toml` | Variables to include in output |
+|`rundir/launch_new_job.sc`| Set project_name, domain, pointlist, restart_type, SLURM options|
+|`rundir/start_model_ccab.sc`| Sets various model parameters, including timestep & dimensions of input and output|
+|`source/model_settings.sc`| Constants, model metadata, and paths are set in this file|
+
+_Note that once the new [distributor](development/distributor) comes online, this structure will change*
 
 ## Reference files (per domain)
 
@@ -50,4 +50,3 @@ Stored in `reference/{DOMAIN}/`:
 |------|---------|
 | `{DOMAIN}_Masks.nc` | Grid mask, lat/lon, x/y in EPSG:3413 |
 | `IN_ll_{DOMAIN}.txt` | Point list: lon, lat, ..., rlat\_idx, rlon\_idx |
-| `{DOMAIN}_grid.nc` | Rotated-pole grid coordinates |

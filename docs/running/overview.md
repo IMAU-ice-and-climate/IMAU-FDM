@@ -9,7 +9,7 @@ cd rundir/
 
 # Edit settings first (see Settings page)
 # Then submit:
-sbatch submit_job.sc
+sbatch launch_new_job.sc
 ```
 
 ## Run types
@@ -20,41 +20,22 @@ Set `restart_type` in `settings/model_settings.toml`:
 |-------|-----------|
 | `none` | Start from scratch (spinup) |
 | `spinup` | Restart from end of spinup (begin main run) |
-| `run` | Continue from end of last main run |
+| `run` | Continue from end of last main run - ensure restart directory is set correctly|
 
 ## Point lists
 
-The model runs one column per MPI rank. A point list specifies which grid
-points to run. Reference point lists live in `reference/{DOMAIN}/`:
-
-- `IN_ll_FGRN055.txt` — all 58 265 ice-covered Greenland points
-
-Custom subsets live in `rundir/pointlists/`. To generate a new subset:
-
-```bash
-sbatch rundir/make_pointlist.sc
-```
-
-Point list format (space-separated, 7 columns):
-
-```
-lon  lat  ??  ??  ??  rlat_idx  rlon_idx
-```
-
-Rows are 1-based; row N corresponds to output file `{prefix}_1D_N.nc`.
+The model runs one column per MPI rank. Reference point lists live in `reference/{DOMAIN}/`. A customized pointlist (list of indices) specifies which grid
+points to run. These live in `rundir/pointlists/`.
 
 ## SLURM scripts
 
 | Script | Purpose |
 |--------|---------|
-| `submit_job.sc` | Main submission script |
-| `launch_new_job.sc` | Launch a fresh run |
-| `launch_example_job.sc` | Run the minimal example |
+| `launch_new_job.sc` | Main script; launch a fresh run |
+| `submit_job.sc` | Starts job |
 | `npnf_outer_script.sc` | Outer SLURM array wrapper |
 | `npnf_inner_script.sc` | Inner per-point launcher |
-| `ns_script.sc` | Node-sharing variant |
-| `offline.sc` | Run without HPC scheduler |
-| `CancelMyJob.sc` | Cancel all running jobs |
+| `CancelMyJob.sc` | Cancel all running jobs - updated when new job is launched|
 
 ## Monitoring a run
 

@@ -1,6 +1,14 @@
-# Distributor (Development)
+# New Workflow (In Development)
 
 Source: `distributor/` (development branch)
+
+<!-- | File | Purpose |
+|------|---------|
+| `settings/model_settings.toml` | Domain, restart type, output layer counts |
+| `settings/run_settings.toml` | Submission iteration counter |
+| `settings/paths.toml` | All input/output directory paths |
+| `settings/ecmwf_settings.toml` | HPC-specific settings |
+| `settings/model_variables.toml` | Variables to include in output | -->
 
 The **distributor** is a new job management layer that replaces the current
 SLURM array approach with a more flexible work-queue pattern.
@@ -17,7 +25,6 @@ The current SLURM array approach (`npnf_outer_script.sc` / `npnf_inner_script.sc
 submits one job per point and relies on SLURM's array job mechanism for
 parallelism. Limitations:
 
-- Large arrays (58 265 jobs for full Greenland) hit SLURM queue limits.
 - Failed points must be re-identified and resubmitted manually.
 - No dynamic load balancing between fast and slow columns.
 
