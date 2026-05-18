@@ -280,24 +280,24 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     end do
 
     do ind_t = 1, Nt_forcing
-        if (SnowMelt(ind_t) < ts_minimum) then
+        if (SnowMelt(ind_t) < config%minimum_values%ts_minimum) then
             remove_Melt = remove_Melt + SnowMelt(ind_t)
             SnowMelt(ind_t) = 0.     
         endif
         
-        if (PreSol(ind_t) < ts_minimum) then
+        if (PreSol(ind_t) < config%minimum_values%ts_minimum) then
             remove_Psol = remove_Psol + PreSol(ind_t)
             PreSol(ind_t) = 0.
         endif
     
-        if (PreTot(ind_t) < ts_minimum) then
+        if (PreTot(ind_t) < config%minimum_values%ts_minimum) then
             remove_Ptot = remove_Ptot + PreTot(ind_t)
             PreTot(ind_t) = 0.
         endif
     
         if (TempSurf(ind_t) > 267.) then
             PreLiq(ind_t) = PreTot(ind_t)-PreSol(ind_t)
-            if (PreLiq(ind_t) < ts_minimum) then
+            if (PreLiq(ind_t) < config%minimum_values%ts_minimum) then
                 remove_Pliq = remove_Pliq + PreLiq(ind_t)
                 PreLiq(ind_t) = 0.
                 PreSol(ind_t) = PreTot(ind_t)

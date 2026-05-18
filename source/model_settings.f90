@@ -8,24 +8,67 @@ module model_settings
     private
     
 
-    public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg
+    type, public :: Constants
+        double precision :: R  ! gas constant [J mole-1 K-1]
+        double precision :: g  ! gravitational acceleration [m s-2]
+        double precision :: rhoi  ! density of ice [kg m-3]
+        double precision :: rho_ocean  ! density of ocean water [kg m-3]
+        double precision :: Tmelt  ! melting point of ice [K]
+        double precision :: Ec  ! activation energy for creep [J mole-1]
+        double precision :: Eg  ! activation energy for grain growth [J mole-1]
+        double precision :: Lh  ! latent heat of fusion [J kg-1]
+        double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
+        double precision :: seconds_per_year  ! days per year TKTKTK: remove once timestamps incorprated
+        double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        double precision :: pi ! pi = 3.1415
+    end type Constants
+
+
+    type, public :: minimum_values_t
+        double precision :: ts_minimum
+        double precision :: det2d_minimum
+    end type minimum_values_t
+
+    type, public :: general_settings_t
+        character(len=:), allocatable :: run_location
+        character(len=:), allocatable :: restart_type
+        integer :: save_output
+    end type general_settings_t
+
+    type, public :: model_physics_t
+        logical :: do_MO_fit
+    end type model_physics_t
+
+    type, public :: output_dimensions_t
+        integer :: proflayers
+        integer :: writeindetail
+        integer :: detlayers
+        double precision :: detthick
+    end type output_dimensions_t
+
+    type, public :: Settings
+        type(minimum_values_t)  :: minimum_values
+        type(general_settings_t):: general_settings
+        type(model_physics_t):: model_physics
+        type(output_dimensions_t) :: output_dimensions
+    end type Settings
+
+
+    public :: Define_Paths, Define_Constants, read_settings, Get_All_Command_Line_Arg, read_constants, Load_Model_Settings
 
     ! Module-level variables that can be accessed by other modules
     
     public :: point_numb
-    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, restart_type, forcing, data_dir
+    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, forcing, data_dir
     public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
     public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
     public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
     public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     public :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
-    public :: save_output
+    public :: seconds_per_year
+    public :: config, const
     public :: model_first_timestep, model_last_timestep
-    
-    ! Parameterization options
-    public :: do_MO_fit
 
     ! Declare the module variables
     ! note
@@ -40,83 +83,137 @@ module model_settings
     character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
     character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
     character(len=512) :: model_first_timestep, model_last_timestep
-    logical :: do_MO_fit
-    integer :: save_output
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
+    double precision :: seconds_per_year
     character(len=:), allocatable :: path_restart, restart_type, model_settings_file
+    type(Settings), allocatable :: config
+    type(Constants), allocatable :: const
 contains
 
-subroutine Define_Settings()
-    !*** Under construction ***!
+
+subroutine read_settings(table, settings_out)
     !*** Define model settings and physics ***!
 
     ! Local variables toml tables
 
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
-    type(toml_table), allocatable :: table
-    type(toml_table), pointer     :: child
+    type(toml_table), allocatable, intent(inout) :: table
+    type(toml_table), pointer :: child
+    type(Settings), intent(out), allocatable :: settings_out
 
-    ! Model settings
+    allocate(settings_out)
 
-    inquire (file=model_settings_file, exist=file_exists)
-    
-    if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
-        stop
-    end if
-
-    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
-
-    if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
-        stop
-    end if
-
-    call toml_parse(table, fu)
-    close (fu)
-
-    if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
-        stop
-    end if
-
-    ! find section.
-    
+    ! Minimum_values
+    nullify(child)
     call get_value(table, 'minimum_values', child, requested=.false.)
-    
     if (associated(child)) then
-
-        call get_value(child, 'ts_minimum', ts_minimum)
-        call get_value(child, 'det2d_minimum', det2d_minimum)
-
-        print *, " "
-        print *, "ts_minimum: ", ts_minimum
-
+        call get_value(child, 'ts_minimum',    settings_out%minimum_values%ts_minimum)
+        call get_value(child, 'det2d_minimum', settings_out%minimum_values%det2d_minimum)
     end if
 
+    ! General_settings
+    nullify(child)
     call get_value(table, 'general_settings', child, requested=.false.)
-
     if (associated(child)) then
-
-        call get_value(child, 'restart_type', restart_type)
-
-        print *, " "
-        print *, "restart_type: ", restart_type
-
+        call get_value(child, 'restart_type', settings_out%general_settings%restart_type)
+        call get_value(child, 'save_output', settings_out%general_settings%save_output)
     end if
-
-    save_output = 10 ! save output every 10 years
 
     ! Model physics
+    nullify(child)
+    call get_value(table, 'model_physics', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'DO_MO_FIT', settings_out%model_physics%do_MO_fit)
+    end if
 
-    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    ! Output dimensions
+    nullify(child)
+    call get_value(table, 'output_dimensions', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'proflayers', settings_out%output_dimensions%proflayers)
+        call get_value(child, 'writeindetail', settings_out%output_dimensions%writeindetail)
+        call get_value(child, 'detlayers', settings_out%output_dimensions%detlayers)
+        call get_value(child, 'detthick', settings_out%output_dimensions%detthick)
+    end if
+end subroutine read_settings
+
+
+subroutine Load_Model_Settings()
+    !*** Read runtime model settings from TOML and expose commonly used values ***!
+
+    integer :: fu, rc
+    logical :: file_exists
+    type(toml_error), allocatable :: parse_error
+    type(toml_table), allocatable :: table
+
+    inquire(file=model_settings_file, exist=file_exists)
+
+    if (.not. file_exists) then
+        write(stderr, '("Error: TOML file ", a, " not found")') model_settings_file
+        stop
+    end if
+
+    open(action='read', file=model_settings_file, iostat=rc, newunit=fu)
+
+    if (rc /= 0) then
+        write(stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
+        stop
+    end if
+
+    call toml_parse(table, fu, parse_error)
+    close(fu)
+
+    if (.not. allocated(table)) then
+        if (allocated(parse_error)) then
+            write(stderr, '("Error: TOML parsing failed for ", a)') model_settings_file
+            write(stderr, '(a)') parse_error%message
+        else
+        write(stderr, '("Error: Parsing failed")')
+        end if
+        stop
+    end if
+
+    if (allocated(config)) then
+        deallocate(config)
+    end if
+
+    call read_settings(table, config)
 
     deallocate(table)
 
-end subroutine Define_Settings
+end subroutine Load_Model_Settings
 
 
+subroutine read_constants(table, const)
+
+    type(toml_table), allocatable, intent(inout) :: table
+    type(toml_table), pointer :: child
+    type(Constants), intent(out), allocatable :: const
+
+    call get_value(table, "constants", child, requested=.false.)
+    if (.not. associated(child)) then
+        write(stderr, '("Cannot find section constants in toml file.")')
+        stop
+    end if
+
+    allocate(const)
+
+    call get_value(child, "R", const%R)
+    call get_value(child, "g", const%g)
+    call get_value(child, "rhoi", const%rhoi)
+    call get_value(child, "rho_ocean", const%rho_ocean)
+    call get_value(child, "Tmelt", const%Tmelt)
+    call get_value(child, "Ec", const%Ec)
+    call get_value(child, "Eg", const%Eg)
+    call get_value(child, "Lh", const%Lh)
+    call get_value(child, "days_per_year", const%days_per_year)
+    call get_value(child, "NaN_value", const%NaN_value)
+
+    const%pi = asin(1.)*2 ! pi = 3.1415
+    const%seconds_per_year = 3600.*24.*const%days_per_year   ! seconds per year [s]
+
+
+end subroutine
+
+    
 ! *******************************************************
 
 
@@ -298,21 +395,18 @@ end subroutine Define_Paths
 subroutine Define_Constants()
     !*** Define physical constants ***!
     
-    pi = asin(1.)*2         ! pi = 3.1415
-    R = 8.3145              ! gas constant [J mole-1 K-1]
-    g = 9.81                ! gravitational acceleration [m s-2]
-    rhoi = 917.             ! density of ice [kg m-3]
-    rho_ocean = 1027.       ! density of ocean water [kg m-3]
-    Tmelt = 273.15          ! melting point of ice [K]
-    Ec = 60000.             ! activation energy for creep [J mole-1]
-    Eg = 42400.             ! activation energy for grain growth [J mole-1]
-    Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365.25    ! days per year [days]
-    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
-    NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-    
-!    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
-!    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
+    ! pi = asin(1.)*2         ! pi = 3.1415
+    ! R = 8.3145              ! gas constant [J mole-1 K-1]
+    ! g = 9.81                ! gravitational acceleration [m s-2]
+    ! rhoi = 917.             ! density of ice [kg m-3]
+    ! rho_ocean = 1027.       ! density of ocean water [kg m-3]
+    ! Tmelt = 273.15          ! melting point of ice [K]
+    ! Ec = 60000.             ! activation energy for creep [J mole-1]
+    ! Eg = 42400.             ! activation energy for grain growth [J mole-1]
+    ! Lh = 333500.            ! latent heat of fusion [J kg-1]
+    ! days_per_year = 365.25    ! days per year [days]
+    ! seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
+    ! NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
 
     ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
     ! Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
