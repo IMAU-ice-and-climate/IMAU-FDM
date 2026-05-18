@@ -16,19 +16,14 @@ contains
 !*** TKTKTK: move this to model_settings and make all variables global ***!
 
 
-subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
-    ind_z_surf, startasice, beginT, writeinprof, writeinspeed, dzmax, &
-    initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
+subroutine Get_Model_Settings_and_Forcing_Dimensions(dtobs, ind_z_surf, lon_current, lat_current, Nlon, Nlat, &
+    Nlon_timeseries, Nt_forcing)
 
     !*** Load model settings from parsed config ***!
 
     ! declare arguments
-    integer, intent(out) :: writeinprof, writeinspeed, dtSnow, nyears, nyearsSU, dtmodelImp, &
-        dtmodelExp, ImpExp, dtobs, ind_z_surf, startasice, beginT, Nlon, Nlat, Nlon_timeseries, &
-        Nt_forcing
-    double precision, intent(out) :: dzmax, initdepth, th, lon_current, lat_current
-    ! declare local variables
-    integer :: NoR
+    integer, intent(out) :: dtobs, ind_z_surf, Nlon, Nlat, Nlon_timeseries, Nt_forcing
+    double precision, intent(out) :: lon_current, lat_current
 
     print *, "Loaded model settings"
     print *, " "
@@ -37,22 +32,7 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
         error stop 'Model settings must be loaded before initializing variables'
     end if
 
-    ! set default values
-    nyears = 84                 ! simulation time [yr]
-    nyearsSU = 30               ! simulation time during the spin up period [yr]
-    dtmodelExp = 180            ! time step in model with explicit T-scheme [s] 
-    dtmodelImp = 900            ! time step in model with implicit T-scheme [s]
-    ImpExp = 1                  ! Impicit or Explicit scheme (1=Implicit/fast, 2= Explicit/slow)
     dtobs = 10800               ! time step in input data [s]
-    dtSnow = 31557600           ! duration of running average of variables used in snow parameterisation [s]
-    dzmax = 0.15                ! vertical model resolution [m]
-    initdepth = 1               ! initial depth of firn profile [m]
-    th = 0.5                    ! theta (if theta=0.5 , it is a Crank Nicolson scheme)
-    startasice = 1              ! indicates the initial rho-profile (1=linear, 2=ice)
-    beginT = 3                  ! indicates the inital T-profile (0=winter, 1=summer, 2=linear)
-    NoR = 6                     ! number of times the data series is repeated for the initial rho profile is constructed
-    writeinspeed = 86400        ! frequency of writing speed components to file
-    writeinprof = 2592000       ! frequency of writing of firn profiles to file
     lon_current = -43.5083      ! indicates the longitude gridpoint  ##TODO: These vary, where to set this?
     lat_current = 60.1478       ! indicates the latitude gridpoint  ##TODO: These vary, where to set this?
     Nlon = 438                  ! Number of longitude points in forcing
@@ -60,7 +40,7 @@ subroutine Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, d
     Nlon_timeseries = 6         ! num of longitude bands (set during input pre-processing)
     Nt_forcing = 246424         ! Number of timesteps in forcing
      
-    ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
+    ind_z_surf = nint(config%model_physics%initdepth/config%general_settings%dzmax)  ! initial amount of vertical layers
 
 end subroutine Get_Model_Settings_and_Forcing_Dimensions
 
@@ -68,18 +48,18 @@ end subroutine Get_Model_Settings_and_Forcing_Dimensions
 ! *******************************************************
 
 
-subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
+subroutine Init_TimeStep_Var(dtobs, dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
     !*** Initialise time step variables ***!
 
     ! declare arguments
-    integer, intent(in) :: dtobs, dtmodelImp, dtmodelExp, nyearsSU, Nt_forcing, ImpExp
+    integer, intent(in) :: dtobs, Nt_forcing
     integer, intent(out) :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer, intent(inout) :: dtmodel
 
-    if (ImpExp == 2) then
-        dtmodel = dtmodelExp
+    if (config%general_settings%ImpExp == 2) then
+        dtmodel = config%general_settings%dtmodelExp
     else
-        dtmodel = dtmodelImp
+        dtmodel = config%general_settings%dtmodelImp
     endif
 
     ! Number of IMAU-FDM time steps per forcing time step
@@ -87,7 +67,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     ! Total number of IMAU-FDM time steps
     Nt_model_tot = Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
-    Nt_model_spinup = INT( (REAL(nyearsSU)*seconds_per_year)/(REAL(dtmodel)) )
+    Nt_model_spinup = INT( (REAL(config%general_settings%nyears_spinup)*seconds_per_year)/(REAL(dtmodel)) )
     if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
 
     print *, "dtmodel: ", dtmodel
@@ -99,12 +79,12 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
 end subroutine Init_TimeStep_Var
 
 
-subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcing
+    integer, intent(in) :: dtmodel, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
@@ -117,13 +97,13 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcin
     ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
     Nt_forcing_64 = int(Nt_forcing, kind=8)
     dtobs_64 = int(dtobs, kind=8)
-    writeinspeed_64 = int(writeinspeed, kind=8)
-    writeinprof_64 = int(writeinprof, kind=8)
+    writeinspeed_64 = int(config%output_dimensions%writeinspeed, kind=8)
+    writeinprof_64 = int(config%output_dimensions%writeinprof, kind=8)
     writeindetail_64 = int(config%output_dimensions%writeindetail, kind=8)
 
     ! Calculate at what timestep output is produced
-    numOutputProf = writeinprof / dtmodel
-    numOutputSpeed = writeinspeed / dtmodel
+    numOutputProf = config%output_dimensions%writeinprof / dtmodel
+    numOutputSpeed = config%output_dimensions%writeinspeed / dtmodel
     numOutputDetail = config%output_dimensions%writeindetail / dtmodel
 
     ! Calculate outputs using 64-bit integers
@@ -139,7 +119,7 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, dtobs, Nt_forcin
     print *, " "
     print *, "Output variables"
     print *, "Prof, Speed, Detail"
-    print *, "writein...", writeinprof, writeinspeed, config%output_dimensions%writeindetail
+    print *, "writein...", config%output_dimensions%writeinprof, config%output_dimensions%writeinspeed, config%output_dimensions%writeindetail
     print *, "numOutput...", numOutputProf, numOutputSpeed, numOutputDetail
     print *, "output...", outputProf, outputSpeed, outputDetail
     print *, " "
@@ -150,12 +130,11 @@ end subroutine Calc_Output_Freq
 ! *******************************************************
 
 
-subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, DZ_max)
+subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** Initialise firn profile variables with zeros ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_surf
-    double precision, intent(in) :: DZ_max
     double precision, dimension(:), intent(out) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -171,10 +150,10 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     Refreeze(:) = 0.
     Year(:) = 0.
     
-    DZ(1:ind_z_surf) = DZ_max
+    DZ(1:ind_z_surf) = config%general_settings%dzmax
 
     Year(1:ind_z_surf) = -999.
-    Depth(ind_z_surf) = 0.5*DZ_max
+    Depth(ind_z_surf) = 0.5*config%general_settings%dzmax
     do ind_z = (ind_z_surf-1), 1, -1
         Depth(ind_z) = Depth(ind_z+1) + 0.5*DZ(ind_z+1) + 0.5*DZ(ind_z)
     enddo

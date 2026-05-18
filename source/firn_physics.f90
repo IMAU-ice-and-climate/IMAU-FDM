@@ -17,11 +17,11 @@ contains
 
 subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, acav, h_surf, vice, vmelt, vacc, vsub, &
     vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
-    ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
+    IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
     !*** Add and remove mass to the surface layer and calculate the velocity components ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_max, dtmodel, ImpExp, IceShelf
+    integer, intent(in) :: ind_z_max, dtmodel, IceShelf
     integer, intent(inout) :: ind_z_surf
     double precision, intent(in) :: rho0, acav
     double precision, intent(inout) :: Ts, Psol, Pliq, Su, Sd, Me
@@ -34,7 +34,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, acav, h_surf, vi
     double precision :: mdiff, macc, mice, mrun, Mmelt, oldDZ
 
     ! Prepare climate input for time step
-    if (ImpExp == 1) then
+    if (config%general_settings%ImpExp == 1) then
         if (Me > 1e-06) then
             Mmelt = Me + Pliq
             Msurfmelt = Msurfmelt + Me
@@ -98,7 +98,7 @@ subroutine Update_Surface(ind_z_max, ind_z_surf, dtmodel, rho0, acav, h_surf, vi
     vice = acav*dtmodel/(seconds_per_year*const%rhoi)
 
     ! Calculate the liquid water content
-    if (ImpExp == 1) then
+    if (config%general_settings%ImpExp == 1) then
         call Bucket_Method(ind_z_max, ind_z_surf, const%rhoi, const%Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
         call LWrefreeze(ind_z_max, ind_z_surf, const%Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
     endif
@@ -167,12 +167,11 @@ end subroutine Solve_Temp_Exp
 ! *******************************************************
 
 
-subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
+subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, Ts, T, Rho, DZ)
     !*** Solve the heat diffusion equation (semi-)implicitly ***!
                
     ! declare arguments
     integer, intent(in) :: ind_z_max, ind_z_surf, dtmodel
-    double precision, intent(in) :: th
     double precision, intent(in) :: Ts
     double precision, dimension(ind_z_max), intent(in) :: Rho, DZ
     double precision, dimension(ind_z_max), intent(inout) :: T
@@ -193,9 +192,9 @@ subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
     kin = Thermal_Cond(const%rhoi,Rho(2),T(2))
     an = ((1.-f)*kip+f*kin)*2./(DZ(1)+DZ(2))
     ap0 = Rho(1)*ci*DZ(1)/dtmodel
-    alpha(1) = an*th
-    D(1) = th*an + ap0
-    C(1) = an*(1.-th)*T(2) + (ap0-(1.-th)*an)*T(1)
+    alpha(1) = an*config%model_physics%th
+    D(1) = config%model_physics%th*an + ap0
+    C(1) = an*(1.-config%model_physics%th)*T(2) + (ap0-(1.-config%model_physics%th)*an)*T(1)
 
     ! j = 2 to ind_z_surf-1, interior
     do ind_z = 2, (ind_z_surf-1)
@@ -206,10 +205,11 @@ subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
         as = an
         an = ((1.-f)*kip+f*kin)*2./(DZ(ind_z)+DZ(ind_z+1))
         ap0 = Rho(ind_z)*ci*DZ(ind_z)/dtmodel
-        beta(ind_z) = as*th
-        alpha(ind_z) = an*th
-        D(ind_z) = th*(as+an) + ap0
-        C(ind_z) = as*(1.-th)*T(ind_z-1) + an*(1.-th)*T(ind_z+1) + (ap0-(1.-th)*(as+an))*T(ind_z)
+        beta(ind_z) = as*config%model_physics%th
+        alpha(ind_z) = an*config%model_physics%th
+        D(ind_z) = config%model_physics%th*(as+an) + ap0
+        C(ind_z) = as*(1.-config%model_physics%th)*T(ind_z-1) + an*(1.-config%model_physics%th)*T(ind_z+1) + &
+            (ap0-(1.-config%model_physics%th)*(as+an))*T(ind_z)
     enddo
     
     ! j = ind_z_surf, surface layer, fixed temperature bc
@@ -219,9 +219,10 @@ subroutine Solve_Temp_Imp(ind_z_max, ind_z_surf, dtmodel, th, Ts, T, Rho, DZ)
     ap0 = Rho(ind_z_surf)*ci*DZ(ind_z_surf)/dtmodel
     Su = 2.*kip*Ts/DZ(ind_z_surf)
     Sp = -2.*kip/DZ(ind_z_surf)
-    beta(ind_z_surf) = as*th
-    D(ind_z_surf) = th*(as-Sp) + ap0
-    C(ind_z_surf) = as*(1.-th)*T(ind_z_surf-1) + (ap0-(1.-th)*(as-Sp))*T(ind_z_surf) + Su
+    beta(ind_z_surf) = as*config%model_physics%th
+    D(ind_z_surf) = config%model_physics%th*(as-Sp) + ap0
+    C(ind_z_surf) = as*(1.-config%model_physics%th)*T(ind_z_surf-1) + &
+        (ap0-(1.-config%model_physics%th)*(as-Sp))*T(ind_z_surf) + Su
 
     ! forward substitution
     A(1) = alpha(1)/D(1)

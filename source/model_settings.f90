@@ -32,14 +32,29 @@ module model_settings
     type, public :: general_settings_t
         character(len=:), allocatable :: run_location
         character(len=:), allocatable :: restart_type
+        character(len=:), allocatable :: domain
+        character(len=:), allocatable :: forcing
         integer :: save_output
+        integer :: nyears_spinup
+        integer :: ImpExp
+        integer :: dtmodelExp
+        integer :: dtmodelImp
+        integer :: dtSnow
+        double precision :: dzmax
     end type general_settings_t
 
     type, public :: model_physics_t
         logical :: do_MO_fit
+        double precision :: initdepth
+        double precision :: th
+        integer :: startasice
+        integer :: beginT
+        integer :: NoR
     end type model_physics_t
 
     type, public :: output_dimensions_t
+        integer :: writeinspeed
+        integer :: writeinprof
         integer :: proflayers
         integer :: writeindetail
         integer :: detlayers
@@ -113,8 +128,17 @@ subroutine read_settings(table, settings_out)
     nullify(child)
     call get_value(table, 'general_settings', child, requested=.false.)
     if (associated(child)) then
+        call get_value(child, 'run_location', settings_out%general_settings%run_location)
         call get_value(child, 'restart_type', settings_out%general_settings%restart_type)
         call get_value(child, 'save_output', settings_out%general_settings%save_output)
+        call get_value(child, 'nyears_spinup', settings_out%general_settings%nyears_spinup)
+        call get_value(child, 'domain', settings_out%general_settings%domain)
+        call get_value(child, 'forcing', settings_out%general_settings%forcing)
+        call get_value(child, 'ImpExp', settings_out%general_settings%ImpExp)
+        call get_value(child, 'dtmodelExp', settings_out%general_settings%dtmodelExp)
+        call get_value(child, 'dtmodelImp', settings_out%general_settings%dtmodelImp)
+        call get_value(child, 'dtSnow', settings_out%general_settings%dtSnow)
+        call get_value(child, 'dzmax', settings_out%general_settings%dzmax)
     end if
 
     ! Model physics
@@ -122,12 +146,19 @@ subroutine read_settings(table, settings_out)
     call get_value(table, 'model_physics', child, requested=.false.)
     if (associated(child)) then
         call get_value(child, 'DO_MO_FIT', settings_out%model_physics%do_MO_fit)
+        call get_value(child, 'initdepth', settings_out%model_physics%initdepth)
+        call get_value(child, 'th', settings_out%model_physics%th)
+        call get_value(child, 'startasice', settings_out%model_physics%startasice)
+        call get_value(child, 'beginT', settings_out%model_physics%beginT)
+        call get_value(child, 'NoR', settings_out%model_physics%NoR)
     end if
 
     ! Output dimensions
     nullify(child)
     call get_value(table, 'output_dimensions', child, requested=.false.)
     if (associated(child)) then
+        call get_value(child, 'writeinspeed', settings_out%output_dimensions%writeinspeed)
+        call get_value(child, 'writeinprof', settings_out%output_dimensions%writeinprof)
         call get_value(child, 'proflayers', settings_out%output_dimensions%proflayers)
         call get_value(child, 'writeindetail', settings_out%output_dimensions%writeindetail)
         call get_value(child, 'detlayers', settings_out%output_dimensions%detlayers)
@@ -269,8 +300,8 @@ subroutine Define_Paths()
 
     ! define local variables
     character*255 :: start_ts_year, end_ts_year, start_ave_year, end_ave_year
-    character(len=:), allocatable :: code_dir, data_dir, project_name, username
-    character(len=:), allocatable :: forcing, domain, input_dir, output_dir, path_restart
+    character(len=:), allocatable :: code_dir, input_dir, output_dir
+    character(len=:), allocatable :: project_name_toml, username_toml, data_dir_toml, forcing_toml, domain_toml
 
     inquire (file=paths_file, exist=file_exists)
     
@@ -309,22 +340,35 @@ subroutine Define_Paths()
     
     call get_value(table, 'directories', child, requested=.false.)
     
-    if (associated(child)) then
-        call get_value(child, 'project_name', project_name)
+    if (.not. associated(child)) then
+        write(stderr, '("Cannot find section constants in toml file.")')
+        stop
+    end if
 
-        print *, " "
-        print *, "Project name: ", project_name
+    call get_value(child, 'project_name', project_name_toml)
+    project_name = trim(adjustl(project_name_toml))
+
+    print *, " "
+    print *, "Project name: ", project_name
 
  
-        call get_value(child, 'username', username)
-        call get_value(child, 'code_dir', code_dir)
-        call get_value(child, 'data_dir', data_dir)
-        call get_value(child, 'forcing', forcing)
-        call get_value(child, 'domain', domain)
+    call get_value(child, 'username', username_toml)
+    call get_value(child, 'code_dir', code_dir)
+    call get_value(child, 'data_dir', data_dir_toml)
+    call get_value(child, 'forcing', forcing_toml)
+    call get_value(child, 'domain', domain_toml)
 
-        print *, "Username: ", username
-        print *, " "
+    username = trim(adjustl(username_toml))
+    data_dir = trim(adjustl(data_dir_toml))
+    forcing = trim(adjustl(forcing_toml))
+    domain = trim(adjustl(domain_toml))
 
+    print *, "Username: ", username
+    print *, " "
+
+    if (allocated(config)) then
+        if (allocated(config%general_settings%domain)) domain = config%general_settings%domain
+        if (allocated(config%general_settings%forcing)) forcing = config%general_settings%forcing
     end if
 
     ! integer :: i

@@ -6,23 +6,21 @@
 run_location = "ecmwf" #ecmwf - run on ecmwf; offline - run on home computer; add other options as necessary; used for compiling in launch_job.sc
 restart_type = "none" # none -> do spinup; spinup -> start post-spinup; run -> start from end of last run
 save_output = 10 # save output every 10 years
+nyears_spinup = 30
 
 domain = "FGRN055" # domain name, used in naming conventions #TODO: HERE or in paths??
 forcing = "era055" # forcing name, used in naming conventions #TODO: HERE or in paths??
 
-[model_physics]
-DO_MO_FIT = "true" if true, uses MO=1.0 in firn physics; if false, use domain-dependent MO fits
-
-[miscellaneous]
-nyears_spinup = 30
 ImpExp = 1 #Impicit or Explicit schemes (1=Implicit/fast, 2= Explicit/slow)
-
-#DEFAULT
 dtmodelExp = 180 #timestep in model with explicit T-scheme [s]
 dtmodelImp = 900 #timestep in model with implicit T-scheme [s]
 dtSnow = 31557600 #duration of running average of variables used in snow parameterisation [s]
 
 dzmax = 0.15 #vertical model resolution [m]
+
+
+[model_physics]
+DO_MO_FIT = true # if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
 initdepth = 1.0 #initial depth of firn profile [m]
 th = 0.5 #theta (if theta=0.5 , it is a Crank Nicolson scheme)
 startasice=1 #indicates the initial rho-profile (1=linear, 2=ice)
