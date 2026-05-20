@@ -40,13 +40,13 @@ subroutine Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longi
         enddo
     enddo
 
-    print *, " "
-    print *, " Input Lon, Lat: ", lon_current, ", ", lat_current
-    print *, "------------------------------------"
-    print *, " Closest gridpoint: ", ind_lon, ", ", ind_lat
-    print *, "     with Lon, Lat: ", lon_grid, ", ", lat_grid
-    print *, "-----------------------------------------------------------------"
-    print *, " "
+    write(log_unit, *) " "
+    write(log_unit, *) " Input Lon, Lat: ", lon_current, ", ", lat_current
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " Closest gridpoint: ", ind_lon, ", ", ind_lat
+    write(log_unit, *) "     with Lon, Lat: ", lon_grid, ", ", lat_grid
+    write(log_unit, *) "-----------------------------------------------------------------"
+    write(log_unit, *) " "
 
 end subroutine Find_Grid
 
@@ -72,28 +72,28 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
 
     allocate(ff10FM(Nt_model_tot))
     
-    print *, 'Forcing before interpolation:'
-    print *, 'TempSurf(1:10)'
-    print *, TempSurf(1:10)
-    print *, ' '
-    print *, 'PreSol(1:10)'
-    print *, PreSol(1:10)
-    print *, ' '
-    print *, 'PreLiq(1:10)'
-    print *, PreLiq(1:10)
-    print *, ' '
-    print *, 'Sublim(1:10)'
-    print *, Sublim(1:10)
-    print *, ' '
-    print *, 'SnowMelt(1:10)'
-    print *, SnowMelt(1:10)
-    print *, ' '
-    print *, 'SnowDrif(1:10)'
-    print *, SnowDrif(1:10)
-    print *, ' '
-    print *, 'FF10m(1:10)'
-    print *, FF10m(1:10)
-    print *, ' '
+    write(log_unit, *) 'Forcing before interpolation:'
+    write(log_unit, *) 'TempSurf(1:10)'
+    write(log_unit, *) TempSurf(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'PreSol(1:10)'
+    write(log_unit, *) PreSol(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'PreLiq(1:10)'
+    write(log_unit, *) PreLiq(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'Sublim(1:10)'
+    write(log_unit, *) Sublim(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'SnowMelt(1:10)'
+    write(log_unit, *) SnowMelt(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'SnowDrif(1:10)'
+    write(log_unit, *) SnowDrif(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'FF10m(1:10)'
+    write(log_unit, *) FF10m(1:10)
+    write(log_unit, *) ' '
 
     do a = 1, (Nt_forcing-1)
         do  b = 1, Nt_model_interpol
@@ -127,8 +127,8 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         numSnow = max(int(dtSnow/dtmodel),1)
     end if 
     
-    print *, 'numSnow: ', numSnow
-    print *, ' '
+    write(log_unit, *) 'numSnow: ', numSnow
+    write(log_unit, *) ' '
 
     if (numSnow == 1) then
         ! Use current temperature and wind speed for snow parameterisations
@@ -171,12 +171,12 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     end if
 
-    print *, 'TempSnow: ', TempSnow
-    print *, ' '
-    print *, 'Snow density (after interpolation):'
-    print *, 'Rho0FM(1:10)'
-    print *, Rho0FM(1:10)
-    print *, ' '
+    write(log_unit, *) 'TempSnow: ', TempSnow
+    write(log_unit, *) ' '
+    write(log_unit, *) 'Snow density (after interpolation):'
+    write(log_unit, *) 'Rho0FM(1:10)'
+    write(log_unit, *) Rho0FM(1:10)
+    write(log_unit, *) ' '
 
     deallocate(ff10FM)
 
@@ -203,14 +203,14 @@ subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav
 
     IceShelf = int(ISM(ind_lon, ind_lat))
 
-    print *, "  "
-    print *, "------------------------------------"    
-    write(*,'(A19,1X,F8.3,1X,A1)') " Average Tsurf:     ", tsav, "K"
-    write(*,'(A19,1X,F8.3,1X,A13)') " Average Acc:      ", acav, "mm w.e. yr-1"
-    write(*,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
-    write(*,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(ind_lon, ind_lat), "mm w.e. yr-1"
-    print *, "------------------------------------"
-    print *, "  "
+    write(log_unit, *) "  "
+    write(log_unit, *) "------------------------------------"    
+    write(log_unit,'(A19,1X,F8.3,1X,A1)') " Average Tsurf:     ", tsav, "K"
+    write(log_unit,'(A19,1X,F8.3,1X,A13)') " Average Acc:      ", acav, "mm w.e. yr-1"
+    write(log_unit,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
+    write(log_unit,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(ind_lon, ind_lat), "mm w.e. yr-1"
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) "  "
 
 end subroutine Index_Ave_Forcing
 
@@ -264,9 +264,9 @@ subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ,
 
     enddo
     
-    print *, 'Initial density 10 lowermost layers:'
-    print *, Rho(1:10)
-    print *, " "
+    write(log_unit, *) 'Initial density 10 lowermost layers:'
+    write(log_unit, *) Rho(1:10)
+    write(log_unit, *) " "
 
 end subroutine Init_Density_Prof
 
@@ -325,9 +325,9 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
 
     enddo
 
-    print *, 'Initial temperature 10 lowermost layers:'
-    print *, T(1:10)
-    print *, " "
+    write(log_unit, *) 'Initial temperature 10 lowermost layers:'
+    write(log_unit, *) T(1:10)
+    write(log_unit, *) " "
     
 end subroutine Init_Temp_Prof
     

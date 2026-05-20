@@ -53,7 +53,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
            spinup_bound = 200  !perhaps this one can be reduced 
            error_bound = 0.004 
     else
-            print *, "No spinup bounds available for domain: ", domain
+            write(log_unit, *) "No spinup bounds available for domain: ", domain
     end if 
 
     do while ( ( ( (z_surf_error > error_bound) .or. (fac_error > error_bound) ) .and. (spinup_numb < spinup_bound) ) .or. (spinup_numb < 3) )   
@@ -123,9 +123,9 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf
         ! Calculate the firn air content, ice mass and total liquid water content of the firn column
         call Calc_Integrated_Var(ind_z_max, ind_z_surf, rhoi, Rho, Mlwc, M, DZ, FirnAir, TotLwc, IceMass)
         
-        print *, "After spin-up #", spinup_numb
-        print *, "Rho(200) = ", Rho(200), "T(200) = ", T(200), "Year(200) = ", Year(200)
-        print *, "Ind_z_surf = ", ind_z_surf, "h_surf = ", h_surf, "FAC = ", FirnAir, "IceMass = ", IceMass
+        write(log_unit, *) "After spin-up #", spinup_numb
+        write(log_unit, *) "Rho(200) = ", Rho(200), "T(200) = ", T(200), "Year(200) = ", Year(200)
+        write(log_unit, *) "Ind_z_surf = ", ind_z_surf, "h_surf = ", h_surf, "FAC = ", FirnAir, "IceMass = ", IceMass
 
         z_surf_error = (h_surf-z_surf_old)*(h_surf-z_surf_old)
         fac_error = (FirnAir-fac_old)*(FirnAir-fac_old)
@@ -171,7 +171,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     double precision :: Mrain = 0., TotRain = 0., Msurfmelt = 0., TotSurfmelt = 0., Msolin = 0., TotSolIn = 0., Rho0out = 0.
     
     ! Time integration
-    print *, "Start of main time loop"
+    write(log_unit, *) "Start of main time loop"
 
     ! start from last time step if restarting from loaded run
     if ( restart_type=="run" ) then
@@ -203,7 +203,7 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
             vsnd, vfc, vbouy, Ts, PSol, PLiq, Su, Me, Sd, M, T, DZ, Rho, DenRho, Mlwc,Refreeze, &
             ImpExp, IceShelf, Msurfmelt, Mrain, Msolin, Mrunoff, Mrefreeze)
         
-        if (mod(ind_t, 200000) == 0) print *, ind_t, h_surf
+        if (mod(ind_t, 200000) == 0) write(log_unit, *) ind_t, h_surf
         
         ! Check if the vertical grid is still valid
         if (DZ(ind_z_surf) > dzMAX) then
@@ -254,8 +254,8 @@ subroutine Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_
     enddo
     
     ! Finished time loop
-    print *, "End of time loop"
-    print *, " "
+    write(log_unit, *) "End of time loop"
+    write(log_unit, *) " "
         
 end subroutine Time_Loop_Main
 

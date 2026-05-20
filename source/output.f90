@@ -277,15 +277,12 @@ subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad, writeinspeed_str
-    character*24 :: current_datetime
 
-    pad = trim(path_out_1d)//trim(fname_out_1d)
-    
+    pad = trim(output_dir)//trim(fname_out_1d)
+
     ncid(:) = 0
     IDs(:,:) = 0
     varID(:,:) = 0
-
-    call fdate(current_datetime)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid(32))
@@ -386,23 +383,8 @@ subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(32),nf90_global,"title","IMAU-FDM 1D output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
-    status = nf90_put_att(ncid(32),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
-    status = nf90_put_att(ncid(32),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
-    status = nf90_put_att(ncid(32),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
-    !status = nf90_put_att(ncid(32),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
-    !status = nf90_put_att(ncid(32),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
-    status = nf90_put_att(ncid(32),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
-    status = nf90_put_att(ncid(32),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')
-    
+    call Write_Global_Atts(ncid(32), "IMAU-FDM 1D output file")
+
     status = nf90_put_att(ncid(32),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_1')
     write(writeinspeed_str, '(I0)') writeinspeed  ! Convert integer to string
@@ -492,11 +474,8 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad, writeinprof_str
-    character*24 :: current_datetime
 
-    call fdate(current_datetime)
-
-    pad = trim(path_out_2d)//trim(fname_out_2d)
+    pad = trim(output_dir)//trim(fname_out_2d)
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -546,23 +525,8 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(31),nf90_global,"title","IMAU-FDM 2D profile output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_title')
-    status = nf90_put_att(ncid(31),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_institution')
-    status = nf90_put_att(ncid(31),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_source')
-    status = nf90_put_att(ncid(31),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_history')
-    !status = nf90_put_att(ncid(31),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_first_timestep')
-    !status = nf90_put_att(ncid(31),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_last_timestep')
-    status = nf90_put_att(ncid(31),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_domain')
-    status = nf90_put_att(ncid(31),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_forcing')
-    
+    call Write_Global_Atts(ncid(31), "IMAU-FDM 2D profile output file")
+
     status = nf90_put_att(ncid(31),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_1')
     write(writeinprof_str, '(I0)') writeinprof ! Convert integer to string
@@ -618,11 +582,8 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     ! declare local arguments
     integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad, writeindetail_str
-    character*24 :: current_datetime
 
-    call fdate(current_datetime)
-    
-    pad = trim(path_out_2ddet)//trim(fname_out_2ddet)
+    pad = trim(output_dir)//trim(fname_out_2ddet)
 
     ncid(:) = 0
     IDs(:,:) = 0
@@ -689,23 +650,8 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(33),nf90_global,"title","IMAU-FDM 2D profile output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_title')
-    status = nf90_put_att(ncid(33),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_institution')
-    status = nf90_put_att(ncid(33),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_source')
-    status = nf90_put_att(ncid(33),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_history')
-    !status = nf90_put_att(ncid(33),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_first_timestep')
-    !status = nf90_put_att(ncid(33),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_last_timestep')
-    status = nf90_put_att(ncid(33),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_domain')
-    status = nf90_put_att(ncid(33),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_forcing')
-    
+    call Write_Global_Atts(ncid(33), "IMAU-FDM 2Ddetail output file")
+
     status = nf90_put_att(ncid(33),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_dim_val_1')
     write(writeindetail_str, '(I0)') writeindetail ! Convert integer to string
@@ -747,21 +693,18 @@ end subroutine Save_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
     !*** Write a netcdf file containing the firn profile after the spin-up ***!
-    
+
     integer :: status, ncid, dimID, varID(10), ind_z_max, ind_z_surf
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
-    character*255 :: pad, point_numb, prefix_output, username, project_name
-    character*24 :: current_datetime
+    character*255 :: pad
 
-    call fdate(current_datetime)
-    
-    pad = trim(path_restart)//trim(fname_restart_from_spinup)
+    pad = trim(restart_dir)//"spinup/"//trim(fname_restart_from_spinup)
 
-    print *, "Saving out after spinup for restarting at: "
-    print *, trim(pad)
+    write(log_unit, *) "Saving out after spinup for restarting at: "
+    write(log_unit, *) trim(pad)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid)
@@ -803,23 +746,8 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid,nf90_global,"title","IMAU-FDM spinup output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
-    status = nf90_put_att(ncid,nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
-    status = nf90_put_att(ncid,nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
-    status = nf90_put_att(ncid,nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
-    !status = nf90_put_att(ncid,nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
-    !status = nf90_put_att(ncid,nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
-    status = nf90_put_att(ncid,nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
-    status = nf90_put_att(ncid,nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')    
-    
+    call Write_Global_Atts(ncid, "IMAU-FDM spinup output file")
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_enddef')
@@ -856,10 +784,10 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
 
-    pad = trim(path_restart)//trim(fname_restart_from_previous_run)
+    pad = trim(restart_dir)//"run/"//trim(fname_restart_from_previous_run)
 
-    print *, "Saving out run for restarting at: "
-    print *, trim(pad)
+    write(log_unit, *) "Saving out run for restarting at: "
+    write(log_unit, *) trim(pad)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid)
@@ -890,7 +818,10 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var8')
     status = nf90_def_var(ncid,"prev_nt",nf90_real,dimID(2),varID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var9')
-    
+
+    ! DEFINE GLOBAL ATTRIBUTES
+    call Write_Global_Atts(ncid, "IMAU-FDM run restart file")
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_enddef')
@@ -920,5 +851,48 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_close')
     
 end subroutine Save_out_run
+
+
+! *******************************************************
+
+
+subroutine Write_Global_Atts(ncid_val, title)
+    !*** Write shared global attributes to a NetCDF file ***!
+    integer,          intent(in) :: ncid_val
+    character(len=*), intent(in) :: title
+
+    integer        :: status
+    character*24   :: current_datetime
+
+    call fdate(current_datetime)
+
+    status = nf90_put_att(ncid_val, nf90_global, "Conventions", "CF-1.8")
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_conventions')
+    status = nf90_put_att(ncid_val, nf90_global, "title", title)
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_title')
+    status = nf90_put_att(ncid_val, nf90_global, "project", trim(project_name))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_project')
+    status = nf90_put_att(ncid_val, nf90_global, "institution", &
+        "Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_institution')
+    status = nf90_put_att(ncid_val, nf90_global, "source", "IMAU-FDM version "//trim(model_version))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_source')
+    status = nf90_put_att(ncid_val, nf90_global, "history", "Created on: "//trim(current_datetime))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_history')
+    status = nf90_put_att(ncid_val, nf90_global, "model_start_datetime", trim(model_first_timestep))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_start')
+    status = nf90_put_att(ncid_val, nf90_global, "model_end_datetime", trim(model_last_timestep))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_end')
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_start_year", trim(start_ave_year))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_start')
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_end_year", trim(end_ave_year))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_end')
+    status = nf90_put_att(ncid_val, nf90_global, "domain", trim(domain))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_domain')
+    status = nf90_put_att(ncid_val, nf90_global, "forcing", trim(forcing))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_forcing')
+
+end subroutine Write_Global_Atts
+
 
 end module output

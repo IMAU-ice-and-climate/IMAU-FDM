@@ -292,7 +292,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ff
     elseif (trim(domain)=="ANT27") then
         MO_low = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
     else
-        print *, "Domain not recognized for MO fit, using ANT27 fit"
+        write(log_unit, *) "Domain not recognized for MO fit, using ANT27 fit"
         MO_low = 1.288 - 0.117*log(acav)  ! Veldhuijsen et al. 2023
     endif
 
@@ -307,7 +307,7 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ff
     elseif (trim(domain)=="ANT27") then
         MO_high = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
     else
-        print *, "Domain not recognized for MO fit, using ANT27 fit"
+        write(log_unit, *) "Domain not recognized for MO fit, using ANT27 fit"
         MO_high = 6.387 * (acav**(-0.477))+0.195   ! Veldhuijsen et al. 2023
     endif
 
@@ -336,8 +336,8 @@ subroutine Densific(ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, rhoi, acav, ff
         
     enddo
 
-    !if (mod(ind_t, 500000) == 0) print *, ""
-    !if (mod(ind_t, 500000) == 0) print *, "MO low: ", MO_low, " MO high: ", MO_high
+    !if (mod(ind_t, 500000) == 0) write(log_unit, *) ""
+    !if (mod(ind_t, 500000) == 0) write(log_unit, *) "MO low: ", MO_low, " MO high: ", MO_high
 
 end subroutine Densific
 

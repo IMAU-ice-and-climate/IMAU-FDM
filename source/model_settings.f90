@@ -8,286 +8,255 @@ module model_settings
     private
     
 
-    public :: Define_Paths, Define_Constants, Define_Settings, Get_All_Command_Line_Arg
+    public :: Define_Job, Define_Filenames, Define_Constants, Define_Settings
 
     ! Module-level variables that can be accessed by other modules
     
+    ! read in from distributor.f90
     public :: point_numb
-    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, restart_type, forcing, data_dir
-    public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
-    public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
-    public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
-    public :: fname_out_2d, fname_out_2ddet, iceshelf_var
+    public :: settings_dir
+    public :: log_unit
+
+    ! read in from toml files
+    public :: domain, forcing, restart_type
+    public :: project_name
+    public :: model_version
+    public :: code_dir, data_dir
     public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
-    public :: save_output
-    public :: model_first_timestep, model_last_timestep
-    
-    ! Parameterization options
     public :: do_MO_fit
+
+    ! currently read in from toml, will be set using netcdf
+    public :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
+    
+    ! created in model_settings
+    
+    public :: reference_dir
+    public :: input_dir, input_averages_dir, input_timeseries_dir
+    public :: project_dir, restart_dir, output_dir
+    public :: fname_mask
+    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
+    public :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
+    public :: fname_out_1d, fname_out_2d, fname_out_2ddet
+    public :: iceshelf_var
 
     ! Declare the module variables
     ! note
     !   Variables read directly from TOML via get_value → character(len=:), allocatable
     !   Everything else (paths built by concatenation, command-line args, hardcoded strings) → character(len=512)
 
-    character(len=512) :: domain, paths_file, point_numb, username, prefix_output, project_name, forcing, data_dir
-    character(len=512) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    character(len=512) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
-    character(len=512) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
-    character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
-    character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    character(len=512) :: model_first_timestep, model_last_timestep
-    logical :: do_MO_fit
-    integer :: save_output
+    ! read in from distributor.f90
+    character(len=512) :: point_numb, settings_dir
+    integer :: log_unit = 6   ! 6 = stdout; set to a file unit by distributor worker before each Run_Model call
+    
+    ! read in from toml files
+    character(len=:), allocatable :: domain, forcing, restart_type
+    character(len=:), allocatable :: project_name
+    character(len=:), allocatable :: model_version
+    character(len=:), allocatable :: code_dir, data_dir
+    logical :: do_MO_fit 
     double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
-    character(len=:), allocatable :: path_restart, restart_type, model_settings_file
+
+    ! currently read in from toml, will be set using netcdf
+    character(len=:), allocatable :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
+
+    ! created in model_settings
+    character(len=512) :: reference_dir
+    character(len=512) :: input_dir, input_averages_dir, input_timeseries_dir
+    character(len=512) :: project_dir, output_dir, restart_dir
+    character(len=512) :: fname_mask
+    character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
+    character(len=512) :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
+    character(len=512) :: fname_out_1d, fname_out_2d, fname_out_2ddet
+    character(len=512) :: iceshelf_var
+    
 contains
 
-subroutine Define_Settings()
-    !*** Under construction ***!
-    !*** Define model settings and physics ***!
+subroutine Define_Settings(nyearsSU, nyears, dtobs, Nlon, Nlat, Nlon_timeseries, Nt_forcing, &
+    initdepth, startasice, begintT, &
+    ImpExp, dtmodelImp, dtmodelExp, dtSnow, dzmax, th, &
+    writeinspeed, writeinprof, writeindetail, proflayers, detlayers, detthick, &
+    ind_z_surf)
 
-    ! Local variables toml tables
+    !*** Replaced and extended initialise_variables/Get_Model_Settings_and_Forcing_Dimensions ***!
+    !*** Define model settings and physics from model.toml ***!
 
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
+    ! Output arguments
+    integer,          intent(out) :: nyearsSU, nyears, dtobs, Nlon, Nlat, Nlon_timeseries, Nt_forcing
+    double precision, intent(out) :: initdepth
+    integer,          intent(out) :: startasice, begintT
+    integer,          intent(out) :: ImpExp, dtmodelImp, dtmodelExp, dtSnow
+    double precision, intent(out) :: dzmax, th
+    integer,          intent(out) :: writeinspeed, writeinprof, writeindetail, proflayers, detlayers
+    double precision, intent(out) :: detthick
+    integer,          intent(out) :: ind_z_surf
+
+    ! Local variables
+    character(len=512)            :: settings_path_model
     type(toml_table), allocatable :: table
     type(toml_table), pointer     :: child
 
-    ! Model settings
+    settings_path_model = trim(settings_dir)//"model.toml"
+    call Load_TOML(settings_path_model, table)
 
-    inquire (file=model_settings_file, exist=file_exists)
-    
-    if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') model_settings_file
-        stop
-    end if
-
-    open (action='read', file=model_settings_file, iostat=rc, newunit=fu)
-
-    if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') model_settings_file
-        stop
-    end if
-
-    call toml_parse(table, fu)
-    close (fu)
-
-    if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
-        stop
-    end if
-
-    ! find section.
-    
-    call get_value(table, 'minimum_values', child, requested=.false.)
-    
+    call get_value(table, 'fitting', child, requested=.false.)
     if (associated(child)) then
+        call get_value(child, 'DO_MO_FIT', do_MO_fit)
+    end if
 
+    call get_value(table, 'forcing', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'nyears_spinup', nyearsSU)
+        call get_value(child, 'nyears_forcing', nyears)
+        call get_value(child, 'dtobs', dtobs)
+        call get_value(child, 'Nlon', Nlon)
+        call get_value(child, 'Nlat', Nlat)
+        call get_value(child, 'Nlon_timeseries', Nlon_timeseries)
+        call get_value(child, 'Nt_forcing', Nt_forcing)
+    end if
+
+    call get_value(table, 'initialization', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'startasice', startasice)
+        call get_value(child, 'begintT', begintT)
+        call get_value(child, 'initdepth', initdepth)
+    end if
+
+    call get_value(table, 'model', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'ImpExp', ImpExp)
+        call get_value(child, 'dtmodelImp', dtmodelImp)
+        call get_value(child, 'dtmodelExp', dtmodelExp)
+        call get_value(child, 'dtSnow', dtSnow)
+        call get_value(child, 'dzmax', dzmax)
+        call get_value(child, 'th', th)
+    end if
+
+    call get_value(table, 'output', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'writeinspeed', writeinspeed)
+        call get_value(child, 'writeinprof', writeinprof)
+        call get_value(child, 'writeindetail', writeindetail)
+        call get_value(child, 'proflayers', proflayers)
+        call get_value(child, 'detlayers', detlayers)
+        call get_value(child, 'detthick', detthick)
+    end if
+
+    call get_value(table, 'thresholds', child, requested=.false.)
+    if (associated(child)) then
         call get_value(child, 'ts_minimum', ts_minimum)
         call get_value(child, 'det2d_minimum', det2d_minimum)
-
-        print *, " "
-        print *, "ts_minimum: ", ts_minimum
-
     end if
 
-    call get_value(table, 'general_settings', child, requested=.false.)
+    ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
 
-    if (associated(child)) then
-
-        call get_value(child, 'restart_type', restart_type)
-
-        print *, " "
-        print *, "restart_type: ", restart_type
-
-    end if
-
-    save_output = 10 ! save output every 10 years
-
-    ! Model physics
-
-    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    write(log_unit, *) "Loaded model settings"
+    write(log_unit, *) " "
 
     deallocate(table)
 
 end subroutine Define_Settings
 
+subroutine Define_Job()
+    !*** Read run.toml and build all directory paths ***!
 
-! *******************************************************
-
-
-subroutine Get_All_Command_Line_Arg()
-    !*** Get all command line arguments ***!
-
-    ! 1: Paths toml file
-    ! 2: Model settings toml file
-    ! 3: Simulation number, corresponding to the line number in the IN-file.
-    ! 6: Restart type, where none= do spinup; spinup = restart from spinup
-
-    print *, "Getting command line arguments..."
-
-    username="ndl4814"
-    domain="FGRN055"
-    prefix_output="FGRN055_era055"
-    project_name="test-new-distributor"
-    restart_type="none"
-    
-    call get_command_argument(1, paths_file)
-    call get_command_argument(2, model_settings_file)
-    call get_command_argument(3, point_numb)
-    call get_command_argument(4, prefix_output)
-    call get_command_argument(5, project_name)
-
-    if (trim(project_name) == "example") then
-
-        print *, "Running example point 1 from sample data"
-
-    else
-        print *, "Running user defined point"
-        ! Reads in current point number, config files, prefix, and project_name for path setting
-    
-    end if
-    
-
-   
-end subroutine Get_All_Command_Line_Arg
-
-
-! *******************************************************
-
-
-subroutine Define_Paths()
-    !*** Definition of all paths used to read in or write out files ***!
-
-    ! Local variables toml tables
-
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
+    character(len=512)            :: settings_path_run
     type(toml_table), allocatable :: table
     type(toml_table), pointer     :: child
 
-    ! define local variables
-    character*255 :: start_ts_year, end_ts_year, start_ave_year, end_ave_year
-    character(len=:), allocatable :: code_dir, data_dir, project_name, username
-    character(len=:), allocatable :: forcing, domain, input_dir, output_dir, path_restart
+    settings_path_run = trim(settings_dir)//"run.toml"
+    call Load_TOML(settings_path_run, table)
 
-    inquire (file=paths_file, exist=file_exists)
-    
-    if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') paths_file
-        stop
-    end if
-
-    open (action='read', file=paths_file, iostat=rc, newunit=fu)
-
-    if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') paths_file
-        stop
-    end if
-
-    call toml_parse(table, fu)
-    close (fu)
-
-    if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
-        stop
-    end if
-
-    ! parameters ## to be moved to config files
-
-    start_ts_year = "1939"
-    end_ts_year = "2023"
-    start_ave_year = "1940"
-    end_ave_year = "1970"
-
-    model_first_timestep = "1939-09-01T00:00:00"
-    model_last_timestep = "2023-12-31T21:00:00"
-    ! paths
-
-    ! find section.
-    
-    call get_value(table, 'directories', child, requested=.false.)
-    
+    call get_value(table, 'job', child, requested=.false.)
     if (associated(child)) then
         call get_value(child, 'project_name', project_name)
-
-        print *, " "
-        print *, "Project name: ", project_name
-
- 
-        call get_value(child, 'username', username)
-        call get_value(child, 'code_dir', code_dir)
-        call get_value(child, 'data_dir', data_dir)
         call get_value(child, 'forcing', forcing)
         call get_value(child, 'domain', domain)
-
-        print *, "Username: ", username
-        print *, " "
+        call get_value(child, 'restart_type', restart_type)
 
     end if
 
-    ! integer :: i
+    call get_value(table, 'metadata', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'model_version', model_version)
+        call get_value(child, 'start_ts_year', start_ts_year)
+        call get_value(child, 'end_ts_year', end_ts_year)
+        call get_value(child, 'start_ave_year', start_ave_year)
+        call get_value(child, 'end_ave_year', end_ave_year)
+        call get_value(child, 'model_first_timestep', model_first_timestep)
+        call get_value(child, 'model_last_timestep', model_last_timestep)
 
-    data_dir = trim(adjustl(data_dir))
+    end if
 
-    output_dir = trim(data_dir)//"output/"
+    call get_value(table, 'directories', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'code_dir', code_dir)
+        call get_value(child, 'data_dir', data_dir)
 
-    if (trim(project_name) == "example") then 
+    end if
 
-        input_dir = trim(data_dir)//"input/"
-        path_restart =  trim(code_dir)//"example/restart/"
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
+    project_dir   = trim(data_dir)//trim(project_name)//"/"
+    output_dir    = trim(project_dir)//"output/"
+    restart_dir   = trim(project_dir)//"restart/"
+    reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"
+    input_dir     = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
+
+    if (trim(project_name) == "example") then
+        input_dir   = trim(data_dir)//"input/"
+        restart_dir = trim(code_dir)//"example/restart/"
+    end if
+
+    input_averages_dir   = trim(input_dir)//"averages/"
+    input_timeseries_dir = trim(input_dir)//"timeseries/"
+
+    write(log_unit, *) "Path to IMAU-FDM: ", code_dir
+    write(log_unit, *) "Path to project directory: ", output_dir
+    write(log_unit, *) "Path to input directory: ", input_dir
+    write(log_unit, *) "Path to restart directory: ", restart_dir
+
+    deallocate(table)
+
+end subroutine Define_Job
+
+
+! *******************************************************
+
+
+subroutine Define_Filenames()
+    !*** Build all output, restart, and input filenames ***!
+
+    character(len=512) :: domain_forcing
+
+    domain_forcing = trim(domain)//"_"//trim(forcing)
+
+    fname_mask                = trim(domain)//"_Masks.nc"
+    prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
+    suffix_forcing_timeseries = ".nc"
+    suffix_forcing_averages   = "_"//trim(domain_forcing)//"-"//trim(start_ts_year)//"_"// &
+                                trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
+
+    fname_out_1d    = trim(domain_forcing)//"_1D_"//trim(point_numb)//".nc"
+    fname_out_2d    = trim(domain_forcing)//"_2D_"//trim(point_numb)//".nc"
+    fname_out_2ddet = trim(domain_forcing)//"_2Ddetail_"//trim(point_numb)//".nc"
+
+    fname_restart_from_spinup       = trim(domain_forcing)//"_restart_from_spinup_"//trim(point_numb)//".nc"
+    prefix_fname_run                = trim(domain_forcing)//"_initialize_from_"
+    suffix_fname_run                = "_run_"//trim(point_numb)//".nc"
+    fname_restart_from_previous_run = trim(prefix_fname_run)//trim(end_ts_year)//trim(suffix_fname_run)
+
+    if (trim(project_name) == "example") then
+        prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
         suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
-
-    else
-        input_dir = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
-        path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
-        suffix_forcing_timeseries = ".nc"
-
     end if
-
-    print *, "Path to IMAU-FDM: ", code_dir
-    print *, "Path to output directory: ", output_dir
-    print *, "Path to input directory: ", input_dir
-    print *, "Path to restart directory: ", path_restart
-
-    path_settings = trim(data_dir)//"ms_files/"
-    path_forcing_dims =  trim(code_dir)//"reference/"//trim(domain)//"/"
-    path_forcing_mask = trim(code_dir)//"reference/"//trim(domain)//"/"
-    path_forcing_averages = trim(input_dir)//"averages/"
-    path_forcing_timeseries = trim(input_dir)//"timeseries/"
-    path_out_1d = trim(output_dir)//"output/"
-    path_out_2d = trim(output_dir)//"output/"
-    path_out_2ddet = trim(output_dir)//"output/"
-
-    ! define filenames
-    fname_settings = "model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
-    fname_forcing_dims = "input_settings_"//trim(domain)//".txt"
-    fname_mask = trim(domain)//"_Masks.nc"
-    suffix_forcing_averages = "_"//trim(prefix_output)//"-"//trim(start_ts_year)//"_"//trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
-    fname_restart_from_spinup = trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
-    prefix_fname_ini = trim(prefix_output)//"_initialize_from_"
-    suffix_fname_ini = "_run_"//trim(point_numb)//".nc"
-    fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
-    fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"
-    fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
-    fname_out_2ddet = trim(prefix_output)//"_2Ddetail_"//trim(point_numb)//".nc"
 
     if (domain == "ANT27") then
         iceshelf_var = "IceShelve"
     else
-        print *, "No iceshelf_var defined for domain, ", domain
-        print *, "so not loading ice shelf mask."
+        write(log_unit, *) "No iceshelf_var defined for domain, ", domain
+        write(log_unit, *) "so not loading ice shelf mask."
     end if
-    
-    deallocate(table)
 
-end subroutine Define_Paths
+
+end subroutine Define_Filenames
 
 
 
@@ -296,36 +265,74 @@ end subroutine Define_Paths
 
 
 subroutine Define_Constants()
-    !*** Define physical constants ***!
-    
-    pi = asin(1.)*2         ! pi = 3.1415
-    R = 8.3145              ! gas constant [J mole-1 K-1]
-    g = 9.81                ! gravitational acceleration [m s-2]
-    rhoi = 917.             ! density of ice [kg m-3]
-    rho_ocean = 1027.       ! density of ocean water [kg m-3]
-    Tmelt = 273.15          ! melting point of ice [K]
-    Ec = 60000.             ! activation energy for creep [J mole-1]
-    Eg = 42400.             ! activation energy for grain growth [J mole-1]
-    Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365.25    ! days per year [days]
-    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
-    NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-    
-!    ts_minimum = 1.e-04     ! minimum magnitude for timeseries value, set when ts are loaded
-!    det2d_minimum = 1.e-05 ! minimum magnitude for refreezing sum in 2ddetail output
 
-    ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
-    ! Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
-    ! rgrain_refreeze = 1.E-3    ! grain size refrozen ice [m]
+    character(len=512)            :: settings_path_constants
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
+
+    settings_path_constants = trim(settings_dir)//"constants.toml"
+    call Load_TOML(settings_path_constants, table)
+
+    ! find section.
+    call get_value(table, 'constants', child, requested=.false.)
+    
+    if (associated(child)) then
+        call get_value(child, 'R', R)                           ! gas constant [J mole-1 K-1]
+        call get_value(child, 'g', g)                           ! gravitational acceleration [m s-2]
+        call get_value(child, 'rhoi', rhoi)                     ! density of ice [kg m-3]
+        call get_value(child, 'rho_ocean', rho_ocean)           ! density of ocean water [kg m-3]
+        call get_value(child, 'Tmelt', Tmelt)                   ! melting point of ice [K]
+        call get_value(child, 'Ec', Ec)                         ! activation energy for creep [J mole-1]
+        call get_value(child, 'Eg', Eg)                         ! activation energy for grain growth [J mole-1]
+        call get_value(child, 'Lh', Lh)                         ! latent heat of fusion [J kg-1]
+        call get_value(child, 'days_per_year', days_per_year)   ! days per year [days]
+        call get_value(child, 'NaN_value', NaN_value)           ! missing value for doubles as used in the NCL scripts
+
+        write(log_unit, *) " "
+        write(log_unit, *) "days_per_year: ", days_per_year
+
+    end if
+
+    deallocate(table)
+
+     pi = asin(1.)*2                             ! pi = 3.1415
+    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
 
 end subroutine Define_Constants
 
 
-
-! ******************************************************* 
-
+! *******************************************************
 
 
+subroutine Load_TOML(file_path, table)
+    !*** Open, parse, and validate a TOML file; stops on any error ***!
+    character(len=*),                intent(in)  :: file_path
+    type(toml_table), allocatable,   intent(out) :: table
+
+    integer :: fu, rc
+    logical :: file_exists
+
+    inquire(file=file_path, exist=file_exists)
+    if (.not. file_exists) then
+        write(stderr, '("Error: TOML file ", a, " not found")') trim(file_path)
+        stop
+    end if
+
+    open(action='read', file=file_path, iostat=rc, newunit=fu)
+    if (rc /= 0) then
+        write(stderr, '("Error: Reading TOML file ", a, " failed")') trim(file_path)
+        stop
+    end if
+
+    call toml_parse(table, fu)
+    close(fu)
+
+    if (.not. allocated(table)) then
+        write(stderr, '("Error: Parsing TOML file ", a, " failed")') trim(file_path)
+        stop
+    end if
+
+end subroutine Load_TOML
 
 
 end module model_settings

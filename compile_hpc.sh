@@ -3,6 +3,7 @@
 # profile will be passed on to fpm's --profile flag. Default: release.
 
 EXE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" #executable saved to IMAU-FDM main folder
+cd "$EXE_DIR"
 
 module reset
 
@@ -44,4 +45,4 @@ NETCDF_LDFLAG=$(nc-config --libs)
 rm -rf "$EXE_DIR/modules" "$EXE_DIR/objects"
 (exec "$fpm" clean --all) || true
 "$fpm" install --profile "$profile" --flag -ffree-line-length-512 --link-flag "$NETCDF_LDFLAG" --prefix "$EXE_DIR"
-rm -rf "$EXE_DIR/modules" "$EXE_DIR/objects"
+rm -rf "$EXE_DIR/modules" "$EXE_DIR/objects" #removes extraneous directories

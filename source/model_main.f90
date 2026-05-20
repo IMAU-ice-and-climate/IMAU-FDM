@@ -18,29 +18,30 @@ module model_main
     use model_settings
     use openNetCDF, only: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
     use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
-    use initialise_variables, only: Get_Model_Settings_and_Forcing_Dimensions, &
-    Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
-    use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
+    use initialise_variables, only: Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
+    use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Index_Ave_Forcing
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main
     
     implicit none
 
 contains
 
-subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon) 
-    
-    integer :: ind_z_surf, ind_lon, ind_lat, Nt_forcing, Nlat, Nlon, Nlon_timeseries, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
+
+subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
+
+    double precision, intent(in) :: cur_lat, cur_lon
+    integer,          intent(in) :: ind_lat, ind_lon
+
+    integer :: ind_z_surf, Nt_forcing, Nlat, Nlon, Nlon_timeseries, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
     integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs
     integer :: writeinprof, writeinspeed, writeindetail
     integer :: numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail
-    integer :: proflayers, detlayers, BeginT, startasice, IceShelf
+    integer :: proflayers, detlayers, beginT, startasice, IceShelf
     integer :: nyears, nyearsSU
     integer :: prev_nt
     integer, parameter :: ind_z_max = 20000
-    
-    double precision :: cur_lat, cur_lon
 
-    double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, lon_current, lat_current, detthick
+    double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, detthick
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(:), allocatable :: SnowMelt, PreTot, PreSol, PreLiq
@@ -53,29 +54,26 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
-    print *, " "
-    print *, "------------------------------------"
-    print *, "----- FIRN DENSIFICATION MODEL -----"
-    print *, "------------------------------------"
-    print *, " "
-    
-    ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
-    call Get_All_Command_Line_Arg()
+    write(log_unit, *) " "
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) "----- FIRN DENSIFICATION MODEL -----"
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " "
+    flush(log_unit)
 
     ! Define model settings and physics, runs first because decides whether or not to run as an example point
-    call Define_Settings() 
-    
-    ! Defines paths - edit if not using ecmwf or if changing file structure of input, output, restart, or code
-    call Define_Paths()
+    call Define_Settings(nyearsSU, nyears, dtobs, Nlon, Nlat, Nlon_timeseries, Nt_forcing, &
+        initdepth, startasice, beginT, &
+        ImpExp, dtmodelImp, dtmodelExp, dtSnow, dzmax, th, &
+        writeinspeed, writeinprof, writeindetail, proflayers, detlayers, detthick, &
+        ind_z_surf)
+
+    ! Build per-point output and restart filenames
+    call Define_Filenames()
 
     ! Defines constants used throughout the model
     call Define_Constants()
     
-    ! Read in the model settings, input settings, constants, and forcing dimensions
-    call Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
-        ind_z_surf, startasice, beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, &
-        initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
-
     ! Determine model time step and amount of model time steps
     
     call Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
@@ -90,28 +88,26 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
 
     call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, Nlat, Nlon)
     
-    print *, "Read all averaged values"
-    print *, " "
+    write(log_unit, *) "Read all averaged values"
+    write(log_unit, *) " "
     
-    ! Find corresponding indices of the grid point for a given latitude and longitude
-    call Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM, Nlon, Nlat)
-
-    ! Read averages for the current grid point		
+    ! Read averages for the current grid point
     call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat)
 
-    print *, "------ Point number: ", trim(point_numb), "------"
-    print *, " Run for Lon: ", lon_current, " and Lat: ", lat_current
-    print *, " Grid indices lon: ", ind_lon, ", lat: ", ind_lat
-    print *, " Grounded (0) or Floating (1) ice: ", IceShelf
-    print *, " Implicit (1) or Explicit (2) scheme: ", ImpExp
-    print *, "------------------------------------"
-    print *, " "
+    write(log_unit, *) "------ Point number: ", trim(point_numb), "------"
+    write(log_unit, *) " Run for Lon: ", cur_lon, " and Lat: ", cur_lat
+    write(log_unit, *) " Grid indices lon: ", ind_lon, ", lat: ", ind_lat
+    write(log_unit, *) " Grounded (0) or Floating (1) ice: ", IceShelf
+    write(log_unit, *) " Implicit (1) or Explicit (2) scheme: ", ImpExp
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " "
     
     call Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, &
     ind_lon, ind_lat, dtobs, Nlon_timeseries)
 
-    print *, "Got all variables from the NetCDF files"
-    print *, " "
+    write(log_unit, *) "Got all variables from the NetCDF files"
+    write(log_unit, *) " "
+    flush(log_unit)
 
     call Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, dzmax)
 
@@ -144,16 +140,16 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
             IceShelf, ImpExp, nyears, nyearsSU)
 
         ! Write intitial profile to NetCDF-file and prepare output arrays
-        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
         prev_nt=1
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
-        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, prefix_output, project_name)
+        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
     else
-        print *, "Restart type not recognized: ", restart_type
+        write(log_unit, *) "Restart type not recognized: ", restart_type
     endif
 
-    ! Call subprogram for spin-up and the time-integration			
+    flush(log_unit)
+    ! Call subprogram for spin-up and the time-integration
     call Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
         outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
         TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
@@ -166,9 +162,10 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
     call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
     call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
     
-    print *, "Written output data to files"
+    write(log_unit, *) "Written output data to files"
+    flush(log_unit)
 
-end subroutine
+end subroutine Run_Model
     
 
 ! ******************************************************* 

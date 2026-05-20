@@ -1,0 +1,38 @@
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] -  This is the ECMWF jobfilter
+[ECMWF-INFO -sbatch] -  +++ Please report issues using the Support portal +++
+[ECMWF-INFO -sbatch] -  +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -sbatch] -  /usr/local/bin/ecsbatch: size: 53801, mtime: Tue Nov 25 12:31:30 2025
+[ECMWF-INFO -sbatch] - -------------------------------------------------------------------------------------
+[ECMWF-INFO -sbatch] - Time at submit: Wed May 20 12:37:28 2026 (1779280648.7071025) on ac6-100.bullx:/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/launch_job
+[ECMWF-INFO -sbatch] - --- SLURM VARIABLES ---
+[ECMWF-INFO -sbatch] - EC_CLUSTER=ac
+[ECMWF-INFO -sbatch] - SLURM_EXPORT_ENV=ALL
+[ECMWF-INFO -sbatch] - SBATCH_EXPORT=NONE
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - jobscript received on STDIN
+[ECMWF-INFO -sbatch] - --- SCRIPT OPTIONS ---
+[ECMWF-INFO -sbatch] - #SBATCH --nodes=1
+[ECMWF-INFO -sbatch] - #SBATCH --ntasks=1
+[ECMWF-INFO -sbatch] - #SBATCH --time=48:00:00
+[ECMWF-INFO -sbatch] - #SBATCH --account=spnlberg
+[ECMWF-INFO -sbatch] - #SBATCH --output=/home/nld4814/scratch/test-distributor/launch_test-distributor_1.log
+[ECMWF-INFO -sbatch] - -----------------------
+[ECMWF-INFO -sbatch] - --- POST-PROCESSED OPTIONS ---
+[ECMWF-INFO -sbatch] - ARG --account=spnlberg
+[ECMWF-INFO -sbatch] - ARG --ntasks=1
+[ECMWF-INFO -sbatch] - ARG --nodes=1
+[ECMWF-INFO -sbatch] - ARG --output=/home/nld4814/scratch/test-distributor/launch_test-distributor_1.log
+[ECMWF-INFO -sbatch] - ARG --time=48:00:00
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - No qos requested, assuming qos=nf
+[ECMWF-INFO -sbatch] - jobtag: nld4814-sbatch-1x2-/home/nld4814/scratch/test-distributor/launch_test-distributor_1.log
+[ECMWF-INFO -sbatch] - ------------------------------
+[ECMWF-INFO -sbatch] - Average Walltime 0 with a Standard Deviation 0
+[ECMWF-INFO -sbatch] - Runtime history
+[ECMWF-INFO -sbatch] -   Date               | Cores   Cluster   Walltime       Mem
+[ECMWF-INFO -sbatch] - 
+[ECMWF-INFO -sbatch] - ['/usr/bin/sbatch', '--account=spnlberg', '--ntasks=1', '--nodes=1', '--output=/home/nld4814/scratch/test-distributor/launch_test-distributor_1.log', '--time=48:00:00', '--qos=nf', '--licenses=h2resw01', '--export=EC_user_time_limit=48:00:00']
+[ECMWF-INFO -sbatch] - sbatch executed on ac
+[ECMWF-INFO -sbatch] - Job queued on ac using method local
+[ECMWF-INFO -sbatch] - Submitted batch job 34994192
