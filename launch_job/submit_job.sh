@@ -46,10 +46,12 @@ if [ "${RUN_TYPE}" == "ECMWF" ]; then
     MAX_NODES=$(toml_get "${SETTINGS_DIR}run.toml" ecmwf max_nodes)
     WALLTIME=$(toml_get "${SETTINGS_DIR}run.toml" ecmwf walltime)
     ACCOUNT=$(toml_get "${SETTINGS_DIR}run.toml" ecmwf account_no)
-    MAX_WORKERS=$(( MAX_NODES * 128 ))
+    MEM_PER_CPU=$(toml_get "${SETTINGS_DIR}run.toml" ecmwf memory_per_task)
+    CORES_PER_NODE=128
+    MAX_WORKERS=$(( MAX_NODES * CORES_PER_NODE - 1 ))  # -1 reserves a slot for the distributor
     NUM_WORKERS=$(( N_POINTS < MAX_WORKERS ? N_POINTS : MAX_WORKERS ))
-    TOTAL_TASKS=$(( NUM_WORKERS + 1 ))
-    NUM_NODES=$(( (TOTAL_TASKS + 127) / 128 ))
+    TOTAL_TASKS=$(( NUM_WORKERS + 1 ))                 # +1 for the distributor
+    NUM_NODES=$(( (TOTAL_TASKS + CORES_PER_NODE - 1) / CORES_PER_NODE ))  # ceiling division
 
     sbatch <<EOF
 #!/bin/bash
@@ -57,6 +59,7 @@ if [ "${RUN_TYPE}" == "ECMWF" ]; then
 #SBATCH --ntasks=$TOTAL_TASKS
 #SBATCH --time=$WALLTIME
 #SBATCH --account=$ACCOUNT
+#SBATCH --mem-per-cpu=$MEM_PER_CPU
 #SBATCH --output=$DISTRLOG_FILE
 
 srun "${WORKEXE_DIR}${FDM_EXECUTABLE}" $WORK_POINTLIST_PATH $SETTINGS_DIR $POINT_LOG_DIR $DISTRIBUTOR_LOG_DIR
