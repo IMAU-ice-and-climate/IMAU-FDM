@@ -49,6 +49,7 @@ cores/data/*
 
 #no executables
 *.x
+bin/
 
 #these files change often - need to update if there are big changes to launch_new_job
 rundir/CancelMyJob.sc
@@ -61,6 +62,7 @@ rundir/newpointlist/*.txt
 
 # Ignore pointlists
 rundir/pointlists/
+launch_job/pointlists/
 
 # Ignore rundir/launch_new_job.sc
 rundir/launch_new_job.sc
