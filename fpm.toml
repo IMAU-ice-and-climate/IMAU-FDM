@@ -14,7 +14,7 @@ source-dir = "source"
 include-dir = "objects"
 
 [[executable]]
-name = "imau-fdm.x"
+name = "imau-fdm"
 source-dir = "source"
 main = "main.f90"
 
