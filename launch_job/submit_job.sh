@@ -53,6 +53,7 @@ if [ "${RUN_TYPE}" == "ECMWF" ]; then
     TOTAL_TASKS=$(( NUM_WORKERS + 1 ))                 # +1 for the distributor
     NUM_NODES=$(( (TOTAL_TASKS + CORES_PER_NODE - 1) / CORES_PER_NODE ))  # ceiling division
 
+    cd "${WORK_DIR}"
     sbatch <<EOF
 #!/bin/bash
 #SBATCH --nodes=$NUM_NODES
