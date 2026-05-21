@@ -17,8 +17,8 @@ TIME_AGGREGATION = '10day'
 
 # Output period — slice the timeseries to this range before saving.
 # Set to None to output the full model period.
-OUTPUT_START = datetime(1958, 1, 1)
-OUTPUT_END   = datetime(2023, 12, 31)
+OUTPUT_START = None # None for full dataset or datetime e.g., datetime(1958,1,1)
+OUTPUT_END   = None # None for full dataset or datetime e.g., datetime(2020,12,31)
 
 # Spinup period for detrending (h_surf and FirnAir only)
 # The model runs repeated forcing during this period
@@ -28,7 +28,6 @@ SPINUP_END = datetime(1970, 1, 1)
 # Variables to process (None = all variables)
 # Example: ['h_surf', 'FirnAir', 'Runoff']
 VARIABLES_TO_PROCESS = None
-
 
 # Number of parallel workers (None = use all available CPUs)
 NUM_WORKERS = None

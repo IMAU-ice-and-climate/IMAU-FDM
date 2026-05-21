@@ -1,0 +1,29 @@
+format: jb-book
+root: intro
+parts:
+  - caption: Overview
+    chapters:
+      - file: overview/architecture
+      - file: overview/physics
+  - caption: Pre-Processing
+    chapters:
+      - file: preprocessing/overview
+  - caption: Running the Model
+    chapters:
+      - file: running/overview
+      - file: running/settings
+      - file: running/hpc
+  - caption: Post-Processing
+    chapters:
+      - file: postprocessing/overview
+      - file: postprocessing/gridded_files
+      - file: postprocessing/extending
+  - caption: MO Fitting
+    chapters:
+      - file: mo_fitting/overview
+  - caption: Source Code
+    chapters:
+      - file: source/overview
+  - caption: Development
+    chapters:
+      - file: development/distributor
