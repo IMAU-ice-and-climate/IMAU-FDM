@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -386,7 +386,8 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-ecmwf">Quick start on ECMWF</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-offline">Quick start on offline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-types">Run types</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#point-lists">Point lists</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slurm-scripts">SLURM scripts</a></li>
@@ -404,14 +405,25 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="running-the-model">
 <h1>Running the Model<a class="headerlink" href="#running-the-model" title="Permalink to this heading">#</a></h1>
+<p>Always re-compile the model first. See <span class="xref myst">compiling</span>.</p>
 <p>Source: <code class="docutils literal notranslate"><span class="pre">rundir/</span></code></p>
-<section id="quick-start">
-<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this heading">#</a></h2>
+<section id="quick-start-on-ecmwf">
+<h2>Quick start on ECMWF<a class="headerlink" href="#quick-start-on-ecmwf" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>rundir/
 
-<span class="c1"># Edit settings first (see Settings page)</span>
+<span class="c1"># Edit settings first (see `running/settings` page)</span>
 <span class="c1"># Then submit:</span>
-sbatch<span class="w"> </span>submit_job.sc
+sbatch<span class="w"> </span>launch_new_job.sc
+</pre></div>
+</div>
+</section>
+<section id="quick-start-on-offline">
+<h2>Quick start on offline<a class="headerlink" href="#quick-start-on-offline" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>rundir/
+
+<span class="c1"># Edit offline.sh</span>
+<span class="c1"># Then submit:</span>
+./offline.sh
 </pre></div>
 </div>
 </section>
@@ -432,7 +444,7 @@ sbatch<span class="w"> </span>submit_job.sc
 <td><p>Restart from end of spinup (begin main run)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">run</span></code></p></td>
-<td><p>Continue from end of last main run</p></td>
+<td><p>Continue from end of last main run - ensure restart directory is set correctly</p></td>
 </tr>
 </tbody>
 </table>
@@ -440,20 +452,7 @@ sbatch<span class="w"> </span>submit_job.sc
 </section>
 <section id="point-lists">
 <h2>Point lists<a class="headerlink" href="#point-lists" title="Permalink to this heading">#</a></h2>
-<p>The model runs one column per MPI rank. A point list specifies which grid
-points to run. Reference point lists live in <code class="docutils literal notranslate"><span class="pre">reference/{DOMAIN}/</span></code>:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">IN_ll_FGRN055.txt</span></code> — all 58 265 ice-covered Greenland points</p></li>
-</ul>
-<p>Custom subsets live in <code class="docutils literal notranslate"><span class="pre">rundir/pointlists/</span></code>. To generate a new subset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sbatch<span class="w"> </span>rundir/make_pointlist.sc
-</pre></div>
-</div>
-<p>Point list format (space-separated, 7 columns):</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>lon  lat  ??  ??  ??  rlat_idx  rlon_idx
-</pre></div>
-</div>
-<p>Rows are 1-based; row N corresponds to output file <code class="docutils literal notranslate"><span class="pre">{prefix}_1D_N.nc</span></code>.</p>
+<p>The model runs one column/point/cell at a time. Reference point lists live in <code class="docutils literal notranslate"><span class="pre">reference/{DOMAIN}/</span></code>. A customized pointlist (list of indices) specifies which grid points to run. These live in <code class="docutils literal notranslate"><span class="pre">rundir/pointlists/</span></code>.</p>
 </section>
 <section id="slurm-scripts">
 <h2>SLURM scripts<a class="headerlink" href="#slurm-scripts" title="Permalink to this heading">#</a></h2>
@@ -464,29 +463,20 @@ points to run. Reference point lists live in <code class="docutils literal notra
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">submit_job.sc</span></code></p></td>
-<td><p>Main submission script</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">launch_new_job.sc</span></code></p></td>
+<td><p>Main script; launch a fresh run</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">launch_new_job.sc</span></code></p></td>
-<td><p>Launch a fresh run</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">submit_job.sc</span></code></p></td>
+<td><p>Starts job</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">launch_example_job.sc</span></code></p></td>
-<td><p>Run the minimal example</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">npnf_outer_script.sc</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">npnf_outer_script.sc</span></code></p></td>
 <td><p>Outer SLURM array wrapper</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">npnf_inner_script.sc</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">npnf_inner_script.sc</span></code></p></td>
 <td><p>Inner per-point launcher</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ns_script.sc</span></code></p></td>
-<td><p>Node-sharing variant</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">offline.sc</span></code></p></td>
-<td><p>Run without HPC scheduler</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CancelMyJob.sc</span></code></p></td>
-<td><p>Cancel all running jobs</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">CancelMyJob.sc</span></code></p></td>
+<td><p>Cancel all running jobs - updated when new job is launched</p></td>
 </tr>
 </tbody>
 </table>
@@ -495,17 +485,27 @@ points to run. Reference point lists live in <code class="docutils literal notra
 <section id="monitoring-a-run">
 <h2>Monitoring a run<a class="headerlink" href="#monitoring-a-run" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Check SLURM queue</span>
+chk
+<span class="c1">#or </span>
 squeue<span class="w"> </span>-u<span class="w"> </span><span class="nv">$USER</span>
 
-<span class="c1"># Inspect FDM log output</span>
+<span class="c1"># see info about ongoing run or whether it actually succeeded</span>
 <span class="nb">cd</span><span class="w"> </span>QAQC/
+
+<span class="c1">#Inspect FDM log output</span>
 jupyter<span class="w"> </span>notebook<span class="w"> </span>plot_ongoing_run.ipynb
 
 <span class="c1"># Check completion</span>
 jupyter<span class="w"> </span>notebook<span class="w"> </span>check_run_is_completed.ipynb
 </pre></div>
 </div>
-<p>Log files are written to <code class="docutils literal notranslate"><span class="pre">rundir/logs/</span></code>.</p>
+<p>You can also look at logs in the output directory. There are multiple types of logs:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">output/logfiles</span></code> - individual logfiles for each point; check remove_ values are resasonable (~&lt;100), filepaths are correct, spinup converges, etc</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nplogs/*_np.log</span></code> - log about the SLURM job itself</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nplogs/*_runlog.log</span></code> - log about the distributor</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">nplogs/Threads_iter_#</span></code> - log about each core</p></li>
+</ol>
 </section>
 </section>
 
@@ -573,7 +573,8 @@ jupyter<span class="w"> </span>notebook<span class="w"> </span>check_run_is_comp
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-ecmwf">Quick start on ECMWF</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-offline">Quick start on offline</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-types">Run types</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#point-lists">Point lists</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#slurm-scripts">SLURM scripts</a></li>

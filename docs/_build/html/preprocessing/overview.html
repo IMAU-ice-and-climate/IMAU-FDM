@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -404,7 +404,7 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="pre-processing">
 <h1>Pre-Processing<a class="headerlink" href="#pre-processing" title="Permalink to this heading">#</a></h1>
-<p>Converts raw RACMO2.3p2 / ERA5 output (decadal NetCDF files) into the
+<p>Converts RACMO output (decadal NetCDF files) into the
 timeseries and spinup-average files expected by IMAU-FDM.</p>
 <p>Source: <code class="docutils literal notranslate"><span class="pre">pre-process-RACMO/</span></code></p>
 <section id="pipeline">
@@ -431,7 +431,7 @@ SLURM <code class="docutils literal notranslate"><span class="pre">afterok</span
 <span class="c1"># Submit all three steps for Greenland ERA5</span>
 python<span class="w"> </span>submit_jobs.py<span class="w"> </span>--domain<span class="w"> </span>FGRN055_era5<span class="w"> </span>--start-year<span class="w"> </span><span class="m">1939</span><span class="w"> </span>--end-year<span class="w"> </span><span class="m">2023</span>
 
-<span class="c1"># Extend an existing run (step 1 and 2 only, for new years)</span>
+<span class="c1"># Extend an existing run (step 1 and 2 only, for adding new years if new data becomes available)</span>
 python<span class="w"> </span>submit_jobs.py<span class="w"> </span>--domain<span class="w"> </span>FGRN055_era5<span class="w"> </span>--start-year<span class="w"> </span><span class="m">2024</span><span class="w"> </span>--end-year<span class="w"> </span><span class="m">2025</span><span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--skip-averages
 </pre></div>
@@ -478,12 +478,12 @@ python<span class="w"> </span>submit_jobs.py<span class="w"> </span>--domain<spa
 </section>
 <section id="output-structure">
 <h2>Output structure<a class="headerlink" href="#output-structure" title="Permalink to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$SCRATCH/FGRN055_era055/input/
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PATH_TO_OUTPUT/{domain}_{forcing}/input/
 ├── timeseries/           # lon-band timeseries (used during model run)
-│   ├── FGRN055_era055_1939-2023_p1.nc
+│   ├── {domain}_{forcing}_{start_year}-{end_year}_p1.nc
 │   └── ...
 └── averages/             # spinup-period averages (used during spinup)
-    └── FGRN055_era055_1940-1970_ave.nc
+    └── {domain}_{forcing}_{spinup_start_year}-{spinup_end_year}_ave.nc
 </pre></div>
 </div>
 </section>

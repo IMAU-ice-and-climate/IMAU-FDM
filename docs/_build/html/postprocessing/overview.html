@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -391,6 +391,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-period-slicing">Output period slicing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-gridded-files">Loading gridded files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-workflow">Typical workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-extension-workflow">Typical extension workflow</a></li>
 </ul>
             </nav>
         </div>
@@ -442,7 +443,7 @@ sub-period (e.g. model covers 1939–2025, output only 1958–2023). Set either 
 <span class="n">ds</span> <span class="o">=</span> <span class="n">load_gridded_data</span><span class="p">(</span><span class="s1">&#39;Runoff&#39;</span><span class="p">,</span> <span class="n">timestep</span><span class="o">=</span><span class="s1">&#39;10day&#39;</span><span class="p">)</span>
 <span class="n">ds</span> <span class="o">=</span> <span class="n">load_gridded_data</span><span class="p">(</span><span class="s1">&#39;h_surf&#39;</span><span class="p">,</span> <span class="n">timestep</span><span class="o">=</span><span class="s1">&#39;10day&#39;</span><span class="p">,</span> <span class="n">detrended</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">ds</span> <span class="o">=</span> <span class="n">load_gridded_data</span><span class="p">(</span><span class="s1">&#39;Runoff&#39;</span><span class="p">,</span> <span class="n">timestep</span><span class="o">=</span><span class="s1">&#39;10day&#39;</span><span class="p">,</span>
-                       <span class="n">output_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;/path/to/1939-2025/post-process&#39;</span><span class="p">),</span>
+                       <span class="n">output_dir</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{OUTPUT_PATH}</span><span class="s1">/post-process&#39;</span><span class="p">),</span>
                        <span class="n">date_tag</span><span class="o">=</span><span class="s1">&#39;1939-2025&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -454,16 +455,20 @@ sub-period (e.g. model covers 1939–2025, output only 1958–2023). Set either 
 sbatch<span class="w"> </span>submit_make_1d_files.sh
 sbatch<span class="w"> </span>submit_make_2d_files.sh
 sbatch<span class="w"> </span>submit_make_2ddetail_files.sh
-
-<span class="c1"># 2. Merge per-column output into full-period pointfiles (1939-2025)</span>
+</pre></div>
+</div>
+</section>
+<section id="typical-extension-workflow">
+<h2>Typical extension workflow<a class="headerlink" href="#typical-extension-workflow" title="Permalink to this heading">#</a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1">#1 Merge per-column output into full-period pointfiles (1939-2025)</span>
 <span class="nb">cd</span><span class="w"> </span>../extend/
 sbatch<span class="w"> </span>submit_extend_pointfiles.sh
 
-<span class="c1"># 3a. Remake 1D files for 1939-2025 (full reprocess required)</span>
+<span class="c1"># 2a. Remake 1D files for 1939-2025 (full reprocess required)</span>
 <span class="nb">cd</span><span class="w"> </span>../create_1D_2D_2Ddetail_files/
 sbatch<span class="w"> </span>submit_make_1d_files.sh<span class="w">   </span><span class="c1"># point INPUT_DIR at merged files</span>
 
-<span class="c1"># 3b. Extend 2D/2Ddetail files (append 2024-2025 only)</span>
+<span class="c1"># 2b. Extend 2D/2Ddetail files (append 2024-2025 only)</span>
 <span class="nb">cd</span><span class="w"> </span>../extend/
 sbatch<span class="w"> </span>submit_extend_variable_2d.sh
 sbatch<span class="w"> </span>submit_extend_variable_2ddetail.sh
@@ -541,6 +546,7 @@ sbatch<span class="w"> </span>submit_extend_variable_2ddetail.sh
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-period-slicing">Output period slicing</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-gridded-files">Loading gridded files</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-workflow">Typical workflow</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#typical-extension-workflow">Typical extension workflow</a></li>
 </ul>
   </nav></div>
 

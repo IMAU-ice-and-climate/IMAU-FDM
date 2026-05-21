@@ -1,6 +1,6 @@
 # Pre-Processing
 
-Converts raw RACMO2.3p2 / ERA5 output (decadal NetCDF files) into the
+Converts RACMO output (decadal NetCDF files) into the
 timeseries and spinup-average files expected by IMAU-FDM.
 
 Source: `pre-process-RACMO/`
@@ -31,7 +31,7 @@ cd pre-process-RACMO/
 # Submit all three steps for Greenland ERA5
 python submit_jobs.py --domain FGRN055_era5 --start-year 1939 --end-year 2023
 
-# Extend an existing run (step 1 and 2 only, for new years)
+# Extend an existing run (step 1 and 2 only, for adding new years if new data becomes available)
 python submit_jobs.py --domain FGRN055_era5 --start-year 2024 --end-year 2025 \
     --skip-averages
 ```
@@ -62,12 +62,12 @@ Key settings in `config.py`:
 ## Output structure
 
 ```
-$SCRATCH/FGRN055_era055/input/
+PATH_TO_OUTPUT/{domain}_{forcing}/input/
 ├── timeseries/           # lon-band timeseries (used during model run)
-│   ├── FGRN055_era055_1939-2023_p1.nc
+│   ├── {domain}_{forcing}_{start_year}-{end_year}_p1.nc
 │   └── ...
 └── averages/             # spinup-period averages (used during spinup)
-    └── FGRN055_era055_1940-1970_ave.nc
+    └── {domain}_{forcing}_{spinup_start_year}-{spinup_end_year}_ave.nc
 ```
 
 ## QA notebook

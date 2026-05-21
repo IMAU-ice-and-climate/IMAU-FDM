@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -407,14 +407,12 @@ document.write(`
 <h2>Directory layout<a class="headerlink" href="#directory-layout" title="Permalink to this heading">#</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>IMAU-FDM/
 ├── source/             # Fortran source code (compiled to imau-fdm.x)
-├── settings/           # TOML configuration files
 ├── rundir/             # SLURM submission scripts and run setup
 ├── pre-process-RACMO/  # Convert RACMO/ERA5 NetCDF → model input
 ├── post-process/       # Convert per-column output → gridded NetCDF
 ├── MO_fit/             # Calibrate densification coefficients
 ├── QAQC/               # Run monitoring and log inspection
 ├── reference/          # Static grid files and point lists (per domain)
-├── distributor/        # Job distribution scripts (HPC)
 ├── example/            # Minimal worked example
 └── docs/               # This documentation (Jupyter Book)
 </pre></div>
@@ -422,16 +420,16 @@ document.write(`
 </section>
 <section id="end-to-end-data-flow">
 <h2>End-to-end data flow<a class="headerlink" href="#end-to-end-data-flow" title="Permalink to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>ERA5 / RACMO2.3p2 (raw decadal NetCDF)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>RACMO: raw decadal NetCDF files of 7 variables (10m wind speed, precipitation, snowfall, snowmelt, snowdrift, evaporation, skin temperature)
         │
         ▼  pre-process-RACMO/
 Yearly files → lon-band timeseries → spinup averages
         │
         ▼  rundir/ + source/
-Per-column output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface)
+Model output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface) for each cell
         │
         ▼  post-process/
-Gridded NetCDF maps  (FDM_{var}_{domain}_{years}_{timestep}.nc)
+Gridded NetCDF maps: specified variables across whole domain/timeseries (e.g., firn air content, integrated liquid water content, etc)
 </pre></div>
 </div>
 </section>
@@ -440,28 +438,23 @@ Gridded NetCDF maps  (FDM_{var}_{domain}_{years}_{timestep}.nc)
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>File</p></th>
-<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Contents</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">settings/model_settings.toml</span></code></p></td>
-<td><p>Domain, restart type, output layer counts</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rundir/launch_new_job.sc</span></code></p></td>
+<td><p>Set project_name, domain, pointlist, restart_type, SLURM options</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">settings/run_settings.toml</span></code></p></td>
-<td><p>Submission iteration counter</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rundir/start_model_ccab.sc</span></code></p></td>
+<td><p>Sets various model parameters, including timestep &amp; dimensions of input and output</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">settings/paths.toml</span></code></p></td>
-<td><p>All input/output directory paths</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">settings/ecmwf_settings.toml</span></code></p></td>
-<td><p>HPC-specific settings</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">settings/model_variables.toml</span></code></p></td>
-<td><p>Variables to include in output</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">source/model_settings.sc</span></code></p></td>
+<td><p>Constants, model metadata, and paths are set in this file</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>_Note that once the new <span class="xref myst">distributor</span> comes online, this structure will change*</p>
 </section>
 <section id="reference-files-per-domain">
 <h2>Reference files (per domain)<a class="headerlink" href="#reference-files-per-domain" title="Permalink to this heading">#</a></h2>
@@ -478,9 +471,6 @@ Gridded NetCDF maps  (FDM_{var}_{domain}_{years}_{timestep}.nc)
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IN_ll_{DOMAIN}.txt</span></code></p></td>
 <td><p>Point list: lon, lat, …, rlat_idx, rlon_idx</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">{DOMAIN}_grid.nc</span></code></p></td>
-<td><p>Rotated-pole grid coordinates</p></td>
 </tr>
 </tbody>
 </table>

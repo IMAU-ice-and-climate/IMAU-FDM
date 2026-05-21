@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -363,9 +363,7 @@ document.write(`
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="fa-solid fa-list"></span>
-</label>
+
 </div></div>
       
     </div>
@@ -381,18 +379,6 @@ document.write(`
     <div id="print-main-content">
         <div id="jb-print-toc">
             
-            <div>
-                <h2> Contents </h2>
-            </div>
-            <nav aria-label="Page">
-                <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-settings-toml"><code class="docutils literal notranslate"><span class="pre">model_settings.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paths-toml"><code class="docutils literal notranslate"><span class="pre">paths.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ecmwf-settings-toml"><code class="docutils literal notranslate"><span class="pre">ecmwf_settings.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-variables-toml"><code class="docutils literal notranslate"><span class="pre">model_variables.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-settings-toml"><code class="docutils literal notranslate"><span class="pre">run_settings.toml</span></code></a></li>
-</ul>
-            </nav>
         </div>
     </div>
 </div>
@@ -404,68 +390,12 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="settings-files">
 <h1>Settings Files<a class="headerlink" href="#settings-files" title="Permalink to this heading">#</a></h1>
-<p>All configuration is in <code class="docutils literal notranslate"><span class="pre">settings/</span></code> as TOML files. The model reads them at
-startup; changing a value requires no recompilation.</p>
-<section id="model-settings-toml">
-<h2><code class="docutils literal notranslate"><span class="pre">model_settings.toml</span></code><a class="headerlink" href="#model-settings-toml" title="Permalink to this heading">#</a></h2>
-<p>Core model configuration.</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="n">run_location</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ecmwf&quot;</span><span class="w">     </span><span class="c1"># &quot;ecmwf&quot; | &quot;offline&quot;</span>
-<span class="n">restart_type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="w">      </span><span class="c1"># &quot;none&quot; | &quot;spinup&quot; | &quot;run&quot;</span>
-
-<span class="n">domain</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;FGRN055&quot;</span><span class="w">        </span><span class="c1"># domain name (used in file naming)</span>
-<span class="n">forcing</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;era055&quot;</span><span class="w">         </span><span class="c1"># forcing name (used in file naming)</span>
-
-<span class="k">[output_dimensions]</span>
-<span class="n">proflayers</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mi">3000</span><span class="w">       </span><span class="c1"># layers in 2D profile output (~122 m)</span>
-<span class="n">writeindetail</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">864000</span><span class="w">     </span><span class="c1"># seconds between 2Ddetail writes (10 days)</span>
-<span class="n">detlayers</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="mi">500</span><span class="w">        </span><span class="c1"># layers in 2Ddetail output (top 20 m)</span>
-<span class="n">detthick</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="mf">0.04</span><span class="w">       </span><span class="c1"># 2Ddetail layer thickness (m)</span>
-
-<span class="k">[minimum_values]</span>
-<span class="n">ts_minimum</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-04</span><span class="w">    </span><span class="c1"># floor for 1D timeseries values</span>
-<span class="n">det2d_minimum</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mf">1.0e-05</span><span class="w">    </span><span class="c1"># floor for 2Ddetail refreezing</span>
-</pre></div>
-</div>
-</section>
-<section id="paths-toml">
-<h2><code class="docutils literal notranslate"><span class="pre">paths.toml</span></code><a class="headerlink" href="#paths-toml" title="Permalink to this heading">#</a></h2>
-<p>All file and directory paths. Edit this when setting up a new run.</p>
-<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[directories]</span>
-<span class="n">project_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w">          </span><span class="c1"># unique run name; output goes to output_dir/project_name</span>
-<span class="n">code_dir</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/perm/nld4814/code/IMAU-FDM/&quot;</span>
-<span class="n">input_dir</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/scratch/FGRN055_era055/input/&quot;</span>
-<span class="n">output_dir</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/scratch/&quot;</span>
-
-<span class="k">[input-subdirectories]</span>
-<span class="n">averages</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;averages/&quot;</span>
-<span class="n">timeseries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;timeseries/&quot;</span>
-
-<span class="k">[output-subdirectories]</span>
-<span class="n">output</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;output/&quot;</span>
-<span class="n">settings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;ms_files/&quot;</span>
-<span class="n">restart</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;restart/&quot;</span>
-
-<span class="k">[reference-files]</span>
-<span class="n">mask</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;FGRN055_Masks.nc&quot;</span>
-<span class="n">pointlist_ref</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;IN_ll_FGRN055.txt&quot;</span>
-</pre></div>
-</div>
-</section>
-<section id="ecmwf-settings-toml">
-<h2><code class="docutils literal notranslate"><span class="pre">ecmwf_settings.toml</span></code><a class="headerlink" href="#ecmwf-settings-toml" title="Permalink to this heading">#</a></h2>
-<p>ECMWF HPC-specific settings (module names, scratch paths). See
-<a class="reference internal" href="hpc.html"><span class="doc std std-doc">HPC Setup</span></a> for details.</p>
-</section>
-<section id="model-variables-toml">
-<h2><code class="docutils literal notranslate"><span class="pre">model_variables.toml</span></code><a class="headerlink" href="#model-variables-toml" title="Permalink to this heading">#</a></h2>
-<p>Selects which variables appear in the 1D output files. Set a variable to
-<code class="docutils literal notranslate"><span class="pre">false</span></code> to suppress it (reduces output size).</p>
-</section>
-<section id="run-settings-toml">
-<h2><code class="docutils literal notranslate"><span class="pre">run_settings.toml</span></code><a class="headerlink" href="#run-settings-toml" title="Permalink to this heading">#</a></h2>
-<p>Tracks the current submission iteration (<code class="docutils literal notranslate"><span class="pre">submission_iteration</span></code>). The SLURM
-scripts increment this automatically; rarely need to edit by hand.</p>
-</section>
+<p>There are currently three locations that need to be updated or checked before a run. This will be updated eventually with a set of toml files in <code class="docutils literal notranslate"><span class="pre">settings</span></code>. However currently these are:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">rundir/launch_new_job.sc</span></code> - This is were you set the model domain and forcing, the pointlist, the SLURM settings, and the restart type and location of the restart files (if relevant)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rundir/start_model_ccab.sc</span></code> - Each domain has its own settings. Check to ensure the number of timesteps, number of years, number of spinup years, and the domain dimensions match the input. Also check the output timesteps and dimensions are what you want.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">source/model_settings.f90</span></code> - This is where output metadata and paths are set, along with model constants constants.</p></li>
+</ol>
 </section>
 
     <script type="text/x-thebe-config">
@@ -522,25 +452,6 @@ scripts increment this automatically; rarely need to edit by hand.</p>
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> Contents
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-settings-toml"><code class="docutils literal notranslate"><span class="pre">model_settings.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#paths-toml"><code class="docutils literal notranslate"><span class="pre">paths.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ecmwf-settings-toml"><code class="docutils literal notranslate"><span class="pre">ecmwf_settings.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-variables-toml"><code class="docutils literal notranslate"><span class="pre">model_variables.toml</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-settings-toml"><code class="docutils literal notranslate"><span class="pre">run_settings.toml</span></code></a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>

@@ -191,7 +191,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -387,7 +387,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-the-ecmwf">Quick start on the ECMWF</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-domains">Supported domains</a></li>
 </ul>
             </nav>
@@ -403,9 +403,7 @@ document.write(`
   <section class="tex2jax_ignore mathjax_ignore" id="imau-fdm">
 <h1>IMAU-FDM<a class="headerlink" href="#imau-fdm" title="Permalink to this heading">#</a></h1>
 <p><strong>IMAU Firn Densification Model</strong> is a one-dimensional column model for firn
-compaction and melt–refreeze processes over ice sheets and glaciers.
-Each grid point is integrated independently in parallel; the full-domain run
-covers tens of thousands of columns.</p>
+compaction and melt–refreeze processes over ice sheets and glaciers.</p>
 <p>This documentation covers the complete workflow:</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
@@ -441,18 +439,26 @@ covers tens of thousands of columns.</p>
 </tbody>
 </table>
 </div>
-<section id="quick-start">
-<h2>Quick start<a class="headerlink" href="#quick-start" title="Permalink to this heading">#</a></h2>
+<section id="quick-start-on-the-ecmwf">
+<h2>Quick start on the ECMWF<a class="headerlink" href="#quick-start-on-the-ecmwf" title="Permalink to this heading">#</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># 1. Pre-process forcing (Greenland, ERA5)</span>
 <span class="nb">cd</span><span class="w"> </span>pre-process-RACMO/
 python<span class="w"> </span>submit_jobs.py<span class="w"> </span>--domain<span class="w"> </span>FGRN055<span class="w"> </span>--forcing<span class="w"> </span>era5<span class="w"> </span><span class="se">\</span>
-<span class="w">    </span>--start-year<span class="w"> </span><span class="m">1939</span><span class="w"> </span>--end-year<span class="w"> </span><span class="m">2023</span>
+<span class="w">    </span>--start-year<span class="w"> </span><span class="m">1939</span><span class="w"> </span>--end-year<span class="w"> </span><span class="m">2025</span>
 
-<span class="c1"># 2. Launch model run</span>
+<span class="c1"># 2. Compile the model</span>
+<span class="nb">cd</span><span class="w"> </span>../
+./compile_hpc.sh
+
+<span class="c1"># 3 Update model settings in rundir/launch_new_job, rundir/start_model_ccab, and source/model_settings</span>
+
+<span class="c1"># 4. Launch model run</span>
 <span class="nb">cd</span><span class="w"> </span>../rundir/
 sbatch<span class="w"> </span>submit_job.sc
 
-<span class="c1"># 3. Post-process output</span>
+<span class="c1"># 5. Update post-processing config files</span>
+
+<span class="c1"># 6. Post-process output </span>
 <span class="nb">cd</span><span class="w"> </span>../post-process/create_1D_2D_2Ddetail_files/
 sbatch<span class="w"> </span>submit_make_1d_files.sh
 sbatch<span class="w"> </span>submit_make_2d_files.sh
@@ -553,7 +559,7 @@ sbatch<span class="w"> </span>submit_make_2ddetail_files.sh
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick start</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start-on-the-ecmwf">Quick start on the ECMWF</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-domains">Supported domains</a></li>
 </ul>
   </nav></div>

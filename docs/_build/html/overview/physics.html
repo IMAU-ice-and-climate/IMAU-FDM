@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -388,8 +388,8 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#firn-compaction">Firn compaction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-layers">Output layers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-variables">Key variables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#coordinate-system">Coordinate system</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-variables">Key variables</a></li>
 </ul>
             </nav>
         </div>
@@ -407,33 +407,34 @@ document.write(`
 independently through:</p>
 <ol class="arabic simple">
 <li><p><strong>Accumulation</strong> — new snow is added at the surface with density ρ₀ (initial
-surface snow density, parameterised from temperature and wind).</p></li>
-<li><p><strong>Firn compaction</strong> — subsurface layers compact via two rate equations
-(dry and wet) calibrated against firn-core observations (MO fitting).</p></li>
+surface snow density).</p></li>
+<li><p><strong>Firn compaction</strong> — subsurface layers compact via density-dependent rate equations
+calibrated against firn-core observations (see <a class="reference internal" href="../mo_fitting/overview.html"><span class="doc std std-doc">MO fitting</span></a>).</p></li>
 <li><p><strong>Melt and refreeze</strong> — surface melt is computed from the surface energy
-balance; meltwater percolates downward and can refreeze into ice lenses
-or recharge the firn pore space.</p></li>
-<li><p><strong>Liquid water transport</strong> — water moves vertically through available pore
-space; capillary retention is accounted for.</p></li>
+balance; meltwater percolates downward and can refreeze, creating denser firn or ice lenses, or becomes runoff if it reaaches the bottom of the firn column</p></li>
+<li><p><strong>Liquid water transport</strong> — water moves vertically and instantaneoulsy through
+available pore space</p></li>
 </ol>
 <section id="firn-compaction">
 <h2>Firn compaction<a class="headerlink" href="#firn-compaction" title="Permalink to this heading">#</a></h2>
 <p>Compaction follows a two-stage Herron-Langway-type scheme. The densification
 rate for a layer is:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dρ/dt = c · A · exp(−E / (R T)) · (ρ_ice − ρ)
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>dρ/dt = c · MO_fit · A · g · exp(−Ec / (R T) + Eg/(R T_base)) · (ρ_ice − ρ)
 </pre></div>
 </div>
 <p>where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">c</span></code> — empirical coefficient (different for Stage 1, ρ &lt; 550 kg m⁻³, and Stage 2)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code> — annual accumulation rate (m w.e. yr⁻¹)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">E</span></code> — activation energy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">c</span></code> — empirical coefficient (0.07 for Stage 1 (ρ &lt; 550 kg m⁻³), and 0.03 for Stage 2 (ρ &gt; 550 kg m⁻³))</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MO_fit</span></code> - scaling factor based on average accumulation (<a class="reference internal" href="../mo_fitting/overview.html"><span class="doc std std-doc">MO Fitting</span></a>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span></code> — average accumulation rate (m w.e. yr⁻¹)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code> - gravitational constant</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ec</span></code> — creep activation energy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Eg</span></code> - grain growth activation energy</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">R</span></code> — gas constant</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">T</span></code> — temperature (K)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T</span></code> — temperature (K) at layer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T_base</span></code> - temperature at the base of the firn column</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ρ_ice</span> <span class="pre">=</span> <span class="pre">917</span> <span class="pre">kg</span> <span class="pre">m⁻³</span></code></p></li>
 </ul>
-<p>The coefficients <code class="docutils literal notranslate"><span class="pre">c</span></code> are calibrated by the MO-fitting procedure (see
-<a class="reference internal" href="../mo_fitting/overview.html"><span class="doc std std-doc">MO Fitting</span></a>).</p>
 </section>
 <section id="output-layers">
 <h2>Output layers<a class="headerlink" href="#output-layers" title="Permalink to this heading">#</a></h2>
@@ -450,24 +451,32 @@ rate for a layer is:</p>
 <tr class="row-even"><td><p>1D</p></td>
 <td><p>—</p></td>
 <td><p>—</p></td>
-<td><p>Daily</p></td>
-<td><p>Surface scalars</p></td>
+<td><p>Daily*</p></td>
+<td><p>integrated or surface value</p></td>
 </tr>
 <tr class="row-odd"><td><p>2D</p></td>
-<td><p>3000</p></td>
-<td><p>~4 cm → m</p></td>
-<td><p>30-day</p></td>
-<td><p>~122 m full column</p></td>
+<td><p>3000*</p></td>
+<td><p>variable</p></td>
+<td><p>30-day*</p></td>
+<td><p>full column</p></td>
 </tr>
 <tr class="row-even"><td><p>2Ddetail</p></td>
-<td><p>500</p></td>
-<td><p>4 cm</p></td>
-<td><p>10-day</p></td>
-<td><p>Top 20 m</p></td>
+<td><p>500*</p></td>
+<td><p>4 cm*</p></td>
+<td><p>10-day*</p></td>
+<td><p>top 20 m</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p>* defaults, can be adjusted in model_settings</p>
+</section>
+<section id="coordinate-system">
+<h2>Coordinate system<a class="headerlink" href="#coordinate-system" title="Permalink to this heading">#</a></h2>
+<p>Output grids use a <strong>rotated-pole projection</strong> (native RACMO grid). Absolute
+coordinates are provided as auxiliary <code class="docutils literal notranslate"><span class="pre">lat</span></code>/<code class="docutils literal notranslate"><span class="pre">lon</span></code> variables. The physical
+x/y coordinates are in <strong>EPSG:3413</strong> (WGS 84 / NSIDC Sea Ice Polar
+Stereographic North, lon₀ = −45°, lat_ts = 70°).</p>
 </section>
 <section id="key-variables">
 <h2>Key variables<a class="headerlink" href="#key-variables" title="Permalink to this heading">#</a></h2>
@@ -522,13 +531,6 @@ rate for a layer is:</p>
 </tbody>
 </table>
 </div>
-</section>
-<section id="coordinate-system">
-<h2>Coordinate system<a class="headerlink" href="#coordinate-system" title="Permalink to this heading">#</a></h2>
-<p>Output grids use a <strong>rotated-pole projection</strong> (native RACMO grid). Absolute
-coordinates are provided as auxiliary <code class="docutils literal notranslate"><span class="pre">lat</span></code>/<code class="docutils literal notranslate"><span class="pre">lon</span></code> variables. The physical
-x/y coordinates are in <strong>EPSG:3413</strong> (WGS 84 / NSIDC Sea Ice Polar
-Stereographic North, lon₀ = −45°, lat_ts = 70°).</p>
 </section>
 </section>
 
@@ -598,8 +600,8 @@ Stereographic North, lon₀ = −45°, lat_ts = 70°).</p>
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#firn-compaction">Firn compaction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#output-layers">Output layers</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-variables">Key variables</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#coordinate-system">Coordinate system</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-variables">Key variables</a></li>
 </ul>
   </nav></div>
 

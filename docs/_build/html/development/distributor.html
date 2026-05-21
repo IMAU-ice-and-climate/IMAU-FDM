@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Distributor (Development) &#8212; IMAU-FDM Documentation</title>
+    <title>New Workflow (In Development) &#8212; IMAU-FDM Documentation</title>
   
   
   
@@ -189,7 +189,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Distributor (Development)</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -375,7 +375,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Distributor (Development)</h1>
+    <h1>New Workflow (In Development)</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -399,9 +399,16 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="distributor-development">
-<h1>Distributor (Development)<a class="headerlink" href="#distributor-development" title="Permalink to this heading">#</a></h1>
+  <section class="tex2jax_ignore mathjax_ignore" id="new-workflow-in-development">
+<h1>New Workflow (In Development)<a class="headerlink" href="#new-workflow-in-development" title="Permalink to this heading">#</a></h1>
 <p>Source: <code class="docutils literal notranslate"><span class="pre">distributor/</span></code> (development branch)</p>
+<!-- | File | Purpose |
+|------|---------|
+| `settings/model_settings.toml` | Domain, restart type, output layer counts |
+| `settings/run_settings.toml` | Submission iteration counter |
+| `settings/paths.toml` | All input/output directory paths |
+| `settings/ecmwf_settings.toml` | HPC-specific settings |
+| `settings/model_variables.toml` | Variables to include in output | -->
 <p>The <strong>distributor</strong> is a new job management layer that replaces the current
 SLURM array approach with a more flexible work-queue pattern.</p>
 <div class="warning admonition">
@@ -415,7 +422,6 @@ This page will be expanded once the design stabilises.</p>
 submits one job per point and relies on SLURM’s array job mechanism for
 parallelism. Limitations:</p>
 <ul class="simple">
-<li><p>Large arrays (58 265 jobs for full Greenland) hit SLURM queue limits.</p></li>
 <li><p>Failed points must be re-identified and resubmitted manually.</p></li>
 <li><p>No dynamic load balancing between fast and slow columns.</p></li>
 </ul>

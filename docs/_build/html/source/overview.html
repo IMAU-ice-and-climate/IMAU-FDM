@@ -65,7 +65,7 @@ const thebe_selector_output = ".output, .cell_output"
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/overview';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Distributor (Development)" href="../development/distributor.html" />
+    <link rel="next" title="New Workflow (In Development)" href="../development/distributor.html" />
     <link rel="prev" title="MO Fitting" href="../mo_fitting/overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -190,7 +190,7 @@ const thebe_selector_output = ".output, .cell_output"
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Development</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">Distributor (Development)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../development/distributor.html">New Workflow (In Development)</a></li>
 </ul>
 
     </div>
@@ -387,7 +387,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-overview">Module overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-system">Build system</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compile">Compile</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-arrays">Key arrays</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-new-output-variable">Adding a new output variable</a></li>
 </ul>
@@ -410,58 +410,48 @@ interfaces in <code class="docutils literal notranslate"><span class="pre">modul
 <h2>Module overview<a class="headerlink" href="#module-overview" title="Permalink to this heading">#</a></h2>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Module</p></th>
-<th class="head"><p>File</p></th>
+<tr class="row-odd"><th class="head"><p>Module/file</p></th>
 <th class="head"><p>Description</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_settings</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">model_settings.f90</span></code></p></td>
-<td><p>Reads and stores all configuration (TOML files, namelist)</p></td>
+<td><p>Reads and stores all configurations (pathnames, public constants, etc)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">initialise_variables</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">initialise_variables.f90</span></code></p></td>
 <td><p>Allocates and zeroes all model arrays</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">initialise_model</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">initialise_model.f90</span></code></p></td>
-<td><p>Reads forcing files, sets up grid, applies spinup</p></td>
+<td><p>Reads forcing files, sets up grid</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">grid_routines</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">grid_routines.f90</span></code></p></td>
 <td><p>Layer insertion/removal, mass redistribution</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">firn_physics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">firn_physics.f90</span></code></p></td>
-<td><p>Densification, temperature diffusion, compaction</p></td>
+<td><p>Densification, temperature diffusion</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">water_physics</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">water_physics.f90</span></code></p></td>
 <td><p>Melt, percolation, refreezing, liquid water transport</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">time_loop</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">time_loop.f90</span></code></p></td>
-<td><p>Outer time integration loop</p></td>
+<td><p>Spinup and model run</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">output</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">output.f90</span></code></p></td>
 <td><p>Writes 1D, 2D, 2Ddetail output NetCDF files</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">openNetCDF</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">openNetCDF.f90</span></code></p></td>
 <td><p>NetCDF read/write wrappers</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">main</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">main.f90</span></code></p></td>
-<td><p>Entry point; MPI initialisation</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 </section>
-<section id="build-system">
-<h2>Build system<a class="headerlink" href="#build-system" title="Permalink to this heading">#</a></h2>
+<section id="compile">
+<h2>Compile<a class="headerlink" href="#compile" title="Permalink to this heading">#</a></h2>
+<p>(see <span class="xref myst">compiling</span> for more details)</p>
 <p>The model is built with <a class="reference external" href="https://fpm.fortran-lang.org/"><code class="docutils literal notranslate"><span class="pre">fpm</span></code></a>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>fpm<span class="w"> </span>build<span class="w"> </span>--profile<span class="w"> </span>release<span class="w">    </span><span class="c1"># optimised</span>
 fpm<span class="w"> </span>build<span class="w"> </span>--profile<span class="w"> </span>debug<span class="w">      </span><span class="c1"># with bounds-checking</span>
@@ -511,13 +501,13 @@ fpm<span class="w"> </span>install<span class="w">                    </span><sp
 </tbody>
 </table>
 </div>
-<p>Layer 0 is the bottom of the column (~55–122 m); the surface layer has the
-highest index. New snow is inserted at the top each timestep.</p>
+<p>Layer 0 is the bottom of the column; the surface layer has the
+highest index.</p>
 </section>
 <section id="adding-a-new-output-variable">
 <h2>Adding a new output variable<a class="headerlink" href="#adding-a-new-output-variable" title="Permalink to this heading">#</a></h2>
 <ol class="arabic simple">
-<li><p>Declare the variable in <code class="docutils literal notranslate"><span class="pre">initialise_variables.f90</span></code>.</p></li>
+<li><p>Declare the variable in <code class="docutils literal notranslate"><span class="pre">initialise_variables.f90</span></code> and across any other modules.</p></li>
 <li><p>Compute it inside <code class="docutils literal notranslate"><span class="pre">time_loop.f90</span></code> (or the relevant physics module).</p></li>
 <li><p>Register it for output in <code class="docutils literal notranslate"><span class="pre">output.f90</span></code> and add it to <code class="docutils literal notranslate"><span class="pre">settings/model_variables.toml</span></code>.</p></li>
 </ol>
@@ -568,7 +558,7 @@ highest index. New snow is inserted at the top each timestep.</p>
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Distributor (Development)</p>
+        <p class="prev-next-title">New Workflow (In Development)</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -589,7 +579,7 @@ highest index. New snow is inserted at the top each timestep.</p>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-overview">Module overview</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-system">Build system</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compile">Compile</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#key-arrays">Key arrays</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#adding-a-new-output-variable">Adding a new output variable</a></li>
 </ul>
