@@ -25,8 +25,8 @@ set -e
 # -----------------------------------------------------------------------------
 # Default configuration - modify these or override via command line
 # -----------------------------------------------------------------------------
-SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/python"
-OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era055_1939-2023/output"
+SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files"
+OUTPUT_DIR="/home/nld4814/scratch/FDM_FGRN055_output/output/points"
 WORKERS=${SLURM_CPUS_PER_TASK:-8}
 
 # Default: find depth where density = 830 kg/m³

@@ -20,7 +20,7 @@ cd "${SCRIPT_DIR}"
 mkdir -p logs
 
 python3 make_1d_files.py \
-    --var FirnAir \
+    --var FirnAir h_surf Rho0\
     --timestep monthly \
     --spinup-start 1940 \
     --spinup-end 1970 \

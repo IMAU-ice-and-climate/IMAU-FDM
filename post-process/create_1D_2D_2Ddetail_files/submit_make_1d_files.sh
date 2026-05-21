@@ -16,7 +16,7 @@
 #
 # Usage:
 #   sbatch submit_make_1d_files.sh                    # Process all variables
-#   sbatch submit_make_files.sh h_surf FirnAir    # Process specific variables
+#   sbatch submit_make_1d_files.sh h_surf FirnAir  # Process specific variables
 #
 # Output location: /home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/
 # =============================================================================
@@ -29,9 +29,9 @@ set -e
 # -----------------------------------------------------------------------------
 SCRIPT_DIR="/home/nld4814/perm/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files"
 WORKERS=${SLURM_CPUS_PER_TASK:-16}
-TIMESTEP="10day"
-SPINUP_START=1940
-SPINUP_END=1970
+TIMESTEP="${FDM_TIMESTEP:-10day}"
+SPINUP_START="${FDM_SPINUP_START:-1940}"
+SPINUP_END="${FDM_SPINUP_END:-1970}"
 
 # -----------------------------------------------------------------------------
 # Load required modules (adjust for your ECMWF environment)
