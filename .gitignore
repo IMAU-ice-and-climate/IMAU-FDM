@@ -77,10 +77,12 @@ temp/
 modules/
 objects/
 
-# Ignore a lot of the MO-fit data and figures -- too big
+# Ignore large MO-fit data -- see MO_fit/README.md for download/access instructions
 MO_fit/data/sumup/source/*
 MO_fit/figures/*
 MO_fit/data/PKM/source/*
+MO_fit/data/PKM/raw/*
+.nfs*
 
 #No claude files
 *.claude.md*
