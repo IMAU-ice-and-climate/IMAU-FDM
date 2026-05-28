@@ -67,7 +67,7 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
     double precision, intent(in) :: h_surf, FirnAir, TotLwc
     double precision, intent(inout) :: Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, Totvbouy
     double precision, intent(inout) :: TotRunoff, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out
-    double precision, dimension((outputSpeed),18), intent(out) :: out_1D
+    double precision, dimension(:,:), intent(out) :: out_1D
 
     ! declare local variables
     integer :: ind_t_out
@@ -75,7 +75,7 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
 
     ! All velocities in m/year
     ! Divide all variables by the number of time steps within the output period
-    factor = seconds_per_year/numOutputSpeed
+    factor = const%seconds_per_year/numOutputSpeed
     Totvice = -1. * (Totvice * factor)
     Totvacc = Totvacc * factor
     Totvsub = Totvsub * factor
@@ -128,33 +128,32 @@ end subroutine To_out_1D
 ! *******************************************************
 
 
-subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers, Rho, &
+subroutine To_out_2D(ind_t, dtmodel, numOutputProf, outputProf, Rho, &
         T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year)
     !*** Write the 2D output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, proflayers
+    integer, intent(in) :: ind_t, dtmodel, numOutputProf, outputProf
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
     double precision, dimension(ind_z_max), intent(inout) :: DenRho
-    double precision, dimension(outputProf,proflayers), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension(:,:), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local variables
     integer :: ind_t_out, ind_z_bot, ind_z_surf_out
     double precision :: factor
-    
+
     ! Determine indices for the output
     ind_t_out = ind_t/numOutputProf
     ind_z_bot = 1
     ind_z_surf_out = ind_z_surf
-    if (ind_z_surf > proflayers) then 
-        ind_z_bot = ind_z_surf - proflayers + 1
-        ind_z_surf_out = proflayers
+    if (ind_z_surf > config%output_dimensions%proflayers) then
+        ind_z_bot = ind_z_surf - config%output_dimensions%proflayers + 1
+        ind_z_surf_out = config%output_dimensions%proflayers
     endif
     
     ! Convert to [kg m-3 year-1]
-    factor = (seconds_per_year) / dtmodel / numOutputProf
+    factor = (const%seconds_per_year) / dtmodel / numOutputProf
     DenRho(:) = DenRho(:) * factor
     
     ! save output to 2D array
@@ -173,22 +172,21 @@ end subroutine To_out_2D
 ! *******************************************************
 
 
-subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, numOutputDetail, outputDetail, &
+subroutine To_out_2Ddetail(ind_t, numOutputDetail, outputDetail, &
     Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, detlayers, numOutputDetail, outputDetail
-    double precision, intent(in) :: detthick
+    integer, intent(in) :: ind_t, numOutputDetail, outputDetail
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, DZ
     double precision, dimension(ind_z_max), intent(inout) :: Refreeze
-    double precision, dimension(outputDetail,detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(outputDetail,config%output_dimensions%detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local arguments
     integer :: ind_t_out, ind_orig, ind_int
     double precision :: dist, part, refreeze_sum
     double precision, dimension(ind_z_max) :: DZ_mod
-    double precision, dimension(detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze
+    double precision, dimension(config%output_dimensions%detlayers) :: IntRho,IntT,IntMlwc,IntRefreeze
         
     IntRho(:) = 0.
     IntT(:) = 0.
@@ -199,24 +197,24 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     dist = 0.
     ind_orig = ind_z_surf
     ind_int = 1
-    do while(ind_int <= detlayers)
-        if ((dist + DZ_mod(ind_orig)) < (detthick * ind_int)) then
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
+    do while(ind_int <= config%output_dimensions%detlayers)
+        if ((dist + DZ_mod(ind_orig)) < (config%output_dimensions%detthick * ind_int)) then
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
-        else if ((dist + DZ_mod(ind_orig)) == (detthick * ind_int)) then
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / detthick)
+        else if ((dist + DZ_mod(ind_orig)) == (config%output_dimensions%detthick * ind_int)) then
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (DZ_mod(ind_orig) / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
             dist = dist + DZ_mod(ind_orig)
             ind_orig = ind_orig - 1
             ind_int = ind_int + 1
         else
-            part = (detthick * ind_int) - dist
-            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (part / detthick)
-            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (part / detthick)
+            part = (config%output_dimensions%detthick * ind_int) - dist
+            IntRho(ind_int) = IntRho(ind_int) + Rho(ind_orig) * (part / config%output_dimensions%detthick)
+            IntT(ind_int) = IntT(ind_int) + T(ind_orig) * (part / config%output_dimensions%detthick)
             IntMlwc(ind_int) = IntMlwc(ind_int) + Mlwc(ind_orig) * (part / DZ(ind_orig))        
             dist = dist + part
             DZ_mod(ind_orig) = DZ_mod(ind_orig) - part
@@ -225,23 +223,23 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t,detlayers, detthick, num
     end do
 
     refreeze_sum = SUM(Refreeze)
-    if (refreeze_sum > det2d_minimum) then
+    if (refreeze_sum > config%model_choices%det2d_minimum) then
         DZ_mod = DZ
         dist = 0.
         ind_orig = ind_z_surf
         ind_int = 1
-        do while(ind_int <= detlayers)
-            if ((dist + DZ_mod(ind_orig)) < (detthick * ind_int)) then
+        do while(ind_int <= config%output_dimensions%detlayers)
+            if ((dist + DZ_mod(ind_orig)) < (config%output_dimensions%detthick * ind_int)) then
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
                 dist = dist + DZ_mod(ind_orig)
                 ind_orig = ind_orig - 1
-            else if ((dist + DZ_mod(ind_orig)) == (detthick * ind_int)) then
+            else if ((dist + DZ_mod(ind_orig)) == (config%output_dimensions%detthick * ind_int)) then
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (DZ_mod(ind_orig) / DZ(ind_orig))
                 dist = dist + DZ_mod(ind_orig)
                 ind_orig = ind_orig - 1
                 ind_int = ind_int + 1
             else
-                part = (detthick * ind_int) - dist
+                part = (config%output_dimensions%detthick * ind_int) - dist
                 IntRefreeze(ind_int) = Intrefreeze(ind_int) + Refreeze(ind_orig) * (part / DZ(ind_orig))
                 dist = dist + part
                 DZ_mod(ind_orig) = DZ_mod(ind_orig) - part
@@ -265,27 +263,24 @@ end subroutine To_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
+subroutine Save_out_1D(outputSpeed, out_1D)
     !*** Write the 1D output variables to a netcdf file !***
     
     ! declare arguments
 
-    integer, intent(in) :: outputSpeed, writeinspeed
-    double precision, dimension((outputSpeed),18), intent(in) :: out_1D
+    integer, intent(in) :: outputSpeed
+    double precision, dimension(:,:), intent(in) :: out_1D
 
 
     ! declare local arguments
     integer :: status, ncid(50), IDs(50,5), varID(50,20)
     character*255 :: pad, writeinspeed_str
-    character*24 :: current_datetime
 
-    pad = trim(path_out_1d)//trim(fname_out_1d)
-    
+    pad = trim(output_dir)//trim(fname_out_1d)
+
     ncid(:) = 0
     IDs(:,:) = 0
     varID(:,:) = 0
-
-    call fdate(current_datetime)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid(32))
@@ -335,77 +330,62 @@ subroutine Save_out_1D(outputSpeed, out_1D, writeinspeed)
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
 
-    status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1a')
     status = nf90_put_att(ncid(32),varID(32,1),"name","Surface height")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1b')
     
-    status = nf90_put_att(ncid(32),varID(32,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2a')
     status = nf90_put_att(ncid(32),varID(32,2),"name","Ice velocity at the model base")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2b')
     
-    status = nf90_put_att(ncid(32),varID(32,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3a')
     
-    status = nf90_put_att(ncid(32),varID(32,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(32),varID(32,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(32),varID(32,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_6')
-    status = nf90_put_att(ncid(32),varID(32,7),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,7),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_7')
-    status = nf90_put_att(ncid(32),varID(32,8),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,8),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_8')
-    status = nf90_put_att(ncid(32),varID(32,9),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,9),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_9')
-    status = nf90_put_att(ncid(32),varID(32,10),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,10),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_10')
     
-    status = nf90_put_att(ncid(32),varID(32,11),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,11),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11a')
     status = nf90_put_att(ncid(32),varID(32,11),"name","Firn Air Content")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11b')
     status = nf90_put_att(ncid(32),varID(32,11),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11c')
     
-    status = nf90_put_att(ncid(32),varID(32,12),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,12),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_12')
-    status = nf90_put_att(ncid(32),varID(32,13),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,13),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_13')
-    status = nf90_put_att(ncid(32),varID(32,14),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,14),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_14')
-    status = nf90_put_att(ncid(32),varID(32,15),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,15),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_15')
-    status = nf90_put_att(ncid(32),varID(32,16),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,16),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_16')
-    status = nf90_put_att(ncid(32),varID(32,17),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,17),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
-    status = nf90_put_att(ncid(32),varID(32,18),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,18),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(32),nf90_global,"title","IMAU-FDM 1D output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
-    status = nf90_put_att(ncid(32),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
-    status = nf90_put_att(ncid(32),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
-    status = nf90_put_att(ncid(32),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
-    !status = nf90_put_att(ncid(32),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
-    !status = nf90_put_att(ncid(32),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
-    status = nf90_put_att(ncid(32),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
-    status = nf90_put_att(ncid(32),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')
-    
+    call Write_Global_Atts(ncid(32), "IMAU-FDM 1D output file")
+
     status = nf90_put_att(ncid(32),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_1')
-    write(writeinspeed_str, '(I0)') writeinspeed  ! Convert integer to string
+    write(writeinspeed_str, '(I0)') config%output_dimensions%writeinspeed  ! Convert integer to string
     status = nf90_put_att(ncid(32),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeinspeed_str))
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_dim_val_2')
     status = nf90_put_att(ncid(32),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
@@ -481,22 +461,20 @@ end subroutine Save_out_1D
 ! *******************************************************
 
 
-subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
+subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year)
     !*** Write the 2D output variables to a netcdf file !***
 
     ! declare arguments
-    integer, intent(in) :: outputProf, proflayers, writeinprof
-    double precision, dimension((outputProf),proflayers), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, &
-        out_2D_depth, out_2D_dRho, out_2D_year
+    double precision, dimension(:,:), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local arguments
-    integer :: status, ncid(50), IDs(50,5), varID(50,20)
+    integer :: status, ncid(50), IDs(50,5), varID(50,20), outputProf
     character*255 :: pad, writeinprof_str
     character*24 :: current_datetime
 
-    call fdate(current_datetime)
+    outputProf = size(out_2D_dens, 1) !TKTKTK outputProf should already be set, check
 
-    pad = trim(path_out_2d)//trim(fname_out_2d)
+    pad = trim(output_dir)//trim(fname_out_2d)
     
     ncid(:) = 0
     IDs(:,:) = 0
@@ -508,7 +486,7 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(31),"ind_t",outputProf,IDs(31,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim2')    
-    status = nf90_def_dim(ncid(31),"layer",proflayers,IDs(31,2))
+    status = nf90_def_dim(ncid(31),"layer",config%output_dimensions%proflayers,IDs(31,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim3')
 
     ! DEFINE VARIABLES
@@ -532,44 +510,21 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
-    status = nf90_put_att(ncid(31),varID(31,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
-    status = nf90_put_att(ncid(31),varID(31,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
-    status = nf90_put_att(ncid(31),varID(31,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
-    status = nf90_put_att(ncid(31),varID(31,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(31),varID(31,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(31),varID(31,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(31),nf90_global,"title","IMAU-FDM 2D profile output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_title')
-    status = nf90_put_att(ncid(31),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_institution')
-    status = nf90_put_att(ncid(31),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_source')
-    status = nf90_put_att(ncid(31),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_history')
-    !status = nf90_put_att(ncid(31),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_first_timestep')
-    !status = nf90_put_att(ncid(31),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_last_timestep')
-    status = nf90_put_att(ncid(31),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_domain')
-    status = nf90_put_att(ncid(31),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_forcing')
-    
-    status = nf90_put_att(ncid(31),nf90_global,"name_of_dimension","Number of timesteps")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_1')
-    write(writeinprof_str, '(I0)') writeinprof ! Convert integer to string
-    status = nf90_put_att(ncid(31),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeinprof_str))
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_2')
-    status = nf90_put_att(ncid(31),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_dim_val_3')
+    call Write_Global_Atts(ncid(31), "IMAU-FDM 2D profile output file")
 
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid(31))
@@ -577,22 +532,22 @@ subroutine Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_
 
     ! SAVE DATA
     status = nf90_put_var(ncid(31),varID(31,1),out_2D_dens,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid1')    
     status = nf90_put_var(ncid(31),varID(31,2),out_2D_temp,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid2')
     status = nf90_put_var(ncid(31),varID(31,3),out_2D_year,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid3')
     status = nf90_put_var(ncid(31),varID(31,4),out_2D_lwc,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid4')
     status = nf90_put_var(ncid(31),varID(31,5),out_2D_depth,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid5')
     status = nf90_put_var(ncid(31),varID(31,6),out_2D_dRho,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid6')
     
     ! CLOSE NETCDF-FILE
@@ -605,33 +560,30 @@ end subroutine Save_out_2D
 ! *******************************************************
 
 
-subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
+subroutine Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to a netcdf file !***
     
     ! declare arguments
-    integer, intent(in) :: outputDetail, detlayers, writeindetail
-    double precision, intent(in) :: detthick
-    double precision, dimension(detlayers) :: DetDepth, DetDZ
-    double precision, dimension((outputDetail),detlayers), intent(in) :: out_2D_det_dens, out_2D_det_temp, &
-        out_2D_det_lwc, out_2D_det_refreeze
+    double precision, dimension(:,:), intent(in) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! declare local arguments
-    integer :: dd, status, ncid(50), IDs(50,5), varID(50,20)
+    integer :: dd, status, ncid(50), IDs(50,5), varID(50,20), outputDetail
     character*255 :: pad, writeindetail_str
     character*24 :: current_datetime
+    double precision, dimension(config%output_dimensions%detlayers) :: DetDepth, DetDZ
 
-    call fdate(current_datetime)
-    
-    pad = trim(path_out_2ddet)//trim(fname_out_2ddet)
+    outputDetail = size(out_2D_det_dens, 1) !TKTKTK outputDetail should already be defined - check
+
+    pad = trim(output_dir)//trim(fname_out_2ddet)
 
     ncid(:) = 0
     IDs(:,:) = 0
     varID(:,:) = 0
 
-    DetDZ(1) = detthick
+        DetDZ(1) = config%output_dimensions%detthick
     DetDepth(1) = DetDZ(1) / 2.
-    do dd = 2, detlayers
-      DetDZ(dd) = detthick
+        do dd = 2, config%output_dimensions%detlayers
+            DetDZ(dd) = config%output_dimensions%detthick
       DetDepth(dd) = DetDepth(dd-1) + DetDZ(dd)
     end do  
 
@@ -641,7 +593,7 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(33),"ind_t",outputDetail,IDs(33,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim4')    
-    status = nf90_def_dim(ncid(33),"layer",detlayers,IDs(33,2))
+    status = nf90_def_dim(ncid(33),"layer",config%output_dimensions%detlayers,IDs(33,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim5')
 
     ! DEFINE VARIABLES
@@ -663,52 +615,37 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     
     ! DEFINE ATTRIBUTES
-    status = nf90_put_att(ncid(33),varID(33,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
     status = nf90_put_att(ncid(33),varID(33,1),"units","kg m-3")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_1')
-    status = nf90_put_att(ncid(33),varID(33,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
     status = nf90_put_att(ncid(33),varID(33,2),"units","K")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_2')
-    status = nf90_put_att(ncid(33),varID(33,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
     status = nf90_put_att(ncid(33),varID(33,3),"units","")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_3')
-    status = nf90_put_att(ncid(33),varID(33,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
     status = nf90_put_att(ncid(33),varID(33,4),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_4')
-    status = nf90_put_att(ncid(33),varID(33,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
     status = nf90_put_att(ncid(33),varID(33,5),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_5')
-    status = nf90_put_att(ncid(33),varID(33,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
     status = nf90_put_att(ncid(33),varID(33,6),"units","")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid(33),nf90_global,"title","IMAU-FDM 2D profile output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_title')
-    status = nf90_put_att(ncid(33),nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_institution')
-    status = nf90_put_att(ncid(33),nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_source')
-    status = nf90_put_att(ncid(33),nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_history')
-    !status = nf90_put_att(ncid(33),nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_first_timestep')
-    !status = nf90_put_att(ncid(33),nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_last_timestep')
-    status = nf90_put_att(ncid(33),nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_domain')
-    status = nf90_put_att(ncid(33),nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_forcing')
-    
+    call Write_Global_Atts(ncid(33), "IMAU-FDM 2Ddetail output file")
+
     status = nf90_put_att(ncid(33),nf90_global,"name_of_dimension","Number of timesteps")
     if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_dim_val_1')
-    write(writeindetail_str, '(I0)') writeindetail ! Convert integer to string
+    write(writeindetail_str, '(I0)') config%output_dimensions%writeindetail ! Convert integer to string
     status = nf90_put_att(ncid(33),nf90_global,"timestep_length_of_dimension_in_seconds",trim(writeindetail_str))
     if(status /= nf90_noerr) call Handle_Error(status,'2Ddet_def_att_dim_val_2')
     status = nf90_put_att(ncid(33),nf90_global,"description_of_dimension","Number of timesteps (defined in timestep (s)) since the start of the model run")
@@ -726,16 +663,16 @@ subroutine Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens,
     
     ! SAVE DATA
     status = nf90_put_var(ncid(33),varID(33,1),out_2D_det_dens, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail1')    
     status = nf90_put_var(ncid(33),varID(33,2),out_2D_det_temp, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail2')
     status = nf90_put_var(ncid(33),varID(33,3),out_2D_det_lwc, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail3')
     status = nf90_put_var(ncid(33),varID(33,6),out_2D_det_refreeze, &
-        start=(/1,1/),count=(/(outputDetail),detlayers/))
+        start=(/1,1/),count=(/(outputDetail),config%output_dimensions%detlayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_detail6')
 
     ! CLOSE NETCDF-FILE
@@ -747,21 +684,18 @@ end subroutine Save_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+subroutine Save_out_spinup(Rho, M, T, Depth, Mlwc, Year)
     !*** Write a netcdf file containing the firn profile after the spin-up ***!
-    
-    integer :: status, ncid, dimID, varID(10), ind_z_max, ind_z_surf
+
+    integer :: status, ncid, dimID, varID(10)
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
-    character*255 :: pad, point_numb, prefix_output, username, project_name
-    character*24 :: current_datetime
+    character*255 :: pad
 
-    call fdate(current_datetime)
-    
-    pad = trim(path_restart)//trim(fname_restart_from_spinup)
+    pad = trim(restart_dir)//"spinup/"//trim(fname_restart_from_spinup)
 
-    print *, "Saving out after spinup for restarting at: "
-    print *, trim(pad)
+    write(log_unit, *) "Saving out after spinup for restarting at: "
+    write(log_unit, *) trim(pad)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid)
@@ -803,23 +737,8 @@ subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, 
     if(status /= nf90_noerr) call Handle_Error(status,'spinup_def_att_name6')
 
     ! DEFINE GLOBAL ATTRIBUTES
-    status = nf90_put_att(ncid,nf90_global,"title","IMAU-FDM spinup output file")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_title')
-    status = nf90_put_att(ncid,nf90_global,"institution","Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_institution')
-    status = nf90_put_att(ncid,nf90_global,"source","IMAU-FDM version 1.2+")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_source')
-    status = nf90_put_att(ncid,nf90_global,"history", "Created on: "//trim(current_datetime))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_history')
-    !status = nf90_put_att(ncid,nf90_global,"model_start_datetime", trim(model_first_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_first_timestep')
-    !status = nf90_put_att(ncid,nf90_global,"model_end_datetime", trim(model_last_timestep))
-    !if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_last_timestep')
-    status = nf90_put_att(ncid,nf90_global,"domain", trim(domain))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_domain')
-    status = nf90_put_att(ncid,nf90_global,"forcing", trim(forcing))
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_forcing')    
-    
+    call Write_Global_Atts(ncid, "IMAU-FDM spinup output file")
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_enddef')
@@ -847,19 +766,19 @@ end subroutine Save_out_spinup
 ! *******************************************************
 
 
-subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, &
+subroutine Save_out_run(Nt_model_tot, Rho, M, T, Depth, Mlwc, Year, &
     DenRho, Refreeze)
     !*** Write a netcdf file containing the firn profile after the run ***!
-    
-    integer :: status, ncid, dimID(2), varID(10), ind_z_max, ind_z_surf, Nt_model_tot
+
+    integer :: status, ncid, dimID(2), varID(10), Nt_model_tot
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc, DenRho, Refreeze
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
 
-    pad = trim(path_restart)//trim(fname_restart_from_previous_run)
+    pad = trim(restart_dir)//"run/"//trim(fname_restart_from_previous_run)
 
-    print *, "Saving out run for restarting at: "
-    print *, trim(pad)
+    write(log_unit, *) "Saving out run for restarting at: "
+    write(log_unit, *) trim(pad)
 
     ! CREATE NETCDF FILES
     status = nf90_create(trim(pad),0,ncid)
@@ -890,7 +809,10 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var8')
     status = nf90_def_var(ncid,"prev_nt",nf90_real,dimID(2),varID(9))
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_def_var9')
-    
+
+    ! DEFINE GLOBAL ATTRIBUTES
+    call Write_Global_Atts(ncid, "IMAU-FDM run restart file")
+
     ! END OF DEFINING FILES
     status = nf90_enddef(ncid)
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_enddef')
@@ -920,5 +842,48 @@ subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, M
     if(status /= nf90_noerr) call Handle_Error(status,'restart_run_close')
     
 end subroutine Save_out_run
+
+
+! *******************************************************
+
+
+subroutine Write_Global_Atts(ncid_val, title)
+    !*** Write shared global attributes to a NetCDF file ***!
+    integer,          intent(in) :: ncid_val
+    character(len=*), intent(in) :: title
+
+    integer        :: status
+    character*24   :: current_datetime
+
+    call fdate(current_datetime)
+
+    status = nf90_put_att(ncid_val, nf90_global, "Conventions", "CF-1.8")
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_conventions')
+    status = nf90_put_att(ncid_val, nf90_global, "title", title)
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_title')
+    status = nf90_put_att(ncid_val, nf90_global, "project", trim(project_name))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_project')
+    status = nf90_put_att(ncid_val, nf90_global, "institution", &
+        "Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_institution')
+    status = nf90_put_att(ncid_val, nf90_global, "source", "IMAU-FDM version "//trim(model_version))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_source')
+    status = nf90_put_att(ncid_val, nf90_global, "history", "Created on: "//trim(current_datetime))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_history')
+    status = nf90_put_att(ncid_val, nf90_global, "model_start_datetime", trim(model_first_timestep))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_start')
+    status = nf90_put_att(ncid_val, nf90_global, "model_end_datetime", trim(model_last_timestep))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_end')
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_start_year", trim(start_ave_year))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_start')
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_end_year", trim(end_ave_year))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_end')
+    status = nf90_put_att(ncid_val, nf90_global, "domain", trim(domain))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_domain')
+    status = nf90_put_att(ncid_val, nf90_global, "forcing", trim(forcing))
+    if (status /= nf90_noerr) call Handle_Error(status, 'global_att_forcing')
+
+end subroutine Write_Global_Atts
+
 
 end module output

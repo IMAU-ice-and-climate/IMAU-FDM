@@ -57,7 +57,7 @@ function read_time_bounds(netcdf_file) result(time_bounds)
     character(len=nf90_max_name) :: dim_name, var_name
 
     allocate(time_bounds)
-
+  
     call handle_error(nf90_open("data/evap_FGRN055_era055_1939-2023_p24-007.nc", 0, ncid), "open_netcdf_file")
     call handle_error(nf90_inquire(ncid, ndim, nvar, nattr, unlim_dim, format_num), "inquire_net_file")
 
@@ -84,14 +84,14 @@ end function
 
 subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     
-    integer :: status, ncid(1), ID(5), Nlat, Nlon
-    double precision, dimension(Nlon,Nlat) :: LSM, ISM, Latitude, Longitude
-    character*255 :: domain, pad
+    integer :: status, ncid(1), ID(5)
+    double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat) :: LSM, ISM, Latitude, Longitude
+    character*255 :: pad
 
-    pad = trim(path_forcing_mask)//trim(fname_mask)
+    pad = trim(reference_dir)//trim(fname_mask)
 
-    print *, "Path to mask: ", trim(pad)
-    print *, " "
+    write(log_unit, *) "Path to mask: ", trim(pad)
+    write(log_unit, *) " "
 
     ! open ice mask
     status = nf90_open(trim(pad),0,ncid(1))
@@ -106,7 +106,7 @@ subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_icemask_lon')
     
     status  = nf90_get_var(ncid(1),ID(1),LSM,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lsm')
     status  = nf90_get_var(ncid(1),ID(2),Latitude)        
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_lat')
@@ -117,7 +117,7 @@ subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
         status = nf90_inq_varid(ncid(1),iceshelf_var,ID(5))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_inq_iceshelf')
         status  = nf90_get_var(ncid(1),ID(6),ISM,start=(/1,1/), &
-            count=(/Nlon,Nlat/))
+            count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat/))
         if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_iceshelfmask')
     else
         ! No Ice Shelves in Greenland / no ice shelf variable defined 
@@ -129,26 +129,26 @@ subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
 
 end subroutine Load_Mask
 
-subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, Nlat, Nlon)
+subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt)
     
-    integer :: status,ncid(50),ID(50),Nlat,Nlon,i,j
-    double precision, dimension(Nlon,Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
+    integer :: status,ncid(50),ID(50),i,j
+    double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt
 
-    print *, "Path to averages: ", trim(path_forcing_averages)//"VAR"//trim(suffix_forcing_averages)
-    print *, " "
+    write(log_unit, *) "Path to averages: ", trim(input_averages_dir)//"VAR"//trim(suffix_forcing_averages)
+    write(log_unit, *) " "
 
-    status = nf90_open(trim(path_forcing_averages)//"snowmelt"//trim(suffix_forcing_averages),0,ncid(1))
+    status = nf90_open(trim(input_averages_dir)//"snowmelt"//trim(suffix_forcing_averages),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open1')
-    status = nf90_open(trim(path_forcing_averages)//"precip"//trim(suffix_forcing_averages),0,ncid(2))
+    status = nf90_open(trim(input_averages_dir)//"precip"//trim(suffix_forcing_averages),0,ncid(2))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open2')
-    status = nf90_open(trim(path_forcing_averages)//"ff10m"//trim(suffix_forcing_averages),0,ncid(3))
+    status = nf90_open(trim(input_averages_dir)//"ff10m"//trim(suffix_forcing_averages),0,ncid(3))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open3')
-    status = nf90_open(trim(path_forcing_averages)//"tskin"//trim(suffix_forcing_averages),0,ncid(4))
+    status = nf90_open(trim(input_averages_dir)//"tskin"//trim(suffix_forcing_averages),0,ncid(4))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open4')
-    status = nf90_open(trim(path_forcing_averages)//"evap"//trim(suffix_forcing_averages),0,ncid(5))
+    status = nf90_open(trim(input_averages_dir)//"evap"//trim(suffix_forcing_averages),0,ncid(5))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open5')
-    status = nf90_open(trim(path_forcing_averages)//"sndiv"//trim(suffix_forcing_averages),0,ncid(6))
+    status = nf90_open(trim(input_averages_dir)//"sndiv"//trim(suffix_forcing_averages),0,ncid(6))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open7')
 
     status = nf90_inq_varid(ncid(1),"snowmelt",ID(1))
@@ -165,22 +165,22 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, Nlat, Nlon)
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_inq_sndiv')
 
     status  = nf90_get_var(ncid(1),ID(1),AveMelt,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avemelt')
     status  = nf90_get_var(ncid(2),ID(2),AveAcc,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_aveacc')
     status  = nf90_get_var(ncid(3),ID(3),AveWind,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avewind')
     status  = nf90_get_var(ncid(4),ID(4),AveTsurf,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avetsurf')
     status  = nf90_get_var(ncid(5),ID(5),AveSubl,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avesubl')
     status  = nf90_get_var(ncid(6),ID(6),AveSnowDrif,start=(/1,1,1,1/), &
-        count=(/Nlon,Nlat,1,1/))
+        count=(/config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat,1,1/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var_avesndiv')
 
     ! Close all netCDF files    
@@ -199,11 +199,11 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, Nlat, Nlon)
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ave_close6')
 
     ! Convert units from [mm w.e./s] to [mm w.e./yr]
-    do i = 1, Nlon
-        do j = 1, Nlat
+    do i = 1, config%forcing_dimensions%Nlon
+        do j = 1, config%forcing_dimensions%Nlat
             AveAcc(i,j) = (AveAcc(i,j)+AveSubl(i,j)-AveSnowDrif(i,j)) &
-                * (seconds_per_year)
-            AveMelt(i,j) = AveMelt(i,j) * (seconds_per_year)
+                * (const%seconds_per_year)
+            AveMelt(i,j) = AveMelt(i,j) * (const%seconds_per_year)
         end do
     end do
     
@@ -213,12 +213,12 @@ end subroutine Load_Ave_Forcing
 ! *******************************************************
 
 
-subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, &
-    ind_lon, ind_lat, dtobs, Nlon_timeseries)
-    
-    integer :: status, ind_t, ncid(50), Nt_forcing, ind_lon, ind_lat, ID(50), dtobs, Nlon_timeseries
+subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, &
+    ind_lon, ind_lat)
+
+    integer :: status, ind_t, ncid(50), ind_lon, ind_lat, ID(50)
     double precision :: remove_Psol,remove_Pliq,remove_Ptot,remove_Melt
-    double precision, dimension(Nt_forcing) :: SnowMelt,PreTot,PreSol,PreLiq,Sublim,TempSurf, &
+    double precision, dimension(:) :: SnowMelt,PreTot,PreSol,PreLiq,Sublim,TempSurf, &
         SnowDrif,FF10m
 
     integer :: latfile, lonfile, fnumb_i
@@ -235,36 +235,35 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     else !running point
 
         latfile = ind_lat
-        lonfile = mod(ind_lon,Nlon_timeseries)
+        lonfile = mod(ind_lon,config%forcing_dimensions%Nlon_timeseries)
 
-        if (lonfile==0) lonfile = Nlon_timeseries
-        fnumb_i = floor((real(ind_lon)-0.001)/real(Nlon_timeseries))+1
+        if (lonfile==0) lonfile = config%forcing_dimensions%Nlon_timeseries
+        fnumb_i = floor((real(ind_lon)-0.001)/real(config%forcing_dimensions%Nlon_timeseries))+1
         if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
         if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
 
         add = trim(prefix_forcing_timeseries)//trim(fnumb)//trim(suffix_forcing_timeseries)
-     
 
     end if
     
 
-    print *, "Looking for timeseries at: "
-    print *, trim(path_forcing_timeseries)//"VAR"//trim(add)
+    write(log_unit, *) "Looking for timeseries at: "
+    write(log_unit, *) trim(input_timeseries_dir)//"VAR"//trim(add)
     
     ! Open the snowmelt netCDF file
-    status = nf90_open(trim(path_forcing_timeseries)//"snowmelt"//trim(add),0,ncid(1))
+    status = nf90_open(trim(input_timeseries_dir)//"snowmelt"//trim(add),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open1')
-    status = nf90_open(trim(path_forcing_timeseries)//"precip"//trim(add),0,ncid(2))
+    status = nf90_open(trim(input_timeseries_dir)//"precip"//trim(add),0,ncid(2))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open2')
-    status = nf90_open(trim(path_forcing_timeseries)//"snowfall"//trim(add),0,ncid(3))
+    status = nf90_open(trim(input_timeseries_dir)//"snowfall"//trim(add),0,ncid(3))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open3')
-    status = nf90_open(trim(path_forcing_timeseries)//"evap"//trim(add),0,ncid(4))
+    status = nf90_open(trim(input_timeseries_dir)//"evap"//trim(add),0,ncid(4))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open4')
-    status = nf90_open(trim(path_forcing_timeseries)//"tskin"//trim(add),0,ncid(5))
+    status = nf90_open(trim(input_timeseries_dir)//"tskin"//trim(add),0,ncid(5))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open5')
-    status = nf90_open(trim(path_forcing_timeseries)//"sndiv"//trim(add),0,ncid(6))
+    status = nf90_open(trim(input_timeseries_dir)//"sndiv"//trim(add),0,ncid(6))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open6')
-    status = nf90_open(trim(path_forcing_timeseries)//"ff10m"//trim(add),0,ncid(7))
+    status = nf90_open(trim(input_timeseries_dir)//"ff10m"//trim(add),0,ncid(7))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open7')
     
     !Get ID of the variables in the NetCDF files
@@ -285,34 +284,34 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
 
     ! Get all variables from the netCDF files
     status  = nf90_get_var(ncid(1),ID(1),SnowMelt,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var1')
-    print *, "Read snowmelt..."
+    write(log_unit, *) "Read snowmelt..."
     status  = nf90_get_var(ncid(2),ID(2),PreTot,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var2')
-    print *, "Read precipitation..."
+    write(log_unit, *) "Read precipitation..."
     status  = nf90_get_var(ncid(3),ID(3),PreSol,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var3')
-    print *, "Read snowfall..."
+    write(log_unit, *) "Read snowfall..."
     status  = nf90_get_var(ncid(4),ID(4),Sublim,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var4')
-    print *, "Read sublimation..."
+    write(log_unit, *) "Read sublimation..."
     status  = nf90_get_var(ncid(5),ID(5),TempSurf,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var5')
-    print *, "Read skin temperature..."
+    write(log_unit, *) "Read skin temperature..."
     status  = nf90_get_var(ncid(6),ID(6),SnowDrif,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var6')
-    print *, "Read snow drift..."
+    write(log_unit, *) "Read snow drift..."
     status  = nf90_get_var(ncid(7),ID(7),FF10m,start=(/lonfile,latfile,1,1/), &
-        count=(/1,1,1,Nt_forcing/))
+        count=(/1,1,1,config%forcing_dimensions%Nt_forcing/))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_get_var7')
-    print *, "Read wind speed..."
-    print *, ' '
+    write(log_unit, *) "Read wind speed..."
+    write(log_unit, *) ' '
 
     ! Close all netCDF files    
     status = nf90_close(ncid(1))
@@ -336,34 +335,34 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     remove_Melt = 0.
 
     ! from per second to per observation time period (e.g., 3 hourly)
-    do ind_t = 1, Nt_forcing
-        SnowMelt(ind_t) = SnowMelt(ind_t) * dtobs
-        PreTot(ind_t) = PreTot(ind_t) * dtobs
-        PreSol(ind_t) = PreSol(ind_t) * dtobs
-        Sublim(ind_t) = Sublim(ind_t) * dtobs
-        SnowDrif(ind_t) = SnowDrif(ind_t) * dtobs
-        PreLiq(ind_t) = PreLiq(ind_t) * dtobs
+    do ind_t = 1, config%forcing_dimensions%Nt_forcing
+        SnowMelt(ind_t) = SnowMelt(ind_t) * config%forcing_dimensions%dtobs
+        PreTot(ind_t) = PreTot(ind_t) * config%forcing_dimensions%dtobs
+        PreSol(ind_t) = PreSol(ind_t) * config%forcing_dimensions%dtobs
+        Sublim(ind_t) = Sublim(ind_t) * config%forcing_dimensions%dtobs
+        SnowDrif(ind_t) = SnowDrif(ind_t) * config%forcing_dimensions%dtobs
+        PreLiq(ind_t) = PreLiq(ind_t) * config%forcing_dimensions%dtobs
     end do
 
-    do ind_t = 1, Nt_forcing
-        if (SnowMelt(ind_t) < ts_minimum) then
+    do ind_t = 1, config%forcing_dimensions%Nt_forcing
+        if (SnowMelt(ind_t) < config%model_choices%ts_minimum) then
             remove_Melt = remove_Melt + SnowMelt(ind_t)
             SnowMelt(ind_t) = 0.     
         endif
         
-        if (PreSol(ind_t) < ts_minimum) then
+        if (PreSol(ind_t) < config%model_choices%ts_minimum) then
             remove_Psol = remove_Psol + PreSol(ind_t)
             PreSol(ind_t) = 0.
         endif
     
-        if (PreTot(ind_t) < ts_minimum) then
+        if (PreTot(ind_t) < config%model_choices%ts_minimum) then
             remove_Ptot = remove_Ptot + PreTot(ind_t)
             PreTot(ind_t) = 0.
         endif
     
         if (TempSurf(ind_t) > 267.) then
             PreLiq(ind_t) = PreTot(ind_t)-PreSol(ind_t)
-            if (PreLiq(ind_t) < ts_minimum) then
+            if (PreLiq(ind_t) < config%model_choices%ts_minimum) then
                 remove_Pliq = remove_Pliq + PreLiq(ind_t)
                 PreLiq(ind_t) = 0.
                 PreSol(ind_t) = PreTot(ind_t)
@@ -373,11 +372,11 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         endif
     end do
     
-    print *, "remove_Psol: ", remove_Psol
-    print *, "remove_Pliq: ", remove_Pliq
-    print *, "remove_Ptot: ", remove_Ptot
-    print *, "remove_Melt: ", remove_Melt
-    print *, ' '
+    write(log_unit, *) "remove_Psol: ", remove_Psol
+    write(log_unit, *) "remove_Pliq: ", remove_Pliq
+    write(log_unit, *) "remove_Ptot: ", remove_Ptot
+    write(log_unit, *) "remove_Melt: ", remove_Melt
+    write(log_unit, *) ' '
 
 end subroutine Load_TimeSeries_Forcing
     
@@ -385,20 +384,19 @@ end subroutine Load_TimeSeries_Forcing
 ! *******************************************************
 
 
-subroutine Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
-        
-    integer :: ind_z_max, ind_z_surf
+subroutine Restart_From_Spinup(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
+
     integer :: ind_z, status, ncid(50), ID(50), LayerID
     
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze
     
     character*255 :: pad
     
-    pad = trim(path_restart)//trim(fname_restart_from_spinup)
+    pad = trim(restart_dir)//"spinup/"//trim(fname_restart_from_spinup)
     
-    print *, "Path of spinup restart file: "
-    print *, trim(pad)
-    print *, ' '
+    write(log_unit, *) "Path of spinup restart file: "
+    write(log_unit, *) trim(pad)
+    write(log_unit, *) ' '
 
     ! Open the restart netCDF file
     status = nf90_open(trim(pad),0,ncid(1))
@@ -452,21 +450,20 @@ end subroutine Restart_From_Spinup
 
 ! *******************************************************
 
-subroutine Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, prefix_output, project_name)
-        
-    integer :: ind_z_max, ind_z_surf, prev_nt
+subroutine Restart_From_Run(prev_nt, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
+
+    integer :: prev_nt
     integer :: ind_z, status, ncid(50), ID(50), LayerID(2)
-    
+
     double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze
+
+    character*255 :: pad
+
+    pad = trim(restart_dir)//"run/"//trim(fname_restart_from_previous_run)
     
-    character*255 :: pad, username, point_numb, project_name, prefix_output
-    
-    pad = trim(path_restart)//trim(fname_restart_from_previous_run)
-    
-    print *, 'Path of run restart files: :'
-    print *, trim(pad)
-    print *, ' '
+    write(log_unit, *) 'Path of run restart files: :'
+    write(log_unit, *) trim(pad)
+    write(log_unit, *) ' '
 
     ! Open the snowmelt netCDF file
     status = nf90_open(trim(pad),0,ncid(1))
@@ -548,7 +545,7 @@ subroutine Handle_Error(stat,msg)
     character(len=*), intent(in) :: msg
 
     if(stat /= nf90_noerr) then
-        print *, 'netCDF error (',msg,'): ', nf90_strerror(stat)
+        write(log_unit, *) 'netCDF error (',msg,'): ', nf90_strerror(stat)
         stop
     endif
 

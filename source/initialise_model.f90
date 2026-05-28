@@ -12,22 +12,24 @@ contains
 ! *******************************************************
 
 
-subroutine Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM, Nlon, Nlat)
+subroutine Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM)
+    ! TKTKTK: should be removed since lat/lon already found in distributor.f90
+
     !*** Determine the indices of the current run point on the forcing grid ***!
     
     ! declare arguments
-    integer, intent(in) :: Nlon, Nlat
+
     integer, intent(out) :: ind_lon, ind_lat
     double precision, intent(in) :: lon_current, lat_current
-    double precision, dimension(Nlon,Nlat), intent(in) :: Latitude, Longitude, LSM
+    double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat), intent(in) :: Latitude, Longitude, LSM
 
     ! declare local variables
     integer :: i, j
     double precision :: dmax, dist, lon_grid, lat_grid
 
     dmax = 999.
-    do i = 1, Nlon
-        do j = 1, Nlat
+    do i = 1, config%forcing_dimensions%Nlon
+        do j = 1, config%forcing_dimensions%Nlat
             dist = sqrt(((lon_current-Longitude(i,j))*cos(((lat_current+Latitude(i,j))/2.)/360.* &
                 asin(1.)*4.))**2. + (lat_current-Latitude(i,j))**2.)
             if ((dist < dmax) .and. (LSM(i,j) > 0.5)) then
@@ -40,13 +42,13 @@ subroutine Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longi
         enddo
     enddo
 
-    print *, " "
-    print *, " Input Lon, Lat: ", lon_current, ", ", lat_current
-    print *, "------------------------------------"
-    print *, " Closest gridpoint: ", ind_lon, ", ", ind_lat
-    print *, "     with Lon, Lat: ", lon_grid, ", ", lat_grid
-    print *, "-----------------------------------------------------------------"
-    print *, " "
+    write(log_unit, *) " "
+    write(log_unit, *) " Input Lon, Lat: ", lon_current, ", ", lat_current
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " Closest gridpoint: ", ind_lon, ", ", ind_lat
+    write(log_unit, *) "     with Lon, Lat: ", lon_grid, ", ", lat_grid
+    write(log_unit, *) "-----------------------------------------------------------------"
+    write(log_unit, *) " "
 
 end subroutine Find_Grid
 
@@ -56,14 +58,13 @@ end subroutine Find_Grid
 
 subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, &
     TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, &
-    Nt_model_tot, dtSnow, dtmodel, domain)
+    Nt_model_tot, dtmodel)
     !*** Linearly interpolate RACMO forcing to model time step and calculate fresh snow density ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel, dtSnow
-    double precision, dimension(Nt_forcing), intent(in) :: TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m
-    double precision, dimension(Nt_model_tot), intent(out) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
-    character*255 :: domain
+    integer, intent(in) :: Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel
+    double precision, dimension(:), intent(in)  :: TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m
+    double precision, dimension(:), intent(out) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
 
     ! declare local variables
     integer :: step, a, b, numSnow
@@ -72,28 +73,28 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
 
     allocate(ff10FM(Nt_model_tot))
     
-    print *, 'Forcing before interpolation:'
-    print *, 'TempSurf(1:10)'
-    print *, TempSurf(1:10)
-    print *, ' '
-    print *, 'PreSol(1:10)'
-    print *, PreSol(1:10)
-    print *, ' '
-    print *, 'PreLiq(1:10)'
-    print *, PreLiq(1:10)
-    print *, ' '
-    print *, 'Sublim(1:10)'
-    print *, Sublim(1:10)
-    print *, ' '
-    print *, 'SnowMelt(1:10)'
-    print *, SnowMelt(1:10)
-    print *, ' '
-    print *, 'SnowDrif(1:10)'
-    print *, SnowDrif(1:10)
-    print *, ' '
-    print *, 'FF10m(1:10)'
-    print *, FF10m(1:10)
-    print *, ' '
+    write(log_unit, *) 'Forcing before interpolation:'
+    write(log_unit, *) 'TempSurf(1:10)'
+    write(log_unit, *) TempSurf(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'PreSol(1:10)'
+    write(log_unit, *) PreSol(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'PreLiq(1:10)'
+    write(log_unit, *) PreLiq(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'Sublim(1:10)'
+    write(log_unit, *) Sublim(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'SnowMelt(1:10)'
+    write(log_unit, *) SnowMelt(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'SnowDrif(1:10)'
+    write(log_unit, *) SnowDrif(1:10)
+    write(log_unit, *) ' '
+    write(log_unit, *) 'FF10m(1:10)'
+    write(log_unit, *) FF10m(1:10)
+    write(log_unit, *) ' '
 
     do a = 1, (Nt_forcing-1)
         do  b = 1, Nt_model_interpol
@@ -124,17 +125,19 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     if (trim(domain) == "ANT27") then 
         numSnow = 1
     else
-        numSnow = max(int(dtSnow/dtmodel),1)
+        numSnow = max(int(config%model_choices%dtSnow/dtmodel),1)
     end if 
     
-    print *, 'numSnow: ', numSnow
-    print *, ' '
+    write(log_unit, *) 'numSnow: ', numSnow
+    write(log_unit, *) ' '
 
     if (numSnow == 1) then
+        ! TKTKTK: make choice of surface snow explicit in model.toml
+        
         ! Use current temperature and wind speed for snow parameterisations
         if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
             do step = 1, Nt_model_tot
-                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt) ! from Fausto et al. 2018 
+                Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - const%Tmelt) ! from Fausto et al. 2018 
             end do
         else
             do step = 1, Nt_model_tot
@@ -148,11 +151,11 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             ! Greenland
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - const%Tmelt)
             end do
             do step = (numSnow+1), Nt_model_tot
                 TempSnow = sum( TempFM(step-numSnow:step) )/numSnow
-                Rho0FM(step) = 362.1 + 2.78*(TempSnow - Tmelt)
+                Rho0FM(step) = 362.1 + 2.78*(TempSnow - const%Tmelt)
             end do
         else
             ! Not Greenland
@@ -171,12 +174,12 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     end if
 
-    print *, 'TempSnow: ', TempSnow
-    print *, ' '
-    print *, 'Snow density (after interpolation):'
-    print *, 'Rho0FM(1:10)'
-    print *, Rho0FM(1:10)
-    print *, ' '
+    write(log_unit, *) 'TempSnow: ', TempSnow
+    write(log_unit, *) ' '
+    write(log_unit, *) 'Snow density (after interpolation):'
+    write(log_unit, *) 'Rho0FM(1:10)'
+    write(log_unit, *) Rho0FM(1:10)
+    write(log_unit, *) ' '
 
     deallocate(ff10FM)
 
@@ -186,31 +189,31 @@ end subroutine Interpol_Forcing
 ! *******************************************************
 
 
-subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat)
+subroutine Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, ind_lon, ind_lat)
     !*** Index the avarage forcing fields for the current run ***! 
 
     ! declare arguments
-    integer, intent(in) :: Nlon, Nlat, ind_lon, ind_lat
+    integer, intent(in) :: ind_lon, ind_lat
     integer, intent(out) :: IceShelf
     double precision, intent(out) :: tsav, acav, ffav
-    double precision, dimension(Nlon,Nlat), intent(in) :: AveTsurf, AveAcc, AveWind, AveMelt, ISM
+    double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat), intent(in) :: AveTsurf, AveAcc, AveWind, AveMelt, ISM
 
     acav = AveAcc(ind_lon, ind_lat)
     if (acav < 0) acav = 0.1
     ffav = AveWind(ind_lon, ind_lat)
     tsav = AveTsurf(ind_lon, ind_lat)
-    if (tsav > Tmelt) tsav = Tmelt
+    if (tsav > const%Tmelt) tsav = const%Tmelt
 
     IceShelf = int(ISM(ind_lon, ind_lat))
 
-    print *, "  "
-    print *, "------------------------------------"    
-    write(*,'(A19,1X,F8.3,1X,A1)') " Average Tsurf:     ", tsav, "K"
-    write(*,'(A19,1X,F8.3,1X,A13)') " Average Acc:      ", acav, "mm w.e. yr-1"
-    write(*,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
-    write(*,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(ind_lon, ind_lat), "mm w.e. yr-1"
-    print *, "------------------------------------"
-    print *, "  "
+    write(log_unit, *) "  "
+    write(log_unit, *) "------------------------------------"    
+    write(log_unit,'(A19,1X,F8.3,1X,A1)') " Average Tsurf:     ", tsav, "K"
+    write(log_unit,'(A19,1X,F8.3,1X,A13)') " Average Acc:      ", acav, "mm w.e. yr-1"
+    write(log_unit,'(A19,1X,F8.3,1X,A5)') " Average Wind:      ", ffav, "m s-1"
+    write(log_unit,'(A19,1X,F8.3,1X,A13)') " Total Melt:       ", AveMelt(ind_lon, ind_lat), "mm w.e. yr-1"
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) "  "
 
 end subroutine Index_Ave_Forcing
 
@@ -218,55 +221,40 @@ end subroutine Index_Ave_Forcing
 ! *******************************************************
 
 
-subroutine Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0, acav, tsav, DZ, Rho, M)
+subroutine Init_Density_Prof(rho0, acav, tsav, DZ, Rho, M)
     !*** Initialise the density profile ***!
-        
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf    
-    double precision, intent(in) :: dzmax, rho0, acav, tsav
+    double precision, intent(in) :: rho0, acav, tsav
     double precision, dimension(ind_z_max), intent(inout) :: DZ, Rho
     double precision, dimension(ind_z_max), intent(out) :: M
 
     ! declare local variables
     integer :: ind_z
-    double precision :: drho, part1, cons
+    double precision :: drho, part1
         
     Rho(ind_z_surf) = rho0 ! rho0 set by Rho0FM in Interpol_Forcing
     M(ind_z_surf) = Rho(ind_z_surf) * DZ(ind_z_surf)
 
     do ind_z = (ind_z_surf-1), 1, -1
 
-        part1 = (rhoi-Rho(ind_z+1))*exp((-Ec/(R*tsav))+(Eg/(R*tsav)))
+        part1 = (const%rhoi-Rho(ind_z+1))*exp((-const%Ec/(const%R*tsav))+(const%Eg/(const%R*tsav)))
 
-        ! TKTKTK: cons never called
         if (Rho(ind_z+1) <= 550.) then
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 0.8147 - 0.0275*log(acav)        ! r2>0.8
-            else
-                cons = 1.435 - 0.151*log(acav)
-            endif
-            drho = 0.07*dzmax*Rho(ind_z+1)*g*part1
+            drho = 0.07*config%model_choices%dzmax*Rho(ind_z+1)*const%g*part1
         else
-            if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
-                cons = 3.9192 * (acav**(-0.2617)) - 0.2781        ! r2>0.8
-            else
-                cons = 2.366 - 0.293*log(acav)
-            endif
-            if (cons < 0.25) cons = 0.25
-            drho = 0.03*dzmax*Rho(ind_z+1)*g*part1
+            drho = 0.03*config%model_choices%dzmax*Rho(ind_z+1)*const%g*part1
         endif
 
 
         Rho(ind_z) = drho + Rho(ind_z+1)
-        if (Rho(ind_z) > rhoi) Rho(ind_z) = rhoi
+        if (Rho(ind_z) > const%rhoi) Rho(ind_z) = const%rhoi
 
         M(ind_z) = Rho(ind_z) * DZ(ind_z)
 
     enddo
     
-    print *, 'Initial density 10 lowermost layers:'
-    print *, Rho(1:10)
-    print *, " "
+    write(log_unit, *) 'Initial density 10 lowermost layers:'
+    write(log_unit, *) Rho(1:10)
+    write(log_unit, *) " "
 
 end subroutine Init_Density_Prof
 
@@ -274,12 +262,9 @@ end subroutine Init_Density_Prof
 ! *******************************************************
 
 
-subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
+subroutine Init_Temp_Prof(tsav, T, Rho, Depth)
     !*** Initialise the temperature profile ***!
-    
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, beginT
-    double precision, intent(in) :: tsav, pi, rhoi
+    double precision, intent(in) :: tsav
     double precision, dimension(ind_z_max), intent(in) :: Depth, Rho
     double precision, dimension(ind_z_max), intent(out) :: T
 
@@ -291,15 +276,17 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
     ampts = 10.
 
     ci = 152.5 + 7.122 * tsav                       ! heat capacity, Paterson (1994)
-    om = 2.*pi/seconds_per_year                               ! rads per second
+    om = 2.*const%pi/const%seconds_per_year                               ! TKTKTK: set in constants; rads per second
 
     do ind_z = ind_z_surf, 1, -1                               ! temperature - depth loop
+
+        ! TKTKTK the choice of these physics should be made explicit in model.toml file
 
         !ki = 0.021+2.5*(Rho(k)/1000.)**2                       ! Anderson (1976), old method
         kice = 9.828 * exp(-0.0057*T(ind_z))                    ! Paterson et al., 1994
         kice_ref = 9.828 * exp(-0.0057*270.15)                  ! Paterson et al., 1994
         kcal = 0.024 - 1.23E-4*Rho(ind_z) + 2.5E-6*Rho(ind_z)**2.
-        kf = 2.107 + 0.003618*(Rho(ind_z)-rhoi)                     ! Calonne (2019)
+        kf = 2.107 + 0.003618*(Rho(ind_z)-const%rhoi)                     ! Calonne (2019)
         kair = (2.334E-3*T(ind_z)**(3./2.))/(164.54 + T(ind_z))           ! Reid (1966) #updated by ehc on 11/06/25 so no longer integer division (3/2)
         kair_ref = (2.334E-3*270.15**(3./2.))/(164.54 + 270.15)
         theta = 1./(1.+exp(-0.04*(Rho(ind_z)-450.)))
@@ -309,11 +296,11 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
         if (ind_z == 1) then
             T(ind_z) = tsav
         else
-            if (beginT == 1) then
+            if (config%initialization%beginT == 1) then
                 ! Winter
                 T(ind_z) = tsav - ampts*exp(-(om/(2.*Diff))**0.5*Depth(ind_z))* &
                     cos(-(om/(2.*Diff))**0.5*Depth(ind_z))
-            elseif (beginT == 2) then
+            elseif (config%initialization%beginT == 2) then
                 ! Summer
                 T(ind_z) = tsav + ampts*exp(-(om/(2.*Diff))**0.5*Depth(ind_z))* &
                     cos(-(om/(2.*Diff))**0.5*Depth(ind_z))
@@ -325,9 +312,9 @@ subroutine Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth
 
     enddo
 
-    print *, 'Initial temperature 10 lowermost layers:'
-    print *, T(1:10)
-    print *, " "
+    write(log_unit, *) 'Initial temperature 10 lowermost layers:'
+    write(log_unit, *) T(1:10)
+    write(log_unit, *) " "
     
 end subroutine Init_Temp_Prof
     

@@ -18,31 +18,29 @@ module model_main
     use model_settings
     use openNetCDF, only: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Restart_From_Spinup, Restart_From_Run
     use output, only: Save_out_1D, Save_out_2D, Save_out_2Ddetail, Save_out_spinup, Save_out_run
-    use initialise_variables, only: Get_Model_Settings_and_Forcing_Dimensions, &
-    Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
-    use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Find_Grid, Index_Ave_Forcing
+    use initialise_variables, only: Calc_Output_Freq, Init_TimeStep_Var, Init_Prof_Var, Init_Output_Var, Alloc_Forcing_Var
+    use initialise_model, only: Init_Density_Prof, Init_Temp_Prof, Interpol_Forcing, Index_Ave_Forcing
     use time_loop, only: Time_Loop_SpinUp, Time_Loop_Main
     
     implicit none
 
 contains
 
-subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon) 
-    
-    integer :: ind_z_surf, ind_lon, ind_lat, Nt_forcing, Nlat, Nlon, Nlon_timeseries, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, dtSnow
-    integer :: ImpExp, dtmodel, dtmodelImp, dtmodelExp, dtobs
+subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
+
+    double precision, intent(in) :: cur_lat, cur_lon
+    integer,          intent(in) :: ind_lat, ind_lon
+
+    integer :: Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer :: writeinprof, writeinspeed, writeindetail
     integer :: numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail
-    integer :: proflayers, detlayers, BeginT, startasice, IceShelf
-    integer :: nyears, nyearsSU
+    integer :: IceShelf
+    integer :: dtmodel
     integer :: prev_nt
-    integer, parameter :: ind_z_max = 20000
-    
-    double precision :: cur_lat, cur_lon
 
-    double precision :: dzmax, initdepth, th, rho0_init, tsav, acav, ffav, lon_current, lat_current, detthick
-    
-    double precision, dimension(ind_z_max) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
+    double precision :: rho0_init, tsav, acav, ffav
+
+    double precision, dimension(:), allocatable :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
     double precision, dimension(:), allocatable :: SnowMelt, PreTot, PreSol, PreLiq
     double precision, dimension(:), allocatable :: Sublim, SnowDrif, TempSurf, FF10m
     double precision, dimension(:), allocatable :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
@@ -53,122 +51,120 @@ subroutine Run_Model(lat_current, lon_current, ind_lat, ind_lon)
     double precision, dimension(:,:), allocatable :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
     double precision, dimension(:,:), allocatable :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
-    print *, " "
-    print *, "------------------------------------"
-    print *, "----- FIRN DENSIFICATION MODEL -----"
-    print *, "------------------------------------"
-    print *, " "
-    
-    ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
-    call Get_All_Command_Line_Arg()
+    write(log_unit, *) " "
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) "----- FIRN DENSIFICATION MODEL -----"
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " "
+    flush(log_unit)
 
     ! Define model settings and physics, runs first because decides whether or not to run as an example point
-    ! call read_settings() 
-    
-    ! Defines paths - edit if not using ecmwf or if changing file structure of input, output, restart, or code
-    call Define_Paths()
+    call Load_Model_Settings()
+
+    allocate(Rho(ind_z_max), M(ind_z_max), T(ind_z_max), Depth(ind_z_max), Mlwc(ind_z_max), &
+             DZ(ind_z_max), DenRho(ind_z_max), Refreeze(ind_z_max), Year(ind_z_max))
+
+    ! Build per-point output and restart filenames
+    call Define_Filenames()
 
     ! Defines constants used throughout the model
-    call Define_Constants()
+    call Load_Constants()
     
-    ! Read in the model settings, input settings, constants, and forcing dimensions
-    call Get_Model_Settings_and_Forcing_Dimensions(dtSnow, nyears, nyearsSU, dtmodelImp, dtmodelExp, ImpExp, dtobs, &
-        ind_z_surf, startasice, beginT, writeinprof, writeinspeed, writeindetail, proflayers, detlayers, detthick, dzmax, &
-        initdepth, th, lon_current, lat_current, Nlon, Nlat, Nlon_timeseries, Nt_forcing)
-
     ! Determine model time step and amount of model time steps
-    
-    call Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
+    Nt_forcing = config%forcing_dimensions%Nt_forcing
+
+    call Init_TimeStep_Var(dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
     
     call Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
         Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-        Nt_forcing, Nt_model_tot, Nlon, Nlat)
+        Nt_forcing, Nt_model_tot)
 
     ! Get variables from the NetCDF files
 
-    call Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
+    call Load_Mask(LSM, Latitude, Longitude, ISM)
 
-    call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, Nlat, Nlon)
+    call Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt)
     
-    print *, "Read all averaged values"
-    print *, " "
+    write(log_unit, *) "Read all averaged values"
+    write(log_unit, *) " "
     
-    ! Find corresponding indices of the grid point for a given latitude and longitude
-    call Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM, Nlon, Nlat)
+    ! Read averages for the current grid point
+    call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, ind_lon, ind_lat)
 
-    ! Read averages for the current grid point		
-    call Index_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt, ISM, tsav, acav, ffav, IceShelf, Nlon, Nlat, ind_lon, ind_lat)
-
-    print *, "------ Point number: ", trim(point_numb), "------"
-    print *, " Run for Lon: ", lon_current, " and Lat: ", lat_current
-    print *, " Grid indices lon: ", ind_lon, ", lat: ", ind_lat
-    print *, " Grounded (0) or Floating (1) ice: ", IceShelf
-    print *, " Implicit (1) or Explicit (2) scheme: ", ImpExp
-    print *, "------------------------------------"
-    print *, " "
+    write(log_unit, *) "------ Point number: ", trim(point_numb), "------"
+    write(log_unit, *) " Run for Lon: ", cur_lon, " and Lat: ", cur_lat
+    write(log_unit, *) " Grid indices lon: ", ind_lon, ", lat: ", ind_lat
+    write(log_unit, *) " Grounded (0) or Floating (1) ice: ", IceShelf
+    write(log_unit, *) " Implicit (1) or Explicit (2) scheme: ", config%model_choices%ImpExp
+    write(log_unit, *) "------------------------------------"
+    write(log_unit, *) " "
     
-    call Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, Nt_forcing, &
-    ind_lon, ind_lat, dtobs, Nlon_timeseries)
+    call Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, SnowDrif, TempSurf, FF10m, &
+    ind_lon, ind_lat)
 
-    print *, "Got all variables from the NetCDF files"
-    print *, " "
+    write(log_unit, *) "Got all variables from the NetCDF files"
+    write(log_unit, *) " "
+    flush(log_unit)
 
-    call Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, dzmax)
+    call Init_Prof_Var(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
 
     ! Get variables needed for outputting data
-    call Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
-    numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
-    
+    call Calc_Output_Freq(dtmodel, Nt_forcing, numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, &
+        outputDetail)
+
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
-        proflayers, detlayers)
+        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail)
     
     ! Interpolate the RACMO forcing data to firn model time step
     call Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, TempFM, PsolFM, PliqFM, SublFM, &
-        MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtSnow, dtmodel, domain)
+        MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel)
+
     
 
     if ( restart_type == "spinup" ) then
-        call Restart_From_Spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
+        call Restart_From_Spinup(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
         prev_nt=1
     else if ( restart_type == "none" ) then ! do spinup
         ! Construct an initial firn layer (T-, rho-, dz-, and M-profile)
         rho0_init = Rho0FM(1)
-        call Init_Density_Prof(ind_z_max, ind_z_surf, dzmax, rho0_init, acav, tsav, DZ, Rho, M)
+        call Init_Density_Prof(rho0_init, acav, tsav, DZ, Rho, M)
 
-        call Init_Temp_Prof(ind_z_max, ind_z_surf, beginT, tsav, pi, T, Rho, Depth, rhoi)
-    
+        call Init_Temp_Prof(tsav, T, Rho, Depth)
+
         ! Spin up the model to a 'steady state'
-        call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, ind_z_max, ind_z_surf, dtmodel, R, Ec, Eg, g, Lh, rhoi, acav, ffav, &
-            th, dzmax, M, T, DZ, Rho, DenRho, Depth, Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-            IceShelf, ImpExp, nyears, nyearsSU)
+        call Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, dtmodel, acav, ffav, M, T, DZ, Rho, DenRho, Depth, &
+            Mlwc, Refreeze, Year, TempFM, PSolFM, PLiqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
+            IceShelf)
 
         ! Write intitial profile to NetCDF-file and prepare output arrays
-        call Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, point_numb, prefix_output, username, project_name)
+        call Save_out_spinup(Rho, M, T, Depth, Mlwc, Year)
         prev_nt=1
+
     else if ( restart_type == "run" ) then ! start from previous run, so no spinup
-        call Restart_From_Run(prev_nt, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze, username, &
-                                point_numb, prefix_output, project_name)
+
+        call Restart_From_Run(prev_nt, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, Refreeze)
     else
-        print *, "Restart type not recognized: ", restart_type
+        write(log_unit, *) "Restart type not recognized: ", restart_type
+
     endif
 
-    ! Call subprogram for spin-up and the time-integration			
-    call Time_Loop_Main(dtmodel, ImpExp, Nt_model_tot, nyears, ind_z_max, ind_z_surf, numOutputSpeed, numOutputProf, numOutputDetail, &
-        outputSpeed, outputProf, outputDetail, th, R, Ec, Eg, g, Lh, dzmax, rhoi, proflayers, detlayers, detthick, acav, ffav, IceShelf, &
-        TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, &
-        domain, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt, restart_type)
+    flush(log_unit)
+    ! Call subprogram for spin-up and the time-integration
+    call Time_Loop_Main(dtmodel, Nt_model_tot, numOutputSpeed, numOutputProf, numOutputDetail, &
+        outputSpeed, outputProf, outputDetail, acav, ffav, IceShelf, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
+        Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
+        out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, prev_nt)
 
     ! Write output to netcdf files
-    call Save_out_1D(outputSpeed, out_1D, writeinspeed)
-    call Save_out_2D(outputProf, proflayers, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, writeinprof)
-    call Save_out_2Ddetail(outputDetail, detlayers, detthick, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, writeindetail)
-    call Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
+    call Save_out_1D(outputSpeed, out_1D)
+    call Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year)
+    call Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
+    call Save_out_run(Nt_model_tot, Rho, M, T, Depth, Mlwc, Year, DenRho, Refreeze)
     
-    print *, "Written output data to files"
+    write(log_unit, *) "Written output data to files"
+    flush(log_unit)
 
-end subroutine
+end subroutine Run_Model
     
 
 ! ******************************************************* 

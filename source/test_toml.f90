@@ -9,6 +9,7 @@ program toml_main
   logical :: file_exists
   character(len=*), parameter :: constants_filename = 'settings/model_variables.toml'
   character(len=*), parameter :: settings_filename = 'settings/model_settings.toml'
+  type(toml_error), allocatable :: parse_error
   type(toml_table), allocatable :: table
   type(Constants), allocatable :: const
   type(Settings), allocatable :: config
@@ -25,11 +26,12 @@ program toml_main
     error stop 1
   end if
 
-  call toml_parse(table, fu)
+  call toml_parse(table, fu, parse_error)
   close(fu)
 
   if (.not. allocated(table)) then
     write(error_unit, '("Error: TOML parsing failed for ",a)') trim(constants_filename)
+    if (allocated(parse_error)) write(error_unit, '(a)') parse_error%message
     error stop 1
   end if
 
@@ -50,16 +52,18 @@ program toml_main
     error stop 1
   end if
 
-  call toml_parse(table, fu)
+  call toml_parse(table, fu, parse_error)
   close(fu)
 
   if (.not. allocated(table)) then
     write(error_unit, '("Error: TOML parsing failed for ",a)') trim(settings_filename)
+    if (allocated(parse_error)) write(error_unit, '(a)') parse_error%message
     error stop 1
   end if
 
   call read_settings(table, config)
+  deallocate(table)
 
-  print *, config%minimum_values%ts_minimum
+  print *, config%model_choices%ts_minimum
 
 end program toml_main

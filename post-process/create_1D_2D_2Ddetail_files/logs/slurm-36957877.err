@@ -1,0 +1,75 @@
+[ECMWF-INFO -ecprofile] /usr/bin/bash NON_INTERACTIVE on ac6-184 at 20260504_071952.915, PID: 684827, JOBID: 36957877
+[ECMWF-INFO -ecprofile] $SCRATCH=/ec/res4/scratch/nld4814
+[ECMWF-INFO -ecprofile] $PERM=/perm/nld4814
+[ECMWF-INFO -ecprofile] $HPCPERM=/ec/res4/hpcperm/nld4814
+[ECMWF-INFO -ecprofile] $TMPDIR=/etc/ecmwf/ssd/ssd1/tmpdirs/nld4814.36957877
+[ECMWF-INFO -ecprofile] $SCRATCHDIR=/ec/res4/scratchdir/nld4814/5/36957877
+concurrent.futures.process._RemoteTraceback: 
+"""
+Traceback (most recent call last):
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/concurrent/futures/process.py", line 264, in _process_worker
+    r = call_item.fn(*call_item.args, **call_item.kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 83, in process_single_point
+    data = read_1d_file(filepath, var_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/utils.py", line 468, in read_1d_file
+    with xr.open_dataset(filepath) as ds:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/api.py", line 577, in open_dataset
+    engine = plugins.guess_engine(filename_or_obj)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/site-packages/xarray/backends/plugins.py", line 212, in guess_engine
+    raise ValueError(error_msg)
+ValueError: did not find a match in any of xarray's currently installed IO backends ['netcdf4', 'h5netcdf', 'scipy', 'cfgrib', 'earthkit', 'gini', 'rasterio', 'zarr']. Consider explicitly selecting one of the installed engines via the ``engine`` parameter, or installing additional IO dependencies, see:
+https://docs.xarray.dev/en/stable/getting-started-guide/installing.html
+https://docs.xarray.dev/en/stable/user-guide/io.html
+"""
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 508, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 473, in main
+    output_path = process_variable(
+                  ^^^^^^^^^^^^^^^^^
+  File "/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/make_1d_files.py", line 250, in process_variable
+    rlat_idx, rlon_idx, data = future.result()
+                               ^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/apps/python3/3.12.11-01/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+ValueError: did not find a match in any of xarray's currently installed IO backends ['netcdf4', 'h5netcdf', 'scipy', 'cfgrib', 'earthkit', 'gini', 'rasterio', 'zarr']. Consider explicitly selecting one of the installed engines via the ``engine`` parameter, or installing additional IO dependencies, see:
+https://docs.xarray.dev/en/stable/getting-started-guide/installing.html
+https://docs.xarray.dev/en/stable/user-guide/io.html
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] This is the ECMWF job Epilogue
+[ECMWF-INFO -ecepilog] +++ Please report issues using the Support portal +++
+[ECMWF-INFO -ecepilog] +++ https://support.ecmwf.int                     +++
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+[ECMWF-INFO -ecepilog] Run at 2026-05-04T07:26:29 on ac
+[ECMWF-INFO -ecepilog] JobName                   : fdm_1d_files
+[ECMWF-INFO -ecepilog] JobID                     : 36957877
+[ECMWF-INFO -ecepilog] Submit                    : 2026-05-04T07:19:31
+[ECMWF-INFO -ecepilog] Start                     : 2026-05-04T07:19:43
+[ECMWF-INFO -ecepilog] End                       : 2026-05-04T07:26:29
+[ECMWF-INFO -ecepilog] QueuedTime                : 12.0
+[ECMWF-INFO -ecepilog] ElapsedRaw                : 406
+[ECMWF-INFO -ecepilog] ExitCode                  : 1:0
+[ECMWF-INFO -ecepilog] DerivedExitCode           : 0:0
+[ECMWF-INFO -ecepilog] State                     : FAILED
+[ECMWF-INFO -ecepilog] Account                   : spnlberg
+[ECMWF-INFO -ecepilog] QOS                       : nf
+[ECMWF-INFO -ecepilog] User                      : nld4814
+[ECMWF-INFO -ecepilog] StdOut                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-36957877.out
+[ECMWF-INFO -ecepilog] StdErr                    : /etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-36957877.err
+[ECMWF-INFO -ecepilog] NNodes                    : 1
+[ECMWF-INFO -ecepilog] NCPUS                     : 32
+[ECMWF-INFO -ecepilog] SBU                       : 30.790
+[ECMWF-INFO -ecepilog] jobtag                    : nld4814-fdm_1d_files-1x32-/etc/ecmwf/nfs/dh1_perm_b/nld4814/code/IMAU-FDM/post-process/create_1D_2D_2Ddetail_files/logs/slurm-_JOBID_.out
+[ECMWF-INFO -ecepilog] ----------------------------------------------------------------------------------------------------
+

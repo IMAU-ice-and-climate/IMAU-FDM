@@ -13,11 +13,8 @@ contains
 ! *******************************************************
 
 
-subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
+subroutine Bucket_Method(rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
     !*** Distribute new liquid water using the bucket method ***!
-
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
     double precision, intent(in) :: Me, rhoi, Lh
     double precision, intent(inout) :: Mmelt, Mrunoff, Mrefreeze
     double precision, dimension(ind_z_max), intent(inout) :: Rho, T, DZ, M, Mlwc, Refreeze
@@ -26,7 +23,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
     integer :: ind_z
     double precision :: cp, cp0, Efreeze, Mfreeze, Mavail, Madd, toomuch
 
-    cp0 = 152.5 + 7.122*Tmelt
+    cp0 = 152.5 + 7.122*const%Tmelt
 
     M(ind_z_surf) = M(ind_z_surf) - Me                !Substract melted snow from upper layer
     DZ(ind_z_surf) = DZ(ind_z_surf) - (Me/Rho(ind_z_surf))   !Recalculate the height of the upper layer
@@ -35,10 +32,10 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
 
         if (Rho(ind_z) < rhoi) then
             cp = 152.5 + 7.122*T(ind_z)
-            Efreeze = (Tmelt-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
+            Efreeze = (const%Tmelt-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
             Mfreeze = Efreeze / Lh          !the mass that can be frozen with that energy
             
-            Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+            Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
     
             !Check if all the water can be refrozen in this layer
             !if YES, all the water is refrozen in this layer. T/M/dz recalculated
@@ -68,16 +65,16 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                     Mrefreeze = Mrefreeze + Madd
                     Refreeze(ind_z) = Refreeze(ind_z) + Madd
                     Rho(ind_z) = M(ind_z) / DZ(ind_z)
-                    T(ind_z) = Tmelt
+                    T(ind_z) = const%Tmelt
                 endif
                 Mmelt = Mmelt - Madd
                 ! Some liquid water may remain in the layer as irreducible water content
-                call LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
+                call LWcontent(ind_z, rhoi, Mmelt, M, Rho, DZ, Mlwc)
             endif
         endif
 
         ! Check if densification did not cause too much LWC
-        Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+        Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
         if (Mavail < Mlwc(ind_z)) then       
             toomuch = Mlwc(ind_z) - Mavail
             Mlwc(ind_z) = Mlwc(ind_z) - toomuch
@@ -98,11 +95,11 @@ end subroutine Bucket_Method
 ! *******************************************************
 
 
-subroutine LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
+subroutine LWcontent(ind_z, rhoi, Mmelt, M, Rho, DZ, Mlwc)
     !*** Update the irreducible water content of layer k ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z, ind_z_max
+    integer, intent(in) :: ind_z
     double precision, intent(in) :: rhoi
     double precision, intent(inout) :: Mmelt
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
@@ -112,7 +109,7 @@ subroutine LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
     double precision :: Mavail, Mporeavail, toomuch
 
 
-    Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+    Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
 
     if (Mavail < Mlwc(ind_z)) then              ! Check if densification did not cause to much LWC
         toomuch = Mlwc(ind_z) - Mavail
@@ -136,11 +133,8 @@ end subroutine LWcontent
 ! *******************************************************
 
 
-subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
+subroutine LWrefreeze(Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
     !*** Refreeze water if layers have cooled below the melting point after temperature update ***!
-
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
     double precision, intent(in) :: Lh
     double precision, intent(inout) :: Mrefreeze
     double precision, dimension(ind_z_max), intent(in) :: DZ
@@ -150,12 +144,12 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
     integer :: ind_z
     double precision :: cp, cp0, Mfreeze
 
-    cp0 = 152.5 + 7.122*Tmelt
+    cp0 = 152.5 + 7.122*const%Tmelt
 
     do ind_z = 1, ind_z_surf   ! loop over all layers
-        if (Mlwc(ind_z)>0 .and. T(ind_z).ne.Tmelt) then
+        if (Mlwc(ind_z)>0 .and. T(ind_z).ne.const%Tmelt) then
             cp = 152.5 + 7.122*T(ind_z)
-            Mfreeze = ((Tmelt-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
+            Mfreeze = ((const%Tmelt-T(ind_z)) * M(ind_z) * cp) / Lh  ! Available energy for refreezing (in kgs)
             if (Mfreeze >= Mlwc(ind_z)) then
                 M(ind_z) = M(ind_z) + Mlwc(ind_z)                   ! Enough energy: all LWC is refrozen
                 Mrefreeze = Mrefreeze + Mlwc(ind_z)
@@ -168,7 +162,7 @@ subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc,
                 Mrefreeze = Mrefreeze + Mfreeze
                 Refreeze(ind_z) = Refreeze(ind_z) + Mfreeze
                 Rho(ind_z) = M(ind_z) / DZ(ind_z)
-                T(ind_z) = Tmelt
+                T(ind_z) = const%Tmelt
                 Mlwc(ind_z) = Mlwc(ind_z) - Mfreeze
             endif
         endif
@@ -180,11 +174,11 @@ end subroutine LWrefreeze
 ! *******************************************************
 
 
-function Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ) result(Mavail)
+function Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ) result(Mavail)
     !*** Calculate how much pore space can be stored inside of the current layer ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z, ind_z_max
+    integer, intent(in) :: ind_z
     double precision, intent(in) :: rhoi
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
 

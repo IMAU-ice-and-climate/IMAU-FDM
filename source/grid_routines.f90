@@ -1,6 +1,8 @@
 module grid_routines
     !*** All subroutines and functions relating to increasing and decreasing the vertical resolution ***!
 
+    use model_settings
+
     implicit none
     private
 
@@ -12,12 +14,11 @@ contains
 ! *******************************************************
 
 
-subroutine Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot, nyears)
+subroutine Split_Layers(Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year, ind_t, Nt_model_tot)
     !*** Splits the uppermost layer if its mass exceeds a threshold value ***!
-    
+
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_t, Nt_model_tot, nyears
-    integer, intent(inout) :: ind_z_surf
+    integer, intent(in) :: ind_t, Nt_model_tot
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
     
     ! Create the new uppermost layer
@@ -28,7 +29,7 @@ subroutine Split_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refr
     Mlwc(ind_z_surf+1) = Mlwc(ind_z_surf)/2.
     DenRho(ind_z_surf+1) = DenRho(ind_z_surf)/2.
     Refreeze(ind_z_surf+1) = Refreeze(ind_z_surf)/2.
-    Year(ind_z_surf+1) = (DBLE(ind_t) * DBLE(nyears)) / DBLE(Nt_model_tot)
+    Year(ind_z_surf+1) = (DBLE(ind_t) * DBLE(config%forcing_dimensions%nyears_forcing)) / DBLE(Nt_model_tot)
     
     ! Update the old layer
     DZ(ind_z_surf) = DZ(ind_z_surf+1)
@@ -45,12 +46,8 @@ end subroutine Split_Layers
 ! *******************************************************
 
 
-subroutine Merge_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+subroutine Merge_Layers(Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** Merges the two uppermost layers into a single layer if the thickness of the uppermost layer is smaller than a user specified threshold value ***!
-    
-    ! declare arguments
-    integer, intent(in) :: ind_z_max
-    integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
     
     ! Add the upper first layer into the second layer
@@ -81,12 +78,8 @@ end subroutine Merge_Layers
 ! *******************************************************
 
 
-subroutine Delete_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+subroutine Delete_Layers(Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** Deletes the bottom 200 layers if they contain only ice to save memory and speed up computations ***!
-    
-    ! declare arguments
-    integer, intent(in) :: ind_z_max
-    integer, intent(inout) :: ind_z_surf
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -122,13 +115,8 @@ end subroutine Delete_Layers
 ! *******************************************************
 
 
-subroutine Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+subroutine Add_Layers(Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** adds 100 layers of pure ice to the bottom of the column if the column is very thin. ***!
-    
-    ! declare arguments
-    integer, intent(in) :: ind_z_max
-    integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: dzmax, rhoi
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -148,8 +136,8 @@ subroutine Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, D
         
     ! Properties of the 100 new layers:
     do ind_z = 1, 100
-        DZ(ind_z)  = dzmax
-        Rho(ind_z) = rhoi
+        DZ(ind_z)  = config%model_choices%dzmax
+        Rho(ind_z) = const%rhoi
         DenRho(ind_z) = 0.
         M(ind_z)   = Rho(ind_z) * DZ(ind_z)
         Mlwc(ind_z) = 0.

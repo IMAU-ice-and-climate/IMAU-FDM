@@ -1,0 +1,47 @@
+# Run configuration — edit this for each new run
+
+[job]
+project_name       = "test-distributor-restart"  # unique name; output goes to data_dir/project_name
+pointlist_name     = "pointlist_1"       # goes in launch_job/pointlists/
+
+domain             = "FGRN055"           # FGRN055 | ANT27
+forcing            = "era5"              
+
+recompile          = false                # true | false - recompile with each new launch_job run?
+run_type           = "ECMWF"               # ECMWF | offline - changes compilation, whether ecmwf job settings are called
+restart_type       = "spinup"              # none | spinup | run - restart from spinup files or last timestep with new data?
+restart_project  = "test-branch-merge"  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same data_dir) 
+submission_iteration = 1                
+relaunch        = "yes"       # with "no", no new iteration will be launched if job does not finish
+
+[metadata]
+# These will eventually be automatically set in fortran but for now they are read in
+model_version = "1.2+" #imau fdm model version
+start_ts_year = "1939" #forcing start year
+end_ts_year = "2025" #forcing end year
+start_ave_year = "1940" #spinup/average file year start
+end_ave_year = "1970" #spinup/average file year end
+model_first_timestep = "1939-09-01T00:00:00"
+model_last_timestep = "2025-12-31T21:00:00"
+
+[directories]
+# Base directories - these set the relative directories for the source code, and the input and output data
+code_dir = "/perm/nld4814/code/IMAU-FDM/" # where codebase is
+data_dir = "/home/nld4814/scratch/" # where output goes
+
+[code-subdirectories]
+# Relative to code_dir
+fdm_executable = "imau-fdm" # the name of the executable
+
+# Q: how to keep track of submission iteration so that job can be relaunched if it doesn't finish?
+
+[ecmwf]
+max_nodes       = 1           # node budget; workers = min(n_points, max_nodes * 128)
+walltime        = "48:00:00"  # (hms) walltime of the job
+cooldown        = "00:00:30"  # (hms) how long prior to end should focus shift to completing running jobs?
+account_no      = "spnlberg"
+EC_hyperthreads = 1
+memory_per_task = "999Mb"
+
+[offline]
+n_procs = 2                   # 1 distributor + N-1 workers

@@ -5,9 +5,10 @@ module model_settings
     use tomlf
     implicit none
 
-    private
-    
+    private ! none?
 
+    integer, parameter, public :: ind_z_max = 20000
+    
     type, public :: Constants
         double precision :: R  ! gas constant [J mole-1 K-1]
         double precision :: g  ! gravitational acceleration [m s-2]
@@ -19,101 +20,326 @@ module model_settings
         double precision :: Lh  ! latent heat of fusion [J kg-1]
         double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
         double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        double precision :: pi
+        double precision :: seconds_per_year
     end type Constants
 
+    type, public :: forcing_dimensions_t
 
-    type, public :: minimum_values_t
+        integer :: nyears_spinup ! number of years spinup is performed for
+        integer :: nyears_forcing ! number of years of forcing
+        integer :: dtobs !length of forcing timestep
+        integer :: Nlon ! size of longitude grid
+        integer :: Nlat ! size of latitude grid
+        integer :: Nlon_timeseries ! number of longitude bands in each parts file
+        integer :: Nt_forcing !number of timesteps in forcing
+
+    end type forcing_dimensions_t
+
+    type, public :: initialization_t
+
+        integer :: startasice
+        integer :: beginT
+        double precision :: initdepth
+
+    end type initialization_t
+
+    type, public :: model_choices_t
+
+        integer :: ImpExp
+        integer :: dtmodelImp
+        integer :: dtmodelExp
+        integer :: dtSnow
+        double precision :: dzmax
+        double precision :: th
         double precision :: ts_minimum
         double precision :: det2d_minimum
-    end type minimum_values_t
 
-    type, public :: general_settings_t
-        character(len=:), allocatable :: restart_type
-    end type general_settings_t
+    end type model_choices_t
 
-    type, public :: Settings
-        type(minimum_values_t)  :: minimum_values
-        type(general_settings_t):: general_settings
+    type, public :: model_physics_t
+
+        logical :: do_MO_fit
+    
+    end type model_physics_t 
+
+    type, public :: output_dimensions_t
+        integer :: writeinspeed
+        integer :: writeinprof
+        integer :: proflayers
+        integer :: writeindetail
+        integer :: detlayers
+        double precision :: detthick
+    end type output_dimensions_t
+
+    type, public :: Settings !TKTKTK explain and what about Constants?
+        type(forcing_dimensions_t)  :: forcing_dimensions
+        type(initialization_t)  :: initialization
+        type(model_choices_t)  :: model_choices ! TKTKTK: rename + make these consistent with model_physics across all f90 + toml files
+        type(model_physics_t):: model_physics ! TKTKTK: make these consistent with model_choices
+        type(output_dimensions_t)  :: output_dimensions
+
     end type Settings
 
-
-    public :: Define_Paths, Define_Constants, read_settings, Get_All_Command_Line_Arg, read_constants
+    public :: Read_Job, Read_Constants, Load_Constants, Read_Settings, Load_Model_Settings, Define_Filenames
 
     ! Module-level variables that can be accessed by other modules
     
+    ! set in distributor.f90
     public :: point_numb
-    public :: domain, paths_file, model_settings_file, username, prefix_output, project_name, restart_type, forcing, data_dir
-    public :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    public :: path_forcing_timeseries, path_restart, path_out_1d, path_out_2d, path_out_2ddet
-    public :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup 
-    public :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
-    public :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    public :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum
-    public :: save_output
-    public :: model_first_timestep, model_last_timestep
+    public :: log_unit
+
+    ! subfolder of code_dir; defined in launch_job file
+    public :: settings_dir
+
+    ! set in run.tmol
+    public :: project_name, domain, forcing, restart_type
+    public :: model_version
+    public :: code_dir, data_dir
+
+    ! currently read in from toml, will be set using netcdf
+    public :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
     
-    ! Parameterization options
-    public :: do_MO_fit
+    ! created in model_settings
+    public :: reference_dir
+    public :: input_dir, input_averages_dir, input_timeseries_dir
+    public :: project_dir, restart_dir, output_dir
+    public :: fname_mask
+    public :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
+    public :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
+    public :: fname_out_1d, fname_out_2d, fname_out_2ddet
+    public :: iceshelf_var
+    public :: ind_z_surf
+    public :: config, const
 
     ! Declare the module variables
     ! note
     !   Variables read directly from TOML via get_value → character(len=:), allocatable
     !   Everything else (paths built by concatenation, command-line args, hardcoded strings) → character(len=512)
 
-    character(len=512) :: domain, paths_file, point_numb, username, prefix_output, project_name, forcing, data_dir
-    character(len=512) :: path_settings, path_forcing_dims, path_forcing_mask, path_forcing_averages
-    character(len=512) :: path_forcing_timeseries, path_out_1d, path_out_2d, path_out_2ddet
-    character(len=512) :: fname_settings, fname_forcing_dims, fname_mask, suffix_forcing_averages
-    character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, fname_restart_from_spinup
-    character(len=512) :: prefix_fname_ini, suffix_fname_ini, fname_restart_from_previous_run, fname_out_1d
-    character(len=512) :: fname_out_2d, fname_out_2ddet, iceshelf_var
-    character(len=512) :: model_first_timestep, model_last_timestep
-    logical :: do_MO_fit
-    integer :: save_output
-    double precision :: rhoi, rho_ocean, Tmelt, NaN_value, R, pi, Ec, Eg, g, Lh, seconds_per_year, ts_minimum, det2d_minimum, days_per_year
-    character(len=:), allocatable :: path_restart, restart_type, model_settings_file
+    ! read in from distributor.f90
+    character(len=512) :: point_numb, settings_dir
+    integer :: log_unit = 6   ! 6 = stdout; set to a file unit by distributor worker before each Run_Model call
+    
+    ! read in from toml files
+    character(len=:), allocatable :: project_name, domain, forcing, restart_type
+    character(len=:), allocatable :: model_version
+    character(len=:), allocatable :: code_dir, data_dir
+
+    ! currently read in from toml, will be set using netcdf
+    character(len=:), allocatable :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
+
+    ! created in here in model_settings
+    character(len=512) :: reference_dir
+    character(len=512) :: input_dir, input_averages_dir, input_timeseries_dir
+    character(len=512) :: project_dir, output_dir, restart_dir
+    character(len=512) :: fname_mask
+    character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
+    character(len=512) :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
+    character(len=512) :: fname_out_1d, fname_out_2d, fname_out_2ddet
+    character(len=512) :: iceshelf_var
+    integer :: ind_z_surf
+
+    ! structures
+    type(Settings), allocatable :: config
+    type(Constants), allocatable :: const
+
 contains
 
-
-subroutine read_settings(table, config)
-    !*** Define model settings and physics ***!
-
-    ! Local variables toml tables
+!TKTKTK: why have this be separate from subroutine Load_Model_Settings()
+subroutine Read_Settings(table, settings_out)
+    !*** Define model settings and physics from model.toml ***!
 
     type(toml_table), allocatable, intent(inout) :: table
     type(toml_table), pointer :: child
-    type(Settings), intent(out), allocatable :: config
+    type(Settings), intent(out), allocatable :: settings_out
 
-    allocate(config)
+    allocate(settings_out)
 
-    ! ---- [minimum_values] ----
+    ! Model physics
     nullify(child)
-    call get_value(table, 'minimum_values', child, requested=.false.)
+    call get_value(table, 'model_physics', child, requested=.false.)
     if (associated(child)) then
-        call get_value(child, 'ts_minimum',    config%minimum_values%ts_minimum)
-        call get_value(child, 'det2d_minimum', config%minimum_values%det2d_minimum)
+        call get_value(child, 'do_mo_fit', settings_out%model_physics%do_MO_fit)
     end if
 
-    ! ---- [general_settings] ----
+    ! Forcing settings --> TKTKTK: to be read in using netcdf
     nullify(child)
-    call get_value(table, 'general_settings', child, requested=.false.)
+    call get_value(table, 'forcing_dimensions', child, requested=.false.)
     if (associated(child)) then
-        call get_value(child, 'restart_type', config%general_settings%restart_type)
+        call get_value(child, 'nyears_spinup', settings_out%forcing_dimensions%nyears_spinup)
+        call get_value(child, 'nyears_forcing', settings_out%forcing_dimensions%nyears_forcing)
+        call get_value(child, 'dtobs', settings_out%forcing_dimensions%dtobs)
+        call get_value(child, 'Nlon', settings_out%forcing_dimensions%Nlon)
+        call get_value(child, 'Nlat', settings_out%forcing_dimensions%Nlat)
+        call get_value(child, 'Nlon_timeseries', settings_out%forcing_dimensions%Nlon_timeseries)
+        call get_value(child, 'Nt_forcing', settings_out%forcing_dimensions%Nt_forcing)
+    else
+        write(stderr, *) "Cannot find section >forcing_dimensions< in model.toml file."
+        stop
     end if
+
+    ! Initialization
+    nullify(child)
+    call get_value(table, 'initialization', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'startasice', settings_out%initialization%startasice)
+        call get_value(child, 'beginT', settings_out%initialization%beginT)
+        call get_value(child, 'initdepth', settings_out%initialization%initdepth)
+    else
+        write(stderr, *) "Cannot find section >initialization< in model.toml file."
+        stop
+    end if
+
+    ! Model timesteps and dimensions
+    nullify(child)
+    call get_value(table, 'model_choices', child, requested=.false.)
+    if (associated(child)) then
+        
+        call get_value(child, 'ImpExp', settings_out%model_choices%ImpExp)
+        call get_value(child, 'dtmodelImp', settings_out%model_choices%dtmodelImp)
+        call get_value(child, 'dtmodelExp', settings_out%model_choices%dtmodelExp)
+        call get_value(child, 'dtSnow', settings_out%model_choices%dtSnow)
+        call get_value(child, 'dzmax', settings_out%model_choices%dzmax)
+        call get_value(child, 'th', settings_out%model_choices%th)
+        call get_value(child, 'ts_minimum',    settings_out%model_choices%ts_minimum)
+        call get_value(child, 'det2d_minimum', settings_out%model_choices%det2d_minimum)
+    else
+        write(stderr, *) "Cannot find section >model_choices< in model.toml file."
+        stop
+    end if
+
+    ! Output dimensions
+    nullify(child)
+    call get_value(table, 'output_dimensions', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'writeinspeed', settings_out%output_dimensions%writeinspeed)
+        call get_value(child, 'writeinprof', settings_out%output_dimensions%writeinprof)
+        call get_value(child, 'proflayers', settings_out%output_dimensions%proflayers)
+        call get_value(child, 'writeindetail', settings_out%output_dimensions%writeindetail)
+        call get_value(child, 'detlayers', settings_out%output_dimensions%detlayers)
+        call get_value(child, 'detthick', settings_out%output_dimensions%detthick)
+    else
+        write(stderr, *) "Cannot find section >output_dimensions< in model.toml file."
+        stop
+    end if
+
+    ind_z_surf = nint(settings_out%initialization%initdepth/settings_out%model_choices%dzmax)  ! initial amount of vertical layers
+
+    write(log_unit, *) "Loaded model settings"
+    write(log_unit, *) " "
+
+end subroutine Read_Settings
+
+
+subroutine Load_Model_Settings()
+    !*** Read runtime model settings from TOML and expose commonly used values ***!
+
+    character(len=512)            :: settings_path_model
+    integer :: fu, rc
+    logical :: file_exists
+    type(toml_error), allocatable :: parse_error
+    type(toml_table), allocatable :: table
+
+    settings_path_model = trim(settings_dir)//"model.toml"
+    call Load_TOML(settings_path_model, table)
+
+    if (allocated(config)) then
+        deallocate(config)
+    end if
+
+    call read_settings(table, config) 
 
     deallocate(table)
 
-    save_output = 10 ! save output every 10 years
+end subroutine Load_Model_Settings
 
-    ! Model physics
+subroutine Read_Job()
+    !*** Read run.toml and build all directory paths ***!
+    ! TKTKTK: check on domain, forcing, restart_type
 
-    do_MO_fit = .false. ! if true, use MO=1.0 in firn physics; if false, use domain-dependent MO fits
+    character(len=512)            :: settings_path_run
+    type(toml_table), allocatable :: table
+    type(toml_table), pointer     :: child
 
-end subroutine read_settings
+    settings_path_run = trim(settings_dir)//"run.toml"
+    call Load_TOML(settings_path_run, table)
 
+    call get_value(table, 'job', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'project_name', project_name)
+        call get_value(child, 'forcing', forcing)
+        call get_value(child, 'domain', domain)
+        call get_value(child, 'restart_type', restart_type)
+    else
+        write(stderr, *) "Cannot find section >job< in run.toml file."
+        stop
+    end if
 
-subroutine read_constants(table, const)
+    call get_value(table, 'metadata', child, requested=.false.)
+    if (associated(child)) then
+        call get_value(child, 'model_version', model_version)
+        call get_value(child, 'start_ts_year', start_ts_year)
+        call get_value(child, 'end_ts_year', end_ts_year)
+        call get_value(child, 'start_ave_year', start_ave_year)
+        call get_value(child, 'end_ave_year', end_ave_year)
+        call get_value(child, 'model_first_timestep', model_first_timestep)
+        call get_value(child, 'model_last_timestep', model_last_timestep)
+    else
+        write(stderr, *) "Cannot find section >metadata< in run.toml file."
+        stop
+    end if
+
+    call get_value(table, 'directories', child, requested=.false.)
+
+    if (associated(child)) then
+        call get_value(child, 'code_dir', code_dir)
+        call get_value(child, 'data_dir', data_dir)
+    else
+        write(stderr, *) "Cannot find section >directories< in run.toml file."
+        stop
+    end if
+
+    code_dir      = trim(adjustl(code_dir))
+    data_dir      = trim(adjustl(data_dir))
+    project_dir   = trim(data_dir)//trim(project_name)//"/"
+    output_dir    = trim(project_dir)//"output/"
+    restart_dir   = trim(project_dir)//"restart/"
+    reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"
+    input_dir     = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
+
+    if (trim(project_name) == "example") then
+        input_dir   = trim(data_dir)//"input/"
+        restart_dir = trim(code_dir)//"example/restart/"
+    end if
+
+    ! Optional: use restart files from a different project (same directory structure)
+    block
+        character(len=:), allocatable :: restart_project
+        nullify(child)
+        call get_value(table, 'job', child, requested=.false.)
+        if (associated(child)) then
+            call get_value(child, 'restart_project', restart_project, requested=.false.)
+            if (allocated(restart_project) .and. len_trim(restart_project) > 0) then
+                restart_dir = trim(data_dir)//trim(restart_project)//"/restart/"
+                write(log_unit, *) "Using restart files from project: ", trim(restart_project)
+            end if
+        end if
+    end block
+
+    input_averages_dir   = trim(input_dir)//"averages/"
+    input_timeseries_dir = trim(input_dir)//"timeseries/"
+
+    write(log_unit, *) "Path to IMAU-FDM: ", code_dir
+    write(log_unit, *) "Path to project directory: ", output_dir
+    write(log_unit, *) "Path to input directory: ", input_dir
+    write(log_unit, *) "Path to restart directory: ", restart_dir
+
+    deallocate(table)
+
+end subroutine Read_Job
+
+subroutine Read_Constants(table, const)
 
     type(toml_table), allocatable, intent(inout) :: table
     type(toml_table), pointer :: child
@@ -121,7 +347,7 @@ subroutine read_constants(table, const)
 
     call get_value(table, "constants", child, requested=.false.)
     if (.not. associated(child)) then
-        write(stderr, '("Cannot find section constants in toml file.")')
+        write(stderr, '("Cannot find section >constants< in constants.toml file.")')
         stop
     end if
 
@@ -137,215 +363,110 @@ subroutine read_constants(table, const)
     call get_value(child, "Lh", const%Lh)
     call get_value(child, "days_per_year", const%days_per_year)
     call get_value(child, "NaN_value", const%NaN_value)
-end subroutine
 
-    
+    const%pi = asin(1.)*2 ! pi = 3.1415
+    const%seconds_per_year = 3600.*24.*const%days_per_year   ! seconds per year [s]
+
+end subroutine Read_Constants
+
+! *******************************************************
+
+subroutine Load_Constants()
+    !*** Load constants from constnats.toml ***!
+    ! TKTKTK: is this needed?
+
+    character(len=512)            :: settings_path_constants
+    integer :: fu, rc
+    logical :: file_exists
+    type(toml_error), allocatable :: parse_error
+    type(toml_table), allocatable :: table
+
+    settings_path_constants = trim(settings_dir)//"constants.toml"
+    call Load_TOML(settings_path_constants, table)
+
+    if (allocated(const)) then
+        deallocate(const)
+    end if
+
+    call Read_Constants(table, const) 
+
+    deallocate(table)
+
+end subroutine Load_Constants
+
 ! *******************************************************
 
 
-subroutine Get_All_Command_Line_Arg()
-    !*** Get all command line arguments ***!
+subroutine Define_Filenames()
+    !*** Build all output, restart, and input filenames ***!
 
-    ! 1: Paths toml file
-    ! 2: Model settings toml file
-    ! 3: Simulation number, corresponding to the line number in the IN-file.
-    ! 6: Restart type, where none= do spinup; spinup = restart from spinup
+    character(len=512) :: domain_forcing
 
-    print *, "Getting command line arguments..."
+    domain_forcing = trim(domain)//"_"//trim(forcing)
 
-    username="ndl4814"
-    domain="FGRN055"
-    prefix_output="FGRN055_era055"
-    project_name="test-new-distributor"
-    restart_type="none"
-    
-    call get_command_argument(1, paths_file)
-    call get_command_argument(2, model_settings_file)
-    call get_command_argument(3, point_numb)
-    call get_command_argument(4, prefix_output)
-    call get_command_argument(5, project_name)
+    fname_mask                = trim(domain)//"_Masks.nc"
+    prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
+    suffix_forcing_timeseries = ".nc"
+    suffix_forcing_averages   = "_"//trim(domain_forcing)//"-"//trim(start_ts_year)//"_"// &
+                                trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
+
+    fname_out_1d    = trim(domain_forcing)//"_1D_"//trim(point_numb)//".nc"
+    fname_out_2d    = trim(domain_forcing)//"_2D_"//trim(point_numb)//".nc"
+    fname_out_2ddet = trim(domain_forcing)//"_2Ddetail_"//trim(point_numb)//".nc"
+
+    fname_restart_from_spinup       = trim(domain_forcing)//"_restart_from_spinup_"//trim(point_numb)//".nc"
+    prefix_fname_run                = trim(domain_forcing)//"_initialize_from_"
+    suffix_fname_run                = "_run_"//trim(point_numb)//".nc"
+    fname_restart_from_previous_run = trim(prefix_fname_run)//trim(end_ts_year)//trim(suffix_fname_run)
 
     if (trim(project_name) == "example") then
-
-        print *, "Running example point 1 from sample data"
-
-    else
-        print *, "Running user defined point"
-        ! Reads in current point number, config files, prefix, and project_name for path setting
-    
+        prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
+        suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
     end if
-    
 
-   
-end subroutine Get_All_Command_Line_Arg
+    if (trim(domain) == "ANT27") then
+        iceshelf_var = "IceShelve"
+    else
+        write(log_unit, *) "No iceshelf_var defined for domain, ", trim(domain)
+        write(log_unit, *) "so not loading ice shelf mask."
+    end if
+
+
+end subroutine Define_Filenames
 
 
 ! *******************************************************
 
 
-subroutine Define_Paths()
-    !*** Definition of all paths used to read in or write out files ***!
+subroutine Load_TOML(file_path, table)
+    !*** Open, parse, and validate a TOML file; stops on any error ***!
+    character(len=*),                intent(in)  :: file_path
+    type(toml_table), allocatable,   intent(out) :: table
 
-    ! Local variables toml tables
+    integer :: fu, rc
+    logical :: file_exists
 
-    integer                       :: fu, rc, i
-    logical                       :: file_exists
-    type(toml_table), allocatable :: table
-    type(toml_table), pointer     :: child
+    inquire(file=file_path, exist=file_exists)
 
-    ! define local variables
-    character*255 :: start_ts_year, end_ts_year, start_ave_year, end_ave_year
-    character(len=:), allocatable :: code_dir, data_dir, project_name, username
-    character(len=:), allocatable :: forcing, domain, input_dir, output_dir, path_restart
-
-    inquire (file=paths_file, exist=file_exists)
-    
     if (.not. file_exists) then
-        write (stderr, '("Error: TOML file ", a, " not found")') paths_file
+        write(stderr, '("Error: TOML file ", a, " not found")') trim(file_path)
         stop
     end if
 
-    open (action='read', file=paths_file, iostat=rc, newunit=fu)
-
+    open(action='read', file=file_path, iostat=rc, newunit=fu)
     if (rc /= 0) then
-        write (stderr, '("Error: Reading TOML file ", a, " failed")') paths_file
+        write(stderr, '("Error: Reading TOML file ", a, " failed")') trim(file_path)
         stop
     end if
 
     call toml_parse(table, fu)
-    close (fu)
+    close(fu)
 
     if (.not. allocated(table)) then
-        write (stderr, '("Error: Parsing failed")')
+        write(stderr, '("Error: Parsing TOML file ", a, " failed")') trim(file_path)
         stop
     end if
 
-    ! parameters ## to be moved to config files
-
-    start_ts_year = "1939"
-    end_ts_year = "2023"
-    start_ave_year = "1940"
-    end_ave_year = "1970"
-
-    model_first_timestep = "1939-09-01T00:00:00"
-    model_last_timestep = "2023-12-31T21:00:00"
-    ! paths
-
-    ! find section.
-    
-    call get_value(table, 'directories', child, requested=.false.)
-    
-    if (associated(child)) then
-        call get_value(child, 'project_name', project_name)
-
-        print *, " "
-        print *, "Project name: ", project_name
-
- 
-        call get_value(child, 'username', username)
-        call get_value(child, 'code_dir', code_dir)
-        call get_value(child, 'data_dir', data_dir)
-        call get_value(child, 'forcing', forcing)
-        call get_value(child, 'domain', domain)
-
-        print *, "Username: ", username
-        print *, " "
-
-    end if
-
-    ! integer :: i
-
-    data_dir = trim(adjustl(data_dir))
-
-    output_dir = trim(data_dir)//"output/"
-
-    if (trim(project_name) == "example") then 
-
-        input_dir = trim(data_dir)//"input/"
-        path_restart =  trim(code_dir)//"example/restart/"
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
-        suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
-
-    else
-        input_dir = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
-        path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
-        suffix_forcing_timeseries = ".nc"
-
-    end if
-
-    print *, "Path to IMAU-FDM: ", code_dir
-    print *, "Path to output directory: ", output_dir
-    print *, "Path to input directory: ", input_dir
-    print *, "Path to restart directory: ", path_restart
-
-    path_settings = trim(data_dir)//"ms_files/"
-    path_forcing_dims =  trim(code_dir)//"reference/"//trim(domain)//"/"
-    path_forcing_mask = trim(code_dir)//"reference/"//trim(domain)//"/"
-    path_forcing_averages = trim(input_dir)//"averages/"
-    path_forcing_timeseries = trim(input_dir)//"timeseries/"
-    path_out_1d = trim(output_dir)//"output/"
-    path_out_2d = trim(output_dir)//"output/"
-    path_out_2ddet = trim(output_dir)//"output/"
-
-    ! define filenames
-    fname_settings = "model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
-    fname_forcing_dims = "input_settings_"//trim(domain)//".txt"
-    fname_mask = trim(domain)//"_Masks.nc"
-    suffix_forcing_averages = "_"//trim(prefix_output)//"-"//trim(start_ts_year)//"_"//trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
-    fname_restart_from_spinup = trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
-    prefix_fname_ini = trim(prefix_output)//"_initialize_from_"
-    suffix_fname_ini = "_run_"//trim(point_numb)//".nc"
-    fname_restart_from_previous_run = trim(prefix_fname_ini)//trim(end_ts_year)//trim(suffix_fname_ini)
-    fname_out_1d = trim(prefix_output)//"_1D_"//trim(point_numb)//".nc"
-    fname_out_2d = trim(prefix_output)//"_2D_"//trim(point_numb)//".nc"
-    fname_out_2ddet = trim(prefix_output)//"_2Ddetail_"//trim(point_numb)//".nc"
-
-    if (domain == "ANT27") then
-        iceshelf_var = "IceShelve"
-    else
-        print *, "No iceshelf_var defined for domain, ", domain
-        print *, "so not loading ice shelf mask."
-    end if
-    
-    deallocate(table)
-
-end subroutine Define_Paths
-
-
-
-! ******************************************************* 
-
-
-
-subroutine Define_Constants()
-    !*** Define physical constants ***!
-    
-    pi = asin(1.)*2         ! pi = 3.1415
-    R = 8.3145              ! gas constant [J mole-1 K-1]
-    g = 9.81                ! gravitational acceleration [m s-2]
-    rhoi = 917.             ! density of ice [kg m-3]
-    rho_ocean = 1027.       ! density of ocean water [kg m-3]
-    Tmelt = 273.15          ! melting point of ice [K]
-    Ec = 60000.             ! activation energy for creep [J mole-1]
-    Eg = 42400.             ! activation energy for grain growth [J mole-1]
-    Lh = 333500.            ! latent heat of fusion [J kg-1]
-    days_per_year = 365.25    ! days per year [days]
-    seconds_per_year = 3600.*24.*days_per_year   ! seconds per year [s]
-    NaN_value = 9.96921e+36 ! missing value for doubles as used in the NCL scripts
-
-    ! kg = 1.3E-7             ! rate constant for grain growth [m2 s-1]
-    ! Ec2 = 49000.            ! activation energy grain boundary diffusion [J mole-1]
-    ! rgrain_refreeze = 1.E-3    ! grain size refrozen ice [m]
-
-end subroutine Define_Constants
-
-
-
-! ******************************************************* 
-
-
-
-
+end subroutine Load_TOML
 
 end module model_settings

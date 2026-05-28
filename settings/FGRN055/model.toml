@@ -1,0 +1,40 @@
+# Model physics and numerics — shared across runs with the same physics setup
+
+[model_physics]
+do_mo_fit = false #if true, sets MO values to 1 so that MO-factors can be refit
+#water_percolation = "coleau_corr"       # coleau_corr | coleau_1p2; use corrected or uncorrected water storage scheme
+
+[forcing_dimensions]
+nyears_spinup = 30 # TKTKTK: update pre-processing so that this value is written + start and end timesteps, then read in
+#all forcing info below should be read from netcdf
+nyears_forcing = 85   # number of years of forcing; will be read in with netcdf
+Nt_forcing = 252272	  # numTimes, number of time points (1939-2025=252272; 1939-2023=246424; 1957-2023=193584)
+dtobs = 10800         # length of input timestep; will be read in with netcdf
+Nlon = 438            # Number of longitude points in forcing
+Nlat = 566            # Number of latitude points in forcing
+Nlon_timeseries = 6   # num of longitude bands (set during input pre-processing)
+
+[initialization]
+startasice = 1        # initial density profile: 1=linear, 2=ice
+begintT    = 3        # initial temperature profile: 0=winter, 1=summer, 2=linear
+initdepth  = 1.0      # initial firn profile depth [m]
+
+[model_choices]
+#ind_z_max  = 20000    # maximum number of vertical layers - set in model_settings.f90 as a compile time parameter
+ImpExp     = 1        # 1=implicit (fast), 2=explicit (slow)
+dtmodelImp = 900      # implicit timestep [s]
+dtmodelExp = 180      # explicit timestep [s]
+dtSnow     = 31557600 # running average window for snow parameterisation [s]
+dzmax      = 0.15     # vertical resolution [m]
+th         = 0.5      # theta; 0.5 = Crank-Nicolson
+ts_minimum   = 1.0e-04   # minimum timeseries value magnitude
+det2d_minimum = 1.0e-05  # minimum refreezing sum in 2Ddetail output
+
+[output_dimensions]
+writeinspeed  = 86400    # frequency of speed components output [s]
+writeinprof   = 2592000  # frequency of firn profile output [s] (~30 days)
+writeindetail = 864000   # frequency of detailed profile output [s] (~10 days)
+proflayers    = 3000     # number of layers in profile output
+detlayers     = 500      # number of layers in detailed output
+detthick      = 0.04     # layer thickness in detailed output [m]
+
