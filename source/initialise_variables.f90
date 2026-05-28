@@ -1,9 +1,6 @@
 module initialise_variables
     !*** Subroutines for allocating memory and assigning initial values to variables ***!
 
-    use, intrinsic :: iso_fortran_env, only: stderr => error_unit
-    use tomlf, only: toml_table, toml_parse, get_value
-
     use model_settings
 
     implicit none
@@ -15,20 +12,20 @@ module initialise_variables
     
 contains
 
-! *******************************************************
-
 subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
+! subroutine Init_TimeStep_Var(dtobs, dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
+
     !*** Initialise time step variables ***!
 
     ! declare arguments
-    integer, intent(in) :: dtobs, dtmodelImp, dtmodelExp, nyearsSU, Nt_forcing, ImpExp
+    integer, intent(in) :: dtobs, Nt_forcing
     integer, intent(out) :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer, intent(inout) :: dtmodel
 
-    if (ImpExp == 2) then
-        dtmodel = dtmodelExp
+    if (config%general_settings%ImpExp == 2) then
+        dtmodel = config%general_settings%dtmodelExp
     else
-        dtmodel = dtmodelImp
+        dtmodel = config%general_settings%dtmodelImp
     endif
 
     ! Number of IMAU-FDM time steps per forcing time step
@@ -36,7 +33,7 @@ subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing,
     ! Total number of IMAU-FDM time steps
     Nt_model_tot = Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
-    Nt_model_spinup = INT( (REAL(nyearsSU)*seconds_per_year)/(REAL(dtmodel)) )
+    Nt_model_spinup = INT( (REAL(config%general_settings%nyears_spinup)*seconds_per_year)/(REAL(dtmodel)) )
     if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
 
     write(log_unit, *) "dtmodel: ", dtmodel
@@ -49,12 +46,12 @@ end subroutine Init_TimeStep_Var
 
 ! *******************************************************
 
-subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, dtobs, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, writeinprof, writeinspeed, writeindetail, dtobs, Nt_forcing
+    integer, intent(in) :: dtmodel, dtobs, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
@@ -67,14 +64,14 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, d
     ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
     Nt_forcing_64 = int(Nt_forcing, kind=8)
     dtobs_64 = int(dtobs, kind=8)
-    writeinspeed_64 = int(writeinspeed, kind=8)
-    writeinprof_64 = int(writeinprof, kind=8)
-    writeindetail_64 = int(writeindetail, kind=8)
+    writeinspeed_64 = int(config%output_dimensions%writeinspeed, kind=8)
+    writeinprof_64 = int(config%output_dimensions%writeinprof, kind=8)
+    writeindetail_64 = int(config%output_dimensions%writeindetail, kind=8)
 
     ! Calculate at what timestep output is produced
-    numOutputProf = writeinprof / dtmodel
-    numOutputSpeed = writeinspeed / dtmodel
-    numOutputDetail = writeindetail / dtmodel
+    numOutputProf = config%output_dimensions%writeinprof / dtmodel
+    numOutputSpeed = config%output_dimensions%writeinspeed / dtmodel
+    numOutputDetail = config%output_dimensions%writeindetail / dtmodel
 
     ! Calculate outputs using 64-bit integers
     tempOutputProf = (Nt_forcing_64 * dtobs_64) / writeinprof_64
@@ -89,7 +86,7 @@ subroutine Calc_Output_Freq(dtmodel, writeinprof, writeinspeed, writeindetail, d
     write(log_unit, *) " "
     write(log_unit, *) "Output variables"
     write(log_unit, *) "Prof, Speed, Detail"
-    write(log_unit, *) "writein...", writeinprof, writeinspeed, writeindetail
+    write(log_unit, *) "writein...", config%output_dimensions%writeinprof, config%output_dimensions%writeinspeed, config%output_dimensions%writeindetail
     write(log_unit, *) "numOutput...", numOutputProf, numOutputSpeed, numOutputDetail
     write(log_unit, *) "output...", outputProf, outputSpeed, outputDetail
     write(log_unit, *) " "
@@ -100,12 +97,11 @@ end subroutine Calc_Output_Freq
 ! *******************************************************
 
 
-subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year, DZ_max)
+subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** Initialise firn profile variables with zeros ***!
 
     ! declare arguments
     integer, intent(in) :: ind_z_surf
-    double precision, intent(in) :: DZ_max
     double precision, dimension(:), intent(out) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -121,10 +117,10 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     Refreeze(:) = 0.
     Year(:) = 0.
     
-    DZ(1:ind_z_surf) = DZ_max
+    DZ(1:ind_z_surf) = config%general_settings%dzmax
 
     Year(1:ind_z_surf) = -999.
-    Depth(ind_z_surf) = 0.5*DZ_max
+    Depth(ind_z_surf) = 0.5*config%general_settings%dzmax
     do ind_z = (ind_z_surf-1), 1, -1
         Depth(ind_z) = Depth(ind_z+1) + 0.5*DZ(ind_z+1) + 0.5*DZ(ind_z)
     enddo
@@ -136,40 +132,39 @@ end subroutine Init_Prof_Var
 
 
 subroutine Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
-        out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail, &
-        proflayers, detlayers)
+    out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze, outputSpeed, outputProf, outputDetail)
     !*** Initialise output variables with NaNs ***!
 
     ! declare arguments
-    integer, intent(in) :: outputSpeed, outputProf, outputDetail, proflayers, detlayers
+    integer, intent(in) :: outputSpeed, outputProf, outputDetail
     double precision, dimension(:,:), allocatable, intent(out) :: out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
 
     ! allocate memory to variables
     allocate(out_1D((outputSpeed), 18))
-    allocate(out_2D_dens((outputProf), proflayers))
-    allocate(out_2D_temp((outputProf), proflayers))
-    allocate(out_2D_lwc((outputProf), proflayers))
-    allocate(out_2D_depth((outputProf), proflayers))
-    allocate(out_2D_dRho((outputProf), proflayers))
-    allocate(out_2D_year((outputProf), proflayers))
-    allocate(out_2D_det_dens((outputDetail), detlayers))
-    allocate(out_2D_det_temp((outputDetail), detlayers))
-    allocate(out_2D_det_lwc((outputDetail), detlayers))
-    allocate(out_2D_det_refreeze((outputDetail), detlayers))
+    allocate(out_2D_dens((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_temp((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_lwc((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_depth((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_dRho((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_year((outputProf), config%output_dimensions%proflayers))
+    allocate(out_2D_det_dens((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_temp((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_lwc((outputDetail), config%output_dimensions%detlayers))
+    allocate(out_2D_det_refreeze((outputDetail), config%output_dimensions%detlayers))
     
     ! Set missing value
-    out_1D(:,:) = NaN_value
-    out_2D_dens(:,:) = NaN_value
-    out_2D_temp(:,:) = NaN_value
-    out_2D_lwc(:,:) = NaN_value
-    out_2D_depth(:,:) = NaN_value
-    out_2D_dRho(:,:) = NaN_value
-    out_2D_year(:,:) = NaN_value
-    out_2D_det_dens(:,:) = NaN_value
-    out_2D_det_temp(:,:) = NaN_value
-    out_2D_det_lwc(:,:) = NaN_value
-    out_2D_det_refreeze(:,:) = NaN_value
+    out_1D(:,:) = const%NaN_value
+    out_2D_dens(:,:) = const%NaN_value
+    out_2D_temp(:,:) = const%NaN_value
+    out_2D_lwc(:,:) = const%NaN_value
+    out_2D_depth(:,:) = const%NaN_value
+    out_2D_dRho(:,:) = const%NaN_value
+    out_2D_year(:,:) = const%NaN_value
+    out_2D_det_dens(:,:) = const%NaN_value
+    out_2D_det_temp(:,:) = const%NaN_value
+    out_2D_det_lwc(:,:) = const%NaN_value
+    out_2D_det_refreeze(:,:) = const%NaN_value
 
 end subroutine Init_Output_Var
 

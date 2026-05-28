@@ -1,6 +1,8 @@
 module grid_routines
     !*** All subroutines and functions relating to increasing and decreasing the vertical resolution ***!
 
+    use model_settings
+
     implicit none
     private
 
@@ -122,13 +124,12 @@ end subroutine Delete_Layers
 ! *******************************************************
 
 
-subroutine Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
+subroutine Add_Layers(ind_z_max, ind_z_surf, Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** adds 100 layers of pure ice to the bottom of the column if the column is very thin. ***!
     
     ! declare arguments
     integer, intent(in) :: ind_z_max
     integer, intent(inout) :: ind_z_surf
-    double precision, intent(in) :: dzmax, rhoi
     double precision, dimension(ind_z_max), intent(inout) :: Rho, M, T, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -148,8 +149,8 @@ subroutine Add_Layers(ind_z_max, ind_z_surf, dzmax, rhoi, Rho, M, T, Mlwc, DZ, D
         
     ! Properties of the 100 new layers:
     do ind_z = 1, 100
-        DZ(ind_z)  = dzmax
-        Rho(ind_z) = rhoi
+        DZ(ind_z)  = config%general_settings%dzmax
+        Rho(ind_z) = const%rhoi
         DenRho(ind_z) = 0.
         M(ind_z)   = Rho(ind_z) * DZ(ind_z)
         Mlwc(ind_z) = 0.
