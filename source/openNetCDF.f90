@@ -53,12 +53,15 @@ function read_time_bounds(netcdf_file) result(time_bounds)
 
     type(TimeBounds), allocatable :: time_bounds
 
-    character(len = *), intent(in) :: netcdf_file
+    character(len = *), intent(in) :: netcdf_file, pad
     character(len=nf90_max_name) :: dim_name, var_name
 
     allocate(time_bounds)
-  
-    call handle_error(nf90_open("data/evap_FGRN055_era055_1939-2023_p24-007.nc", 0, ncid), "open_netcdf_file")
+    
+    pad = trim(input_timeseries_dir)//"evap"//trim(prefix_forcing_timeseries)//"24"//trim(suffix_forcing_timeseries)
+    ! pad = "data/evap_FGRN055_era055_1939-2023_p24-007.nc"
+    
+    call handle_error(nf90_open(trim(pad), 0, ncid), "open_netcdf_file") 
     call handle_error(nf90_inquire(ncid, ndim, nvar, nattr, unlim_dim, format_num), "inquire_net_file")
 
     ! print *, ndim, nvar, nattr, unlim_dim, format_num
