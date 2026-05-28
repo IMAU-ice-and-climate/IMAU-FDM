@@ -12,28 +12,27 @@ module initialise_variables
     
 contains
 
-subroutine Init_TimeStep_Var(dtobs, dtmodel, dtmodelImp, dtmodelExp, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup, ImpExp, nyearsSU)
-! subroutine Init_TimeStep_Var(dtobs, dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
+subroutine Init_TimeStep_Var(dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
 
     !*** Initialise time step variables ***!
 
     ! declare arguments
-    integer, intent(in) :: dtobs, Nt_forcing
+    integer, intent(in) :: Nt_forcing
     integer, intent(out) :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer, intent(inout) :: dtmodel
 
-    if (config%general_settings%ImpExp == 2) then
-        dtmodel = config%general_settings%dtmodelExp
+    if (config%model_choices%ImpExp == 2) then
+        dtmodel = config%model_choices%dtmodelExp
     else
-        dtmodel = config%general_settings%dtmodelImp
+        dtmodel = config%model_choices%dtmodelImp
     endif
 
     ! Number of IMAU-FDM time steps per forcing time step
-    Nt_model_interpol = dtobs/dtmodel
+    Nt_model_interpol = config%forcing_dimensions%dtobs/dtmodel
     ! Total number of IMAU-FDM time steps
     Nt_model_tot = Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
-    Nt_model_spinup = INT( (REAL(config%general_settings%nyears_spinup)*seconds_per_year)/(REAL(dtmodel)) )
+    Nt_model_spinup = INT( (REAL(config%forcing_dimensions%nyears_spinup)*const%seconds_per_year)/(REAL(dtmodel)) )
     if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
 
     write(log_unit, *) "dtmodel: ", dtmodel
@@ -46,12 +45,13 @@ end subroutine Init_TimeStep_Var
 
 ! *******************************************************
 
-subroutine Calc_Output_Freq(dtmodel, dtobs, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, Nt_forcing, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
+    ! TKTKTK: add these to the output_dimensions config?
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, dtobs, Nt_forcing
+    integer, intent(in) :: dtmodel, Nt_forcing
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
@@ -63,7 +63,7 @@ subroutine Calc_Output_Freq(dtmodel, dtobs, Nt_forcing, numOutputProf, &
     ! if integers are larger than 2147483647 (32-bit integer), 64-bit integers are needed which can go up to 9223372036854775807
     ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
     Nt_forcing_64 = int(Nt_forcing, kind=8)
-    dtobs_64 = int(dtobs, kind=8)
+    dtobs_64 = int(config%forcing_dimensions%dtobs, kind=8)
     writeinspeed_64 = int(config%output_dimensions%writeinspeed, kind=8)
     writeinprof_64 = int(config%output_dimensions%writeinprof, kind=8)
     writeindetail_64 = int(config%output_dimensions%writeindetail, kind=8)
@@ -97,11 +97,10 @@ end subroutine Calc_Output_Freq
 ! *******************************************************
 
 
-subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
+subroutine Init_Prof_Var(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
     !*** Initialise firn profile variables with zeros ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z_surf
     double precision, dimension(:), intent(out) :: Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year
 
     ! declare local variables
@@ -117,10 +116,10 @@ subroutine Init_Prof_Var(ind_z_surf, Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreez
     Refreeze(:) = 0.
     Year(:) = 0.
     
-    DZ(1:ind_z_surf) = config%general_settings%dzmax
+    DZ(1:ind_z_surf) = config%model_choices%dzmax
 
     Year(1:ind_z_surf) = -999.
-    Depth(ind_z_surf) = 0.5*config%general_settings%dzmax
+    Depth(ind_z_surf) = 0.5*config%model_choices%dzmax
     do ind_z = (ind_z_surf-1), 1, -1
         Depth(ind_z) = Depth(ind_z+1) + 0.5*DZ(ind_z+1) + 0.5*DZ(ind_z)
     enddo
@@ -173,11 +172,11 @@ end subroutine Init_Output_Var
 
 subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
     Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-    Nt_forcing, Nt_model_tot, Nlon, Nlat)
+    Nt_forcing, Nt_model_tot)
     !*** Allocate memory to forcing variables ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing, Nt_model_tot, Nlon, Nlat
+    integer, intent(in) :: Nt_forcing, Nt_model_tot
     double precision, dimension(:), allocatable, intent(out) :: SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m
     double precision, dimension(:), allocatable, intent(out) :: MeltFM, PsolFM, PliqFM, SublFM, TempFM, DrifFM, Rho0FM
     double precision, dimension(:,:), allocatable, intent(out) :: AveTsurf, LSM, ISM, Latitude, Longitude, AveAcc, AveWind, AveMelt
@@ -195,14 +194,14 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     allocate(FF10m(Nt_forcing))
     
     ! Averaged variables
-    allocate(AveTsurf(Nlon,Nlat))
-    allocate(LSM(Nlon,Nlat))
-    allocate(ISM(Nlon,Nlat))
-    allocate(Latitude(Nlon,Nlat))
-    allocate(Longitude(Nlon,Nlat))
-    allocate(AveAcc(Nlon,Nlat))
-    allocate(AveWind(Nlon,Nlat))
-    allocate(AveMelt(Nlon,Nlat))
+    allocate(AveTsurf(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(LSM(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(ISM(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(Latitude(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(Longitude(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(AveAcc(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(AveWind(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
+    allocate(AveMelt(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
 
     ! Interpolated forcing time series variables
     allocate(MeltFM(Nt_model_tot))

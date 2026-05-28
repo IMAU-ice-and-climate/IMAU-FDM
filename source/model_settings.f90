@@ -6,6 +6,8 @@ module model_settings
     implicit none
 
     private ! none?
+
+    integer, parameter, public :: ind_z_max = 20000
     
     type, public :: Constants
         double precision :: R  ! gas constant [J mole-1 K-1]
@@ -18,6 +20,8 @@ module model_settings
         double precision :: Lh  ! latent heat of fusion [J kg-1]
         double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
         double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        double precision :: pi
+        double precision :: seconds_per_year
     end type Constants
 
     type, public :: forcing_dimensions_t
@@ -51,7 +55,13 @@ module model_settings
         double precision :: ts_minimum
         double precision :: det2d_minimum
 
-    end type model_choices
+    end type model_choices_t
+
+    type, public :: model_physics_t
+
+        logical :: do_MO_fit
+    
+    end type model_physics_t 
 
     type, public :: output_dimensions_t
         integer :: writeinspeed
@@ -62,20 +72,13 @@ module model_settings
         double precision :: detthick
     end type output_dimensions_t
 
-    type, public :: run_settings_t
-
-        character(len=:), allocatable :: restart_type
-        character(len=:), allocatable :: domain
-        character(len=:), allocatable :: forcing
-
-    end type general_settings_t
-
     type, public :: Settings !TKTKTK explain and what about Constants?
-        type(forcing_t)  :: forcing_dimensions
+        type(forcing_dimensions_t)  :: forcing_dimensions
         type(initialization_t)  :: initialization
-        type(model_choices_t)  :: model_choices
+        type(model_choices_t)  :: model_choices ! TKTKTK: rename + make these consistent with model_physics across all f90 + toml files
+        type(model_physics_t):: model_physics ! TKTKTK: make these consistent with model_choices
         type(output_dimensions_t)  :: output_dimensions
-        type(run_settings_t):: run_settings
+
     end type Settings
 
     public :: Read_Job, Read_Constants, Load_Constants, Read_Settings, Load_Model_Settings, Define_Filenames
@@ -90,7 +93,7 @@ module model_settings
     public :: settings_dir
 
     ! set in run.tmol
-    public :: project_name
+    public :: project_name, domain, forcing, restart_type
     public :: model_version
     public :: code_dir, data_dir
 
@@ -106,8 +109,7 @@ module model_settings
     public :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
     public :: fname_out_1d, fname_out_2d, fname_out_2ddet
     public :: iceshelf_var
-
-    public :: pi, seconds_per_year
+    public :: ind_z_surf
     public :: config, const
 
     ! Declare the module variables
@@ -120,7 +122,7 @@ module model_settings
     integer :: log_unit = 6   ! 6 = stdout; set to a file unit by distributor worker before each Run_Model call
     
     ! read in from toml files
-    character(len=:), allocatable :: project_name
+    character(len=:), allocatable :: project_name, domain, forcing, restart_type
     character(len=:), allocatable :: model_version
     character(len=:), allocatable :: code_dir, data_dir
 
@@ -136,7 +138,7 @@ module model_settings
     character(len=512) :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
     character(len=512) :: fname_out_1d, fname_out_2d, fname_out_2ddet
     character(len=512) :: iceshelf_var
-    double precision :: pi, seconds_per_year
+    integer :: ind_z_surf
 
     ! structures
     type(Settings), allocatable :: config
@@ -173,7 +175,7 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'Nlon_timeseries', settings_out%forcing_dimensions%Nlon_timeseries)
         call get_value(child, 'Nt_forcing', settings_out%forcing_dimensions%Nt_forcing)
     else
-        write(std_err, *) "Cannot find section >forcing_dimensions< in model.toml file."
+        write(stderr, *) "Cannot find section >forcing_dimensions< in model.toml file."
         stop
     end if
 
@@ -185,7 +187,7 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'beginT', settings_out%initialization%beginT)
         call get_value(child, 'initdepth', settings_out%initialization%initdepth)
     else
-        write(std_err, *) "Cannot find section >initialization< in model.toml file."
+        write(stderr, *) "Cannot find section >initialization< in model.toml file."
         stop
     end if
 
@@ -193,6 +195,7 @@ subroutine Read_Settings(table, settings_out)
     nullify(child)
     call get_value(table, 'model_choices', child, requested=.false.)
     if (associated(child)) then
+        
         call get_value(child, 'ImpExp', settings_out%model_choices%ImpExp)
         call get_value(child, 'dtmodelImp', settings_out%model_choices%dtmodelImp)
         call get_value(child, 'dtmodelExp', settings_out%model_choices%dtmodelExp)
@@ -202,7 +205,7 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'ts_minimum',    settings_out%model_choices%ts_minimum)
         call get_value(child, 'det2d_minimum', settings_out%model_choices%det2d_minimum)
     else
-        write(std_err, *) "Cannot find section >model_choices< in model.toml file."
+        write(stderr, *) "Cannot find section >model_choices< in model.toml file."
         stop
     end if
 
@@ -217,11 +220,11 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'detlayers', settings_out%output_dimensions%detlayers)
         call get_value(child, 'detthick', settings_out%output_dimensions%detthick)
     else
-        write(std_err, *) "Cannot find section >output_dimensions< in model.toml file."
+        write(stderr, *) "Cannot find section >output_dimensions< in model.toml file."
         stop
     end if
 
-    ind_z_surf = nint(initdepth/dzmax)  ! initial amount of vertical layers
+    ind_z_surf = nint(settings_out%initialization%initdepth/settings_out%model_choices%dzmax)  ! initial amount of vertical layers
 
     write(log_unit, *) "Loaded model settings"
     write(log_unit, *) " "
@@ -232,6 +235,7 @@ end subroutine Read_Settings
 subroutine Load_Model_Settings()
     !*** Read runtime model settings from TOML and expose commonly used values ***!
 
+    character(len=512)            :: settings_path_model
     integer :: fu, rc
     logical :: file_exists
     type(toml_error), allocatable :: parse_error
@@ -252,6 +256,7 @@ end subroutine Load_Model_Settings
 
 subroutine Read_Job()
     !*** Read run.toml and build all directory paths ***!
+    ! TKTKTK: check on domain, forcing, restart_type
 
     character(len=512)            :: settings_path_run
     type(toml_table), allocatable :: table
@@ -267,13 +272,8 @@ subroutine Read_Job()
         call get_value(child, 'domain', domain)
         call get_value(child, 'restart_type', restart_type)
     else
-        write(std_err, *) "Cannot find section >job< in run.toml file."
+        write(stderr, *) "Cannot find section >job< in run.toml file."
         stop
-    end if
-
-    if (allocated(config)) then
-        if (allocated(config%general_settings%domain)) domain = config%run_settings%domain
-        if (allocated(config%general_settings%forcing)) forcing = config%run_settings%forcing
     end if
 
     call get_value(table, 'metadata', child, requested=.false.)
@@ -286,7 +286,7 @@ subroutine Read_Job()
         call get_value(child, 'model_first_timestep', model_first_timestep)
         call get_value(child, 'model_last_timestep', model_last_timestep)
     else
-        write(std_err, *) "Cannot find section >metadata< in run.toml file."
+        write(stderr, *) "Cannot find section >metadata< in run.toml file."
         stop
     end if
 
@@ -296,7 +296,7 @@ subroutine Read_Job()
         call get_value(child, 'code_dir', code_dir)
         call get_value(child, 'data_dir', data_dir)
     else
-        write(std_err, *) "Cannot find section >directories< in run.toml file."
+        write(stderr, *) "Cannot find section >directories< in run.toml file."
         stop
     end if
 
@@ -305,13 +305,27 @@ subroutine Read_Job()
     project_dir   = trim(data_dir)//trim(project_name)//"/"
     output_dir    = trim(project_dir)//"output/"
     restart_dir   = trim(project_dir)//"restart/"
-    reference_dir = trim(code_dir)//"reference/"//trim(config%run_settings%domain)//"/"
-    input_dir     = trim(data_dir)//trim(config%run_settings%domain)//"_"//trim(config%run_settings%forcing)//"/input/"
+    reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"
+    input_dir     = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
 
     if (trim(project_name) == "example") then
         input_dir   = trim(data_dir)//"input/"
         restart_dir = trim(code_dir)//"example/restart/"
     end if
+
+    ! Optional: use restart files from a different project (same directory structure)
+    block
+        character(len=:), allocatable :: restart_project
+        nullify(child)
+        call get_value(table, 'job', child, requested=.false.)
+        if (associated(child)) then
+            call get_value(child, 'restart_project', restart_project, requested=.false.)
+            if (allocated(restart_project) .and. len_trim(restart_project) > 0) then
+                restart_dir = trim(data_dir)//trim(restart_project)//"/restart/"
+                write(log_unit, *) "Using restart files from project: ", trim(restart_project)
+            end if
+        end if
+    end block
 
     input_averages_dir   = trim(input_dir)//"averages/"
     input_timeseries_dir = trim(input_dir)//"timeseries/"
@@ -358,8 +372,10 @@ end subroutine Read_Constants
 ! *******************************************************
 
 subroutine Load_Constants()
-    !*** Read runtime model settings from TOML and expose commonly used values ***!
+    !*** Load constants from constnats.toml ***!
+    ! TKTKTK: is this needed?
 
+    character(len=512)            :: settings_path_constants
     integer :: fu, rc
     logical :: file_exists
     type(toml_error), allocatable :: parse_error
@@ -372,11 +388,11 @@ subroutine Load_Constants()
         deallocate(const)
     end if
 
-    call read_settings(table, const) 
+    call Read_Constants(table, const) 
 
     deallocate(table)
 
-end subroutine Load_Model_Settings
+end subroutine Load_Constants
 
 ! *******************************************************
 
@@ -386,10 +402,9 @@ subroutine Define_Filenames()
 
     character(len=512) :: domain_forcing
 
-    !TKTKTK: is this the correct way of using the struct variables?
-    domain_forcing = trim(config%run_settings%domain)//"_"//trim(config%run_settings%forcing)
+    domain_forcing = trim(domain)//"_"//trim(forcing)
 
-    fname_mask                = trim(config%run_settings%domain)//"_Masks.nc"
+    fname_mask                = trim(domain)//"_Masks.nc"
     prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
     suffix_forcing_timeseries = ".nc"
     suffix_forcing_averages   = "_"//trim(domain_forcing)//"-"//trim(start_ts_year)//"_"// &
@@ -409,10 +424,10 @@ subroutine Define_Filenames()
         suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
     end if
 
-    if (config%run_settings%domain == "ANT27") then
+    if (trim(domain) == "ANT27") then
         iceshelf_var = "IceShelve"
     else
-        write(log_unit, *) "No iceshelf_var defined for domain, ", config%run_settings%domain
+        write(log_unit, *) "No iceshelf_var defined for domain, ", trim(domain)
         write(log_unit, *) "so not loading ice shelf mask."
     end if
 

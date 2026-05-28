@@ -64,12 +64,13 @@ RECOMPILE=$(toml_get "${SETTINGS_DIR}run.toml" job recompile)
 
 # compiles excecutable again to make sure everything is up to date if recompile = true
 if [ "$RECOMPILE" == "True" ]; then
-  if [ ${RUN_TYPE} == "ECMWF" ]; then 
-      bash "${FDM_BASE}/compile_hpc.sh"
+  if [ ${RUN_TYPE} == "ECMWF" ]; then
+      bash "${FDM_BASE}/compile_hpc.sh" || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
   elif [ ${RUN_TYPE} == "offline" ]; then
-      fpm run
+      fpm run || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
   else
-      echo "Run type -- ${RUN_TYPE} -- not recognized"
+      echo "ERROR: Run type -- ${RUN_TYPE} -- not recognized"
+      exit 1
   fi
 fi
 

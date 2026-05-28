@@ -67,7 +67,7 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
     double precision, intent(in) :: h_surf, FirnAir, TotLwc
     double precision, intent(inout) :: Totvice, Totvfc, Totvacc, Totvsub, Totvsnd, Totvmelt, Totvbouy
     double precision, intent(inout) :: TotRunoff, TotRefreeze, TotRain, TotSurfmelt, TotSolIn, IceMass, Rho0out
-    double precision, dimension((outputSpeed),18), intent(out) :: out_1D
+    double precision, dimension(:,:), intent(out) :: out_1D
 
     ! declare local variables
     integer :: ind_t_out
@@ -75,7 +75,7 @@ subroutine To_out_1D(ind_t, numOutputSpeed, h_surf, Totvice, Totvfc, Totvacc, To
 
     ! All velocities in m/year
     ! Divide all variables by the number of time steps within the output period
-    factor = seconds_per_year/numOutputSpeed
+    factor = const%seconds_per_year/numOutputSpeed
     Totvice = -1. * (Totvice * factor)
     Totvacc = Totvacc * factor
     Totvsub = Totvsub * factor
@@ -128,34 +128,32 @@ end subroutine To_out_1D
 ! *******************************************************
 
 
-subroutine To_out_2D(ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf, Rho, &
+subroutine To_out_2D(ind_t, dtmodel, numOutputProf, outputProf, Rho, &
         T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year)
     !*** Write the 2D output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, dtmodel, numOutputProf, outputProf
+    integer, intent(in) :: ind_t, dtmodel, numOutputProf, outputProf
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, Depth, Year
     double precision, dimension(ind_z_max), intent(inout) :: DenRho
     double precision, dimension(:,:), intent(out) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local variables
-    integer :: ind_t_out, ind_z_bot, ind_z_surf_out, proflayers
+    integer :: ind_t_out, ind_z_bot, ind_z_surf_out
     double precision :: factor
 
-    proflayers = config%output_dimensions%proflayers
-    
     ! Determine indices for the output
     ind_t_out = ind_t/numOutputProf
     ind_z_bot = 1
     ind_z_surf_out = ind_z_surf
-    if (ind_z_surf > proflayers) then 
-        ind_z_bot = ind_z_surf - proflayers + 1
-        ind_z_surf_out = proflayers
+    if (ind_z_surf > config%output_dimensions%proflayers) then
+        ind_z_bot = ind_z_surf - config%output_dimensions%proflayers + 1
+        ind_z_surf_out = config%output_dimensions%proflayers
     endif
     
     ! Convert to [kg m-3 year-1]
-    factor = (seconds_per_year) / dtmodel / numOutputProf
+    factor = (const%seconds_per_year) / dtmodel / numOutputProf
     DenRho(:) = DenRho(:) * factor
     
     ! save output to 2D array
@@ -174,12 +172,12 @@ end subroutine To_out_2D
 ! *******************************************************
 
 
-subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, numOutputDetail, outputDetail, &
+subroutine To_out_2Ddetail(ind_t, numOutputDetail, outputDetail, &
     Rho, T, Mlwc, Refreeze, DZ, out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze)
     !*** Write the 2Ddetail output variables to the variables that will be converted into a netcdf file after the time loop ***!
-    
+
     ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf, ind_t, numOutputDetail, outputDetail
+    integer, intent(in) :: ind_t, numOutputDetail, outputDetail
     double precision, dimension(ind_z_max), intent(in) :: Rho, T, Mlwc, DZ
     double precision, dimension(ind_z_max), intent(inout) :: Refreeze
     double precision, dimension(outputDetail,config%output_dimensions%detlayers), intent(out) :: out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, out_2D_det_refreeze
@@ -225,7 +223,7 @@ subroutine To_out_2Ddetail(ind_z_max, ind_z_surf, ind_t, numOutputDetail, output
     end do
 
     refreeze_sum = SUM(Refreeze)
-    if (refreeze_sum > config%minimum_values%det2d_minimum) then
+    if (refreeze_sum > config%model_choices%det2d_minimum) then
         DZ_mod = DZ
         dist = 0.
         ind_orig = ind_z_surf
@@ -271,7 +269,7 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     ! declare arguments
 
     integer, intent(in) :: outputSpeed
-    double precision, dimension((outputSpeed),18), intent(in) :: out_1D
+    double precision, dimension(:,:), intent(in) :: out_1D
 
 
     ! declare local arguments
@@ -332,54 +330,54 @@ subroutine Save_out_1D(outputSpeed, out_1D)
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
 
-    status = nf90_put_att(ncid(32),varID(32,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1a')
     status = nf90_put_att(ncid(32),varID(32,1),"name","Surface height")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1b')
     
-    status = nf90_put_att(ncid(32),varID(32,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2a')
     status = nf90_put_att(ncid(32),varID(32,2),"name","Ice velocity at the model base")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2b')
     
-    status = nf90_put_att(ncid(32),varID(32,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3a')
     
-    status = nf90_put_att(ncid(32),varID(32,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(32),varID(32,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(32),varID(32,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_6')
-    status = nf90_put_att(ncid(32),varID(32,7),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,7),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_7')
-    status = nf90_put_att(ncid(32),varID(32,8),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,8),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_8')
-    status = nf90_put_att(ncid(32),varID(32,9),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,9),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_9')
-    status = nf90_put_att(ncid(32),varID(32,10),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,10),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_10')
     
-    status = nf90_put_att(ncid(32),varID(32,11),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,11),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11a')
     status = nf90_put_att(ncid(32),varID(32,11),"name","Firn Air Content")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11b')
     status = nf90_put_att(ncid(32),varID(32,11),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11c')
     
-    status = nf90_put_att(ncid(32),varID(32,12),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,12),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_12')
-    status = nf90_put_att(ncid(32),varID(32,13),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,13),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_13')
-    status = nf90_put_att(ncid(32),varID(32,14),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,14),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_14')
-    status = nf90_put_att(ncid(32),varID(32,15),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,15),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_15')
-    status = nf90_put_att(ncid(32),varID(32,16),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,16),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_16')
-    status = nf90_put_att(ncid(32),varID(32,17),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,17),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
-    status = nf90_put_att(ncid(32),varID(32,18),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(32),varID(32,18),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
 
     ! DEFINE GLOBAL ATTRIBUTES
@@ -470,12 +468,11 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
     double precision, dimension(:,:), intent(in) :: out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year
 
     ! declare local arguments
-    integer :: status, ncid(50), IDs(50,5), varID(50,20), outputProf, proflayers
+    integer :: status, ncid(50), IDs(50,5), varID(50,20), outputProf
     character*255 :: pad, writeinprof_str
     character*24 :: current_datetime
 
     outputProf = size(out_2D_dens, 1) !TKTKTK outputProf should already be set, check
-    proflayers = config%output_dimensions%proflayers
 
     pad = trim(output_dir)//trim(fname_out_2d)
     
@@ -489,7 +486,7 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
     ! DEFINE DIMENSIONS
     status = nf90_def_dim(ncid(31),"ind_t",outputProf,IDs(31,1))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim2')    
-    status = nf90_def_dim(ncid(31),"layer",proflayers,IDs(31,2))
+    status = nf90_def_dim(ncid(31),"layer",config%output_dimensions%proflayers,IDs(31,2))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_dim3')
 
     ! DEFINE VARIABLES
@@ -513,17 +510,17 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
 
     ! DEFINE ATTRIBUTES (unit could also be defined here)
-    status = nf90_put_att(ncid(31),varID(31,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
-    status = nf90_put_att(ncid(31),varID(31,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
-    status = nf90_put_att(ncid(31),varID(31,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
-    status = nf90_put_att(ncid(31),varID(31,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(31),varID(31,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(31),varID(31,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(31),varID(31,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
 
     ! DEFINE GLOBAL ATTRIBUTES
@@ -535,22 +532,22 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
 
     ! SAVE DATA
     status = nf90_put_var(ncid(31),varID(31,1),out_2D_dens,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid1')    
     status = nf90_put_var(ncid(31),varID(31,2),out_2D_temp,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid2')
     status = nf90_put_var(ncid(31),varID(31,3),out_2D_year,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid3')
     status = nf90_put_var(ncid(31),varID(31,4),out_2D_lwc,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid4')
     status = nf90_put_var(ncid(31),varID(31,5),out_2D_depth,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid5')
     status = nf90_put_var(ncid(31),varID(31,6),out_2D_dRho,start=(/1,1/), &
-        count=(/(outputProf),proflayers/))
+        count=(/(outputProf),config%output_dimensions%proflayers/))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_put_var_grid6')
     
     ! CLOSE NETCDF-FILE
@@ -618,27 +615,27 @@ subroutine Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, o
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     
     ! DEFINE ATTRIBUTES
-    status = nf90_put_att(ncid(33),varID(33,1),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,1),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
     status = nf90_put_att(ncid(33),varID(33,1),"units","kg m-3")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_1')
-    status = nf90_put_att(ncid(33),varID(33,2),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,2),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
     status = nf90_put_att(ncid(33),varID(33,2),"units","K")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_2')
-    status = nf90_put_att(ncid(33),varID(33,3),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,3),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
     status = nf90_put_att(ncid(33),varID(33,3),"units","")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_3')
-    status = nf90_put_att(ncid(33),varID(33,4),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,4),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
     status = nf90_put_att(ncid(33),varID(33,4),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_4')
-    status = nf90_put_att(ncid(33),varID(33,5),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,5),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
     status = nf90_put_att(ncid(33),varID(33,5),"units","m")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_5')
-    status = nf90_put_att(ncid(33),varID(33,6),"missing_value",9.96921e+36)
+    status = nf90_put_att(ncid(33),varID(33,6),"missing_value",const%NaN_value)
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
     status = nf90_put_att(ncid(33),varID(33,6),"units","")
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_6')
@@ -687,10 +684,10 @@ end subroutine Save_out_2Ddetail
 ! *******************************************************
 
 
-subroutine Save_out_spinup(ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year)
+subroutine Save_out_spinup(Rho, M, T, Depth, Mlwc, Year)
     !*** Write a netcdf file containing the firn profile after the spin-up ***!
 
-    integer :: status, ncid, dimID, varID(10), ind_z_max, ind_z_surf
+    integer :: status, ncid, dimID, varID(10)
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
@@ -769,11 +766,11 @@ end subroutine Save_out_spinup
 ! *******************************************************
 
 
-subroutine Save_out_run(Nt_model_tot, ind_z_max, ind_z_surf, Rho, M, T, Depth, Mlwc, Year, &
+subroutine Save_out_run(Nt_model_tot, Rho, M, T, Depth, Mlwc, Year, &
     DenRho, Refreeze)
     !*** Write a netcdf file containing the firn profile after the run ***!
-    
-    integer :: status, ncid, dimID(2), varID(10), ind_z_max, ind_z_surf, Nt_model_tot
+
+    integer :: status, ncid, dimID(2), varID(10), Nt_model_tot
     double precision, dimension(ind_z_max) :: M, T, Depth, Mlwc, DenRho, Refreeze
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad

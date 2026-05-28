@@ -4,12 +4,12 @@ program main
     use model_main
     implicit none
 
-    double precision, dimension(60000) :: lat, lon, ind_lats, ind_lons
+    double precision, allocatable :: lat(:), lon(:), ind_lats(:), ind_lons(:)
     double precision :: cur_lat, cur_lon, new_lat, new_lon
     integer :: new_ind_lat, new_ind_lon
     integer :: io, i_row, i_point, ierror, rank, job_request, n_proc_done, size, cur_i_point, cur_int_lat, cur_int_lon
-    integer :: recv_point_numb_int
-    integer, dimension(60000) :: pointlist
+    integer :: recv_point_numb_int, n_ref
+    integer, allocatable :: pointlist(:)
     integer, dimension(MPI_Status_size) :: status
     double precision :: jobs_done = -99999999.0
     double precision :: ignore_ref1, ignore_ref2, ignore_ref3 !ignored
@@ -17,6 +17,8 @@ program main
     character(len=512) :: point_log_dir, dist_log_dir
     character(len=512) :: log_fname, dist_log_fname
     integer :: dist_log_unit, point_log_unit, devnull_unit
+    character(8)  :: ts_date
+    character(10) :: ts_time
     job_request = 42
 
     call MPI_Init(ierror)
@@ -28,11 +30,11 @@ program main
     call get_command_argument(3, point_log_dir)
     call get_command_argument(4, dist_log_dir)
 
-    ! All ranks suppress Define_Job startup output (paths, averages) from going to SLURM log
+    ! All ranks suppress Read_Job startup output (paths, averages) from going to SLURM log
     open(newunit=devnull_unit, file='/dev/null', action='write', status='old')
     log_unit = devnull_unit
 
-    call Define_Job()
+    call Read_Job()
     ref_pointlist_path = trim(reference_dir)//"IN_ll_"//trim(domain)//".txt"
 
     if (rank == 0) then
@@ -45,6 +47,9 @@ program main
             call MPI_Abort(MPI_Comm_World, 1, ierror)
         end if
         log_unit = dist_log_unit
+        call date_and_time(ts_date, ts_time)
+        write(dist_log_unit, '(A)') "Started: "//ts_date(1:4)//"-"//ts_date(5:6)//"-"//ts_date(7:8)// &
+                                    " "//ts_time(1:2)//":"//ts_time(3:4)//":"//ts_time(5:6)
         write(dist_log_unit, '(2A)')   "Distributor started: ", trim(project_name)
         write(dist_log_unit, '(A,I0)') "MPI size: ", size
         flush(dist_log_unit)
@@ -60,15 +65,22 @@ program main
             call MPI_Abort(MPI_Comm_World, 1, ierror)
         end if
 
-        i_row = 1
+        n_ref = 0
         do
-            read (20, *, iostat=io) cur_lon, cur_lat, ignore_ref1, ignore_ref2, ignore_ref3, cur_int_lat, cur_int_lon
-            if (io/=0) exit
-            lat(i_row) = cur_lat
-            lon(i_row) = cur_lon
-            ind_lats(i_row) = cur_int_lat
-            ind_lons(i_row) = cur_int_lon
-            i_row = i_row + 1
+            read(20, *, iostat=io) cur_lon, cur_lat, ignore_ref1, ignore_ref2, ignore_ref3, cur_int_lat, cur_int_lon
+            if (io /= 0) exit
+            n_ref = n_ref + 1
+        end do
+        rewind(20)
+        allocate(lat(n_ref), lon(n_ref), ind_lats(n_ref), ind_lons(n_ref))
+
+        do i_row = 1, n_ref
+            read(20, *) cur_lon, cur_lat, ignore_ref1, ignore_ref2, ignore_ref3, cur_int_lat, cur_int_lon
+            lat(i_row)     = cur_lat
+            lon(i_row)     = cur_lon
+            ! Pointlist stores 0-based Python indices; convert to 1-based Fortran indices
+            ind_lats(i_row) = cur_int_lat + 1
+            ind_lons(i_row) = cur_int_lon + 1
         end do
         close(20)
 
@@ -82,14 +94,19 @@ program main
             flush(dist_log_unit)
             call MPI_Abort(MPI_Comm_World, 1, ierror)
         end if
-        i_point = 1
+        i_point = 0
         do
-            read (30, *, iostat=io) pointlist(i_point)
-            if (io/=0) exit
+            read(30, *, iostat=io) cur_int_lat  ! dummy read to count
+            if (io /= 0) exit
             i_point = i_point + 1
         end do
+        rewind(30)
+        allocate(pointlist(i_point))
+
+        do i_row = 1, i_point
+            read(30, *) pointlist(i_row)
+        end do
         close(30)
-        i_point = i_point-1
         write(dist_log_unit, '(A,I0)') "Total points to run: ", i_point
         flush(dist_log_unit)
 
@@ -120,11 +137,17 @@ program main
                 log_unit = 6  ! fallback to stdout
             else
                 log_unit = point_log_unit
+                call date_and_time(ts_date, ts_time)
+                write(log_unit, '(A)') "Started: "//ts_date(1:4)//"-"//ts_date(5:6)//"-"//ts_date(7:8)// &
+                                       " "//ts_time(1:2)//":"//ts_time(3:4)//":"//ts_time(5:6)
             end if
 
             call Run_Model(cur_lat, cur_lon, cur_int_lat, cur_int_lon)
 
             if (io == 0) then
+                call date_and_time(ts_date, ts_time)
+                write(log_unit, '(A)') "Finished: "//ts_date(1:4)//"-"//ts_date(5:6)//"-"//ts_date(7:8)// &
+                                       " "//ts_time(1:2)//":"//ts_time(3:4)//":"//ts_time(5:6)
                 flush(point_log_unit)
                 close(point_log_unit)
             end if
@@ -171,6 +194,9 @@ program main
         end do
 
         write(dist_log_unit, '(A)') "All points dispatched. Distributor exiting."
+        call date_and_time(ts_date, ts_time)
+        write(dist_log_unit, '(A)') "Finished: "//ts_date(1:4)//"-"//ts_date(5:6)//"-"//ts_date(7:8)// &
+                                    " "//ts_time(1:2)//":"//ts_time(3:4)//":"//ts_time(5:6)
         close(dist_log_unit)
     end if
 

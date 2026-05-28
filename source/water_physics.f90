@@ -13,11 +13,8 @@ contains
 ! *******************************************************
 
 
-subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
+subroutine Bucket_Method(rhoi, Lh, Me, Mmelt, T, M, Rho, DZ, Mlwc, Refreeze, Mrunoff, Mrefreeze)
     !*** Distribute new liquid water using the bucket method ***!
-
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
     double precision, intent(in) :: Me, rhoi, Lh
     double precision, intent(inout) :: Mmelt, Mrunoff, Mrefreeze
     double precision, dimension(ind_z_max), intent(inout) :: Rho, T, DZ, M, Mlwc, Refreeze
@@ -38,7 +35,7 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
             Efreeze = (const%Tmelt-T(ind_z))*M(ind_z)*cp !Calculate the energy available for freezing in the layer
             Mfreeze = Efreeze / Lh          !the mass that can be frozen with that energy
             
-            Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+            Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
     
             !Check if all the water can be refrozen in this layer
             !if YES, all the water is refrozen in this layer. T/M/dz recalculated
@@ -72,12 +69,12 @@ subroutine Bucket_Method(ind_z_max, ind_z_surf, rhoi, Lh, Me, Mmelt, T, M, Rho, 
                 endif
                 Mmelt = Mmelt - Madd
                 ! Some liquid water may remain in the layer as irreducible water content
-                call LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
+                call LWcontent(ind_z, rhoi, Mmelt, M, Rho, DZ, Mlwc)
             endif
         endif
 
         ! Check if densification did not cause too much LWC
-        Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+        Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
         if (Mavail < Mlwc(ind_z)) then       
             toomuch = Mlwc(ind_z) - Mavail
             Mlwc(ind_z) = Mlwc(ind_z) - toomuch
@@ -98,11 +95,11 @@ end subroutine Bucket_Method
 ! *******************************************************
 
 
-subroutine LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
+subroutine LWcontent(ind_z, rhoi, Mmelt, M, Rho, DZ, Mlwc)
     !*** Update the irreducible water content of layer k ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z, ind_z_max
+    integer, intent(in) :: ind_z
     double precision, intent(in) :: rhoi
     double precision, intent(inout) :: Mmelt
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
@@ -112,7 +109,7 @@ subroutine LWcontent(ind_z, ind_z_max, rhoi, Mmelt, M, Rho, DZ, Mlwc)
     double precision :: Mavail, Mporeavail, toomuch
 
 
-    Mavail = Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ)
+    Mavail = Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ)
 
     if (Mavail < Mlwc(ind_z)) then              ! Check if densification did not cause to much LWC
         toomuch = Mlwc(ind_z) - Mavail
@@ -136,11 +133,8 @@ end subroutine LWcontent
 ! *******************************************************
 
 
-subroutine LWrefreeze(ind_z_max, ind_z_surf, Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
+subroutine LWrefreeze(Lh, Mrefreeze, T, M, Rho, DZ, Mlwc, Refreeze)
     !*** Refreeze water if layers have cooled below the melting point after temperature update ***!
-
-    ! declare arguments
-    integer, intent(in) :: ind_z_max, ind_z_surf
     double precision, intent(in) :: Lh
     double precision, intent(inout) :: Mrefreeze
     double precision, dimension(ind_z_max), intent(in) :: DZ
@@ -180,11 +174,11 @@ end subroutine LWrefreeze
 ! *******************************************************
 
 
-function Calc_Avail_Storage(ind_z, ind_z_max, rhoi, M, Rho, DZ) result(Mavail)
+function Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ) result(Mavail)
     !*** Calculate how much pore space can be stored inside of the current layer ***!
 
     ! declare arguments
-    integer, intent(in) :: ind_z, ind_z_max
+    integer, intent(in) :: ind_z
     double precision, intent(in) :: rhoi
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
 

@@ -64,6 +64,6 @@ program toml_main
   call read_settings(table, config)
   deallocate(table)
 
-  print *, config%minimum_values%ts_minimum
+  print *, config%model_choices%ts_minimum
 
 end program toml_main
