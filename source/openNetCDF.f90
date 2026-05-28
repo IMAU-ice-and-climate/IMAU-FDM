@@ -2,21 +2,87 @@ module openNetCDF
     !*** subroutines for loading forcing data
 
     use netcdf, only : nf90_open,nf90_inq_varid, nf90_inq_dimid, nf90_inquire_dimension, & 
-        nf90_close,nf90_get_var,nf90_noerr, nf90_strerror
+        nf90_close,nf90_get_var,nf90_noerr, nf90_strerror, nf90_max_name, nf90_inquire, &
+        nf90_inquire_variable
     
     use model_settings
 
     implicit none
     private
 
-    public :: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Handle_Error, Restart_From_Spinup, Restart_From_Run
+    type, public :: TimeBounds
+        character(5) :: start_ts_year
+        character(5) :: end_ts_year
+        character(30) :: model_first_timestep
+        character(30) :: model_last_timestep
+    end type TimeBounds
 
+    public :: Load_Mask, Load_Ave_Forcing, Load_TimeSeries_Forcing, Handle_Error, Restart_From_Spinup, Restart_From_Run, read_avg_dimensions, read_time_bounds
+    ! public :: read_avg_dimensions, Handle_Error
 contains
 
 
 ! *******************************************************
 
-subroutine Load_Mask(LSM, Latitude, Longitude, ISM)
+subroutine read_avg_dimensions(netcdf_file, n_lon, n_lat)
+
+    integer :: status, ncid, dim_id
+    integer, intent(out) :: n_lon, n_lat
+    character(len = *), intent(in) :: netcdf_file
+    character(len=nf90_max_name) :: dim_name
+
+    call handle_error(nf90_open(netcdf_file, 0, ncid), "open_avg_file")
+    call handle_error(nf90_inq_dimid(ncid, "rlat", dim_id), "find_rlat")
+    call handle_error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lat), "get_nlat")
+    call handle_error(nf90_inq_dimid(ncid, "rlon", dim_id), "find_rlon")
+    call handle_error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lon), "get_nlon")
+    status = nf90_close(ncid)
+
+end subroutine read_avg_dimensions
+
+function read_time_bounds(netcdf_file) result(time_bounds)
+    integer :: ncid, ndim
+    integer :: nvar, nattr, unlim_dim, format_num
+    integer :: idim
+    integer :: bnds_varid
+
+    integer, allocatable :: bounds(:, :)
+    integer :: counts(2)
+    integer :: bound_dimids(2)
+    integer :: start_ts_year, end_ts_year, start_date, end_date
+
+    type(TimeBounds), allocatable :: time_bounds
+
+    character(len = *), intent(in) :: netcdf_file
+    character(len=nf90_max_name) :: dim_name, var_name
+
+    allocate(time_bounds)
+  
+    call handle_error(nf90_open("data/evap_FGRN055_era055_1939-2023_p24-007.nc", 0, ncid), "open_netcdf_file")
+    call handle_error(nf90_inquire(ncid, ndim, nvar, nattr, unlim_dim, format_num), "inquire_net_file")
+
+    ! print *, ndim, nvar, nattr, unlim_dim, format_num
+
+    call Handle_Error(nf90_inq_varid(ncid, "date_bnds", bnds_varid), "Reading var id day_bnds")
+    call Handle_Error(nf90_inquire_variable(ncid, bnds_varid, dimids=bound_dimids), "Getting dim_ids for bounds")
+    do idim = 1, 2
+        call Handle_Error(nf90_inquire_dimension(ncid, bound_dimids(idim), len=counts(idim)), "Reading time bound counts")
+    end do
+    allocate(bounds(counts(1), counts(2)))
+    call Handle_Error(nf90_get_var(ncid, bnds_varid, bounds), "Reading time bounds")
+
+    start_date = bounds(1, 1)
+    end_date = bounds(1, counts(2))
+    start_ts_year = start_date / 10000
+    end_ts_year = bounds(1, counts(2)) / 10000
+    write(time_bounds%model_first_timestep, "(i4, '-', i2.2, '-', i2.2, 'T00:00:00')") start_ts_year, mod(start_date/100, 100), mod(start_date, 100)
+    write(time_bounds%model_last_timestep, "(i4, '-', i2.2, '-', i2.2, 'T21:00:00')") end_ts_year, mod(end_date/100, 100), mod(end_date, 100)
+    write(time_bounds%start_ts_year, "(i4)") start_ts_year
+    write(time_bounds%end_ts_year, "(i4)") end_ts_year
+    call Handle_Error(nf90_close(ncid), "Closing netcdf4 file")
+end function
+
+subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
     
     integer :: status, ncid(1), ID(5)
     double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat) :: LSM, ISM, Latitude, Longitude
@@ -177,7 +243,7 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
         if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
 
         add = trim(prefix_forcing_timeseries)//trim(fnumb)//trim(suffix_forcing_timeseries)
-     
+
     end if
     
 
