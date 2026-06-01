@@ -53,7 +53,8 @@ function read_time_bounds(netcdf_file) result(time_bounds)
 
     type(TimeBounds), allocatable :: time_bounds
 
-    character(len = *), intent(in) :: netcdf_file, pad
+    character*255 :: pad
+    character(len = *), intent(in) :: netcdf_file
     character(len=nf90_max_name) :: dim_name, var_name
 
     allocate(time_bounds)
@@ -85,7 +86,7 @@ function read_time_bounds(netcdf_file) result(time_bounds)
     call Handle_Error(nf90_close(ncid), "Closing netcdf4 file")
 end function
 
-subroutine Load_Mask(LSM, Nlat, Nlon, Latitude, Longitude, ISM, domain)
+subroutine Load_Mask(LSM, Latitude, Longitude, ISM)
     
     integer :: status, ncid(1), ID(5)
     double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat) :: LSM, ISM, Latitude, Longitude

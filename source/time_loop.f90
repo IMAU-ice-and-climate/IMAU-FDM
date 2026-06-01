@@ -124,6 +124,7 @@ subroutine Time_Loop_SpinUp(Nt_model_tot, Nt_model_spinup, dtmodel, acav, ffav, 
         write(log_unit, *) "After spin-up #", spinup_numb
         write(log_unit, *) "Rho(200) = ", Rho(200), "T(200) = ", T(200), "Year(200) = ", Year(200)
         write(log_unit, *) "Ind_z_surf = ", ind_z_surf, "h_surf = ", h_surf, "FAC = ", FirnAir, "IceMass = ", IceMass
+        flush(log_unit)
 
         z_surf_error = (h_surf-z_surf_old)*(h_surf-z_surf_old)
         fac_error = (FirnAir-fac_old)*(FirnAir-fac_old)

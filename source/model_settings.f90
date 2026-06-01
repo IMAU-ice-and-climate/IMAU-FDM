@@ -319,7 +319,7 @@ subroutine Read_Job()
         nullify(child)
         call get_value(table, 'job', child, requested=.false.)
         if (associated(child)) then
-            call get_value(child, 'restart_project', restart_project, requested=.false.)
+            call get_value(child, 'restart_project', restart_project, default="")
             if (allocated(restart_project) .and. len_trim(restart_project) > 0) then
                 restart_dir = trim(data_dir)//trim(restart_project)//"/restart/"
                 write(log_unit, *) "Using restart files from project: ", trim(restart_project)
