@@ -183,16 +183,16 @@ function Calc_Avail_Storage(ind_z, rhoi, M, Rho, DZ) result(Mavail)
     double precision, dimension(ind_z_max), intent(in) :: M, Rho, DZ
 
     ! declare local variables
-    double precision :: poro, maxpore, MavailCol, MavailMax, Mavail
+    double precision :: poro, MavailCol, MavailMax, Mavail, Wm_percent
 
     ! Maximum available capacity for liquid water according to Coleou, 1998
     poro = (const%rhoi-Rho(ind_z))/const%rhoi
     Wm_percent = 0.017 + 0.057 * (poro/(1.-poro))
 
-    if (settings_out%model_physics%LWC_avail == "Coleou1998_corr") then
+    if (config%model_physics%LWC_avail == "Coleou1998_corr") then
         ! fixes known bug in FDM v1p2
         Wm_percent = Wm_percent / ( 1. - Wm_percent )
-    elseif (settings_out%model_physics%LWC_avail == "Coleou1998_1p2") then
+    elseif (config%model_physics%LWC_avail == "Coleou1998_1p2") then
         ! uses old Wm_percent, which underestimates LWC
         Wm_percent = Wm_percent
     endif

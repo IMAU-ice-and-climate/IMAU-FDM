@@ -165,8 +165,10 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'LWC_avail', settings_out%model_physics%LWC_avail)
 
         ! warns if an option gets passed that doesn't match the options in water_physics    
-        if (LWC_avail /= "Coleou1998_corr" .and. LWC_avail /= "Coleou1998_1p2") then
-            call Handle_Error(0, 'invalid LWC_avail: '//trim(LWC_avail)//' . Set valid option in model.toml.')
+        if (settings_out%model_physics%LWC_avail /= "Coleou1998_corr" .and. &
+            settings_out%model_physics%LWC_avail /= "Coleou1998_1p2") then
+            call Handle_Error(0, 'invalid LWC_avail: '// &
+                trim(settings_out%model_physics%LWC_avail)//' . Set valid LWC_avail option in model.toml.')
         endif
     
     end if
