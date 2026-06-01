@@ -85,4 +85,4 @@ MO_fit/data/PKM/raw/*
 .nfs*
 
 #No claude files
-*.claude.md*
+*.claude.md*launch_job/pointlists/*.txt
