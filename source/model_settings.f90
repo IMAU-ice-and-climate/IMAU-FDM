@@ -60,6 +60,7 @@ module model_settings
     type, public :: model_physics_t
 
         logical :: do_MO_fit
+        character*64 :: LWC_avail
     
     end type model_physics_t 
 
@@ -161,6 +162,13 @@ subroutine Read_Settings(table, settings_out)
     call get_value(table, 'model_physics', child, requested=.false.)
     if (associated(child)) then
         call get_value(child, 'do_mo_fit', settings_out%model_physics%do_MO_fit)
+        call get_value(child, 'LWC_avail', settings_out%model_physics%LWC_avail)
+
+        ! warns if an option gets passed that doesn't match the options in water_physics    
+        if (LWC_avail /= "Coleou1998_corr" .and. LWC_avail /= "Coleou1998_1p2") then
+            call Handle_Error(0, 'invalid LWC_avail: '//trim(LWC_avail)//' . Set valid option in model.toml.')
+        endif
+    
     end if
 
     ! Forcing settings --> TKTKTK: to be read in using netcdf

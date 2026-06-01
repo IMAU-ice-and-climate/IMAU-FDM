@@ -1,16 +1,16 @@
 # Run configuration — edit this for each new run
 
 [job]
-project_name       = "test-distributor-restart"  # unique name; output goes to data_dir/project_name
+project_name       = "test-branch-merge-3"  # unique name; output goes to data_dir/project_name
 pointlist_name     = "pointlist_1"       # goes in launch_job/pointlists/
 
 domain             = "FGRN055"           # FGRN055 | ANT27
 forcing            = "era5"              
 
-recompile          = false                # true | false - recompile with each new launch_job run?
+recompile          = true                # true | false - recompile with each new launch_job run?
 run_type           = "ECMWF"               # ECMWF | offline - changes compilation, whether ecmwf job settings are called
-restart_type       = "spinup"              # none | spinup | run - restart from spinup files or last timestep with new data?
-restart_project  = "test-branch-merge"  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same data_dir) 
+restart_type       = "none"              # none | spinup | run - restart from spinup files or last timestep with new data?
+restart_project  = ""  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same data_dir) 
 submission_iteration = 1                
 relaunch        = "yes"       # with "no", no new iteration will be launched if job does not finish
 
