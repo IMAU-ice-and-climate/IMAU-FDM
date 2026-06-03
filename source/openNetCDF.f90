@@ -328,7 +328,7 @@ subroutine Restart_From_Spinup(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze)
     
     character*255 :: pad
     
-    pad = trim(restart_dir)//"spinup/"//trim(fname_restart_from_spinup)
+    pad = trim(restart_in_dir)//"spinup/"//trim(fname_restart_from_spinup)
     
     write(log_unit, *) "Path of spinup restart file: "
     write(log_unit, *) trim(pad)
@@ -395,7 +395,7 @@ subroutine Restart_From_Run(prev_nt, Rho, M, T, Depth, Mlwc, DZ, Year, DenRho, R
 
     character*255 :: pad
 
-    pad = trim(restart_dir)//"run/"//trim(fname_restart_from_previous_run)
+    pad = trim(restart_in_dir)//"run/"//trim(fname_restart_from_previous_run)
     
     write(log_unit, *) 'Path of run restart files: :'
     write(log_unit, *) trim(pad)

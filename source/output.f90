@@ -691,7 +691,7 @@ subroutine Save_out_spinup(Rho, M, T, Depth, Mlwc, Year)
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
 
-    pad = trim(restart_dir)//"spinup/"//trim(fname_restart_from_spinup)
+    pad = trim(restart_out_dir)//"spinup/"//trim(fname_restart_from_spinup)
 
     write(log_unit, *) "Saving out after spinup for restarting at: "
     write(log_unit, *) trim(pad)
@@ -774,7 +774,7 @@ subroutine Save_out_run(Nt_model_tot, Rho, M, T, Depth, Mlwc, Year, &
     double precision, dimension(ind_z_max) :: Rho, Year
     character*255 :: pad
 
-    pad = trim(restart_dir)//"run/"//trim(fname_restart_from_previous_run)
+    pad = trim(restart_out_dir)//"run/"//trim(fname_restart_from_previous_run)
 
     write(log_unit, *) "Saving out run for restarting at: "
     write(log_unit, *) trim(pad)

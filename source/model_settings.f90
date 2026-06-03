@@ -124,7 +124,7 @@ module model_settings
     ! created in model_settings
     public :: reference_dir
     public :: input_dir, input_averages_dir, input_timeseries_dir
-    public :: project_dir, restart_dir, output_dir
+    public :: project_dir, restart_in_dir, restart_out_dir, output_dir
     public :: fname_mask
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
     public :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
@@ -152,7 +152,7 @@ module model_settings
     ! created in here in model_settings
     character(len=512) :: reference_dir
     character(len=512) :: input_dir, input_averages_dir, input_timeseries_dir
-    character(len=512) :: project_dir, output_dir, restart_dir
+    character(len=512) :: project_dir, output_dir, restart_in_dir, restart_out_dir
     character(len=512) :: fname_mask
     character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
     character(len=512) :: fname_restart_from_spinup, prefix_fname_run, suffix_fname_run, fname_restart_from_previous_run
@@ -471,16 +471,22 @@ subroutine Read_Job()
     data_dir      = trim(adjustl(data_dir))
     project_dir   = trim(data_dir)//trim(project_name)//"/"
     output_dir    = trim(project_dir)//"output/"
-    restart_dir   = trim(project_dir)//"restart/"
+    ! restart_out_dir: where THIS run WRITES its restart files (always its own project).
+    ! restart_in_dir : where restart files are READ at startup (may point at another
+    ! project via restart_project below).
+    restart_out_dir = trim(project_dir)//"restart/"
+    restart_in_dir  = trim(project_dir)//"restart/"
     reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"
     input_dir     = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
 
     if (trim(project_name) == "example") then
-        input_dir   = trim(data_dir)//"input/"
-        restart_dir = trim(code_dir)//"example/restart/"
+        input_dir       = trim(data_dir)//"input/"
+        restart_out_dir = trim(code_dir)//"example/restart/"
+        restart_in_dir  = trim(code_dir)//"example/restart/"
     end if
 
-    ! Optional: use restart files from a different project (same directory structure)
+    ! Optional: READ initial restart files from a different project. Writes still go to
+    ! this run's own restart_out_dir, so the source project is never modified.
     block
         character(len=:), allocatable :: restart_project
         nullify(child)
@@ -488,8 +494,8 @@ subroutine Read_Job()
         if (associated(child)) then
             call get_value(child, 'restart_project', restart_project, default="")
             if (allocated(restart_project) .and. len_trim(restart_project) > 0) then
-                restart_dir = trim(data_dir)//trim(restart_project)//"/restart/"
-                write(log_unit, *) "Using restart files from project: ", trim(restart_project)
+                restart_in_dir = trim(data_dir)//trim(restart_project)//"/restart/"
+                write(log_unit, *) "Reading restart files from project: ", trim(restart_project)
             end if
         end if
     end block
@@ -500,7 +506,8 @@ subroutine Read_Job()
     write(log_unit, *) "Path to IMAU-FDM: ", code_dir
     write(log_unit, *) "Path to project directory: ", output_dir
     write(log_unit, *) "Path to input directory: ", input_dir
-    write(log_unit, *) "Path to restart directory: ", restart_dir
+    write(log_unit, *) "Restart read dir:  ", restart_in_dir
+    write(log_unit, *) "Restart write dir: ", restart_out_dir
 
     deallocate(table)
 
