@@ -57,12 +57,12 @@ end subroutine Find_Grid
 
 
 subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, &
-    TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, &
+    TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, Nt_model_interpol, &
     Nt_model_tot, dtmodel)
     !*** Linearly interpolate RACMO forcing to model time step and calculate fresh snow density ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel
+    integer, intent(in) :: Nt_model_interpol, Nt_model_tot, dtmodel
     double precision, dimension(:), intent(in)  :: TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m
     double precision, dimension(:), intent(out) :: TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM
 
@@ -96,7 +96,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     write(log_unit, *) FF10m(1:10)
     write(log_unit, *) ' '
 
-    do a = 1, (Nt_forcing-1)
+    do a = 1, (config%forcing_dimensions%Nt_forcing-1)
         do  b = 1, Nt_model_interpol
             step = (a-1)*Nt_model_interpol + b
             part1 = (b-1.)/Nt_model_interpol
@@ -112,14 +112,14 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
     end do
 
     do b = 1, Nt_model_interpol
-        step = (Nt_forcing-1)*Nt_model_interpol + b
-        TempFM(step) = TempSurf(Nt_forcing)
-        PSolFM(step) = PreSol(Nt_forcing)/Nt_model_interpol
-        PliqFM(step) = PreLiq(Nt_forcing)/Nt_model_interpol
-        SublFM(step) = Sublim(Nt_forcing)/Nt_model_interpol
-        MeltFM(step) = SnowMelt(Nt_forcing)/Nt_model_interpol
-        DrifFM(step) = SnowDrif(Nt_forcing)/Nt_model_interpol
-        ff10FM(step) = FF10m(Nt_forcing)
+        step = (config%forcing_dimensions%Nt_forcing-1)*Nt_model_interpol + b
+        TempFM(step) = TempSurf(config%forcing_dimensions%Nt_forcing)
+        PSolFM(step) = PreSol(config%forcing_dimensions%Nt_forcing)/Nt_model_interpol
+        PliqFM(step) = PreLiq(config%forcing_dimensions%Nt_forcing)/Nt_model_interpol
+        SublFM(step) = Sublim(config%forcing_dimensions%Nt_forcing)/Nt_model_interpol
+        MeltFM(step) = SnowMelt(config%forcing_dimensions%Nt_forcing)/Nt_model_interpol
+        DrifFM(step) = SnowDrif(config%forcing_dimensions%Nt_forcing)/Nt_model_interpol
+        ff10FM(step) = FF10m(config%forcing_dimensions%Nt_forcing)
     end do
 
     if (trim(domain) == "ANT27") then 
@@ -135,7 +135,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         ! TKTKTK: make choice of surface snow explicit in model.toml
         
         ! Use current temperature and wind speed for snow parameterisations
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
             do step = 1, Nt_model_tot
                 Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - const%Tmelt) ! from Fausto et al. 2018 
             end do
@@ -147,8 +147,10 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     else
         ! Use mean temperature and wind speed, averaged over numSnow time steps
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055") then
             ! Greenland
+            ! TKTKTK: from Fausto 2018; physics should be specified
+            ! TKTKTK: option to use constant density (315) could also be added in
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow
                 Rho0FM(step) = 362.1 + 2.78*(TempSnow - const%Tmelt)
@@ -159,6 +161,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
             end do
         else
             ! Not Greenland
+            ! TKTKTK: from Veldhuisjen 2023 refitting Laenarts 2012; physics should be specfieid
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             ff10Snow = sum( ff10FM(1:numSnow) )/numSnow
             do step = 1, numSnow

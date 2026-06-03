@@ -1,28 +1,23 @@
 # Run configuration — edit this for each new run
 
 [job]
-project_name       = "test-branch-merge-3"  # unique name; output goes to data_dir/project_name
+project_name       = "test-branch-merge-6"  # unique name; output goes to data_dir/project_name
 pointlist_name     = "pointlist_1"       # goes in launch_job/pointlists/
 
 domain             = "FGRN055"           # FGRN055 | ANT27
 forcing            = "era5"              
 
-recompile          = true                # true | false - recompile with each new launch_job run?
+recompile          = false                # true | false - recompile with each new launch_job run?
 run_type           = "ECMWF"               # ECMWF | offline - changes compilation, whether ecmwf job settings are called
 restart_type       = "none"              # none | spinup | run - restart from spinup files or last timestep with new data?
-restart_project  = ""  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same data_dir) 
+restart_project  = "run_FGRN055-era055_1939-2023"  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same data_dir) 
 submission_iteration = 1                
 relaunch        = "yes"       # with "no", no new iteration will be launched if job does not finish
 
 [metadata]
-# These will eventually be automatically set in fortran but for now they are read in
-model_version = "1.2+" #imau fdm model version
-start_ts_year = "1939" #forcing start year
-end_ts_year = "2025" #forcing end year
-start_ave_year = "1940" #spinup/average file year start
-end_ave_year = "1970" #spinup/average file year end
-model_first_timestep = "1939-09-01T00:00:00"
-model_last_timestep = "2025-12-31T21:00:00"
+model_version = "1.4" # IMAU-FDM model version
+# Forcing start/end years, spin-up averaging years, and model first/last timesteps
+# are now read from the forcing netCDF metadata (Set_Forcing_Dimensions), not here.
 
 [directories]
 # Base directories - these set the relative directories for the source code, and the input and output data

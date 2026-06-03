@@ -2,21 +2,17 @@
 
 [model_physics]
 do_mo_fit = false #if true, sets MO values to 1 so that MO-factors can be refit
-LWC_avail = "Coleou1998_corr"       # Coleou1998_corr | Coleou1998_1p2; use corrected or uncorrected scheme to calculate LWC storage availability in water_physics
+LWC_avail = "Coleou1998_1p2"       # Coleou1998_corr | Coleou1998_1p2; use corrected or uncorrected scheme to calculate LWC storage availability in water_physics
 
 [forcing_dimensions]
-nyears_spinup = 30 # TKTKTK: update pre-processing so that this value is written + start and end timesteps, then read in
-#all forcing info below should be read from netcdf
-nyears_forcing = 85   # number of years of forcing; will be read in with netcdf
-Nt_forcing = 252272	  # numTimes, number of time points (1939-2025=252272; 1939-2023=246424; 1957-2023=193584)
-dtobs = 10800         # length of input timestep; will be read in with netcdf
-Nlon = 438            # Number of longitude points in forcing
-Nlat = 566            # Number of latitude points in forcing
-Nlon_timeseries = 6   # num of longitude bands (set during input pre-processing)
+nyears_spinup = 30 # TKTKTK: could also be read from netCDF once preprocessing writes it
+# All other forcing dimensions/dates (nyears_forcing, dtobs, Nlon, Nlat,
+# Nlon_timeseries, Nt_forcing) are read from the forcing netCDF files in
+# Set_Forcing_Dimensions(), not from TOML.
 
 [initialization]
 startasice = 1        # initial density profile: 1=linear, 2=ice
-begintT    = 3        # initial temperature profile: 0=winter, 1=summer, 2=linear
+beginT     = 3        # initial temperature profile: 1=winter, 2=summer, other=isothermal (T=tsav)
 initdepth  = 1.0      # initial firn profile depth [m]
 
 [model_choices]
@@ -37,4 +33,3 @@ writeindetail = 864000   # frequency of detailed profile output [s] (~10 days)
 proflayers    = 3000     # number of layers in profile output
 detlayers     = 500      # number of layers in detailed output
 detthick      = 0.04     # layer thickness in detailed output [m]
-

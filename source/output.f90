@@ -3,8 +3,7 @@ module output
 
     use netcdf, only: nf90_create, nf90_def_dim, nf90_def_var, nf90_real, nf90_int, nf90_noerr, &
         nf90_enddef, nf90_put_var, nf90_close, nf90_unlimited, nf90_put_att, nf90_global
-    use model_settings
-    use openNetCDF, only: Handle_Error
+    use model_settings   ! provides Handle_Error (moved here from openNetCDF)
 
     implicit none
 
@@ -866,17 +865,17 @@ subroutine Write_Global_Atts(ncid_val, title)
     status = nf90_put_att(ncid_val, nf90_global, "institution", &
         "Institute for Marine and Atmospheric Research (IMAU) at Utrecht University, Utrecht, Netherlands")
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_institution')
-    status = nf90_put_att(ncid_val, nf90_global, "source", "IMAU-FDM version "//trim(model_version))
+    status = nf90_put_att(ncid_val, nf90_global, "source", "IMAU-FDM version "//trim(metadata%model_version))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_source')
     status = nf90_put_att(ncid_val, nf90_global, "history", "Created on: "//trim(current_datetime))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_history')
-    status = nf90_put_att(ncid_val, nf90_global, "model_start_datetime", trim(model_first_timestep))
+    status = nf90_put_att(ncid_val, nf90_global, "model_start_datetime", trim(metadata%model_first_timestep))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_start')
-    status = nf90_put_att(ncid_val, nf90_global, "model_end_datetime", trim(model_last_timestep))
+    status = nf90_put_att(ncid_val, nf90_global, "model_end_datetime", trim(metadata%model_last_timestep))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_model_end')
-    status = nf90_put_att(ncid_val, nf90_global, "spinup_start_year", trim(start_ave_year))
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_start_year", trim(metadata%start_ave_year))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_start')
-    status = nf90_put_att(ncid_val, nf90_global, "spinup_end_year", trim(end_ave_year))
+    status = nf90_put_att(ncid_val, nf90_global, "spinup_end_year", trim(metadata%end_ave_year))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_spinup_end')
     status = nf90_put_att(ncid_val, nf90_global, "domain", trim(domain))
     if (status /= nf90_noerr) call Handle_Error(status, 'global_att_domain')

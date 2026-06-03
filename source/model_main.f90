@@ -31,7 +31,7 @@ subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
     double precision, intent(in) :: cur_lat, cur_lon
     integer,          intent(in) :: ind_lat, ind_lon
 
-    integer :: Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup
+    integer :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer :: writeinprof, writeinspeed, writeindetail
     integer :: numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail
     integer :: IceShelf
@@ -67,17 +67,18 @@ subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
     ! Build per-point output and restart filenames
     call Define_Filenames()
 
+    ! Read forcing grid dimensions (Nlon, Nlat) from the averages netCDF file
+    call Set_Forcing_Dimensions()
+
     ! Defines constants used throughout the model
     call Load_Constants()
     
     ! Determine model time step and amount of model time steps
-    Nt_forcing = config%forcing_dimensions%Nt_forcing
+    call Init_TimeStep_Var(dtmodel, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
 
-    call Init_TimeStep_Var(dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
-    
     call Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
         Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-        Nt_forcing, Nt_model_tot)
+        Nt_model_tot)
 
     ! Get variables from the NetCDF files
 
@@ -109,7 +110,7 @@ subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
     call Init_Prof_Var(Rho, M, T, Depth, Mlwc, DZ, DenRho, Refreeze, Year)
 
     ! Get variables needed for outputting data
-    call Calc_Output_Freq(dtmodel, Nt_forcing, numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, &
+    call Calc_Output_Freq(dtmodel, numOutputProf, numOutputSpeed, numOutputDetail, outputProf, outputSpeed, &
         outputDetail)
 
     call Init_Output_Var(out_1D, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, out_2D_year, &
@@ -117,7 +118,7 @@ subroutine Run_Model(cur_lat, cur_lon, ind_lat, ind_lon)
     
     ! Interpolate the RACMO forcing data to firn model time step
     call Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif, FF10m, TempFM, PsolFM, PliqFM, SublFM, &
-        MeltFM, DrifFM, Rho0FM, Nt_forcing, Nt_model_interpol, Nt_model_tot, dtmodel)
+        MeltFM, DrifFM, Rho0FM, Nt_model_interpol, Nt_model_tot, dtmodel)
 
     
 

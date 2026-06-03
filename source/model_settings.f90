@@ -3,6 +3,10 @@ module model_settings
 
     use, intrinsic :: iso_fortran_env, only: stderr => error_unit
     use tomlf
+    use netcdf, only: nf90_open, nf90_close, nf90_inq_dimid, nf90_inquire_dimension, &
+        nf90_inq_varid, nf90_inquire, nf90_inquire_variable, nf90_get_var, &
+        nf90_get_att, nf90_global, &
+        nf90_noerr, nf90_strerror, nf90_max_name
     implicit none
 
     private ! none?
@@ -36,6 +40,19 @@ module model_settings
 
     end type forcing_dimensions_t
 
+    ! Single source for run/forcing metadata. The date fields are read from the
+    ! forcing netCDF files (timeseries date_bnds, averages global attrs) rather
+    ! than from TOML; model_version still comes from run.toml [metadata].
+    type, public :: metadata_t
+        character(5)  :: start_ts_year
+        character(5)  :: end_ts_year
+        character(5)  :: start_ave_year
+        character(5)  :: end_ave_year
+        character(30) :: model_first_timestep
+        character(30) :: model_last_timestep
+        character(30) :: model_version
+    end type metadata_t
+
     type, public :: initialization_t
 
         integer :: startasice
@@ -44,6 +61,8 @@ module model_settings
 
     end type initialization_t
 
+    ! Numerical / discretization settings (scheme, timesteps, resolution, thresholds).
+    ! Physics-parameterisation choices live in model_physics_t.
     type, public :: model_choices_t
 
         integer :: ImpExp
@@ -57,12 +76,14 @@ module model_settings
 
     end type model_choices_t
 
+    ! Physics-parameterisation choices (densification refit, LWC scheme).
+    ! Numerical/discretization settings live in model_choices_t.
     type, public :: model_physics_t
 
         logical :: do_MO_fit
-        character*64 :: LWC_avail
-    
-    end type model_physics_t 
+        character(len=:), allocatable :: LWC_avail
+
+    end type model_physics_t
 
     type, public :: output_dimensions_t
         integer :: writeinspeed
@@ -73,11 +94,11 @@ module model_settings
         double precision :: detthick
     end type output_dimensions_t
 
-    type, public :: Settings !TKTKTK explain and what about Constants?
-        type(forcing_dimensions_t)  :: forcing_dimensions
-        type(initialization_t)  :: initialization
-        type(model_choices_t)  :: model_choices ! TKTKTK: rename + make these consistent with model_physics across all f90 + toml files
-        type(model_physics_t):: model_physics ! TKTKTK: make these consistent with model_choices
+    type, public :: Settings
+        type(forcing_dimensions_t) :: forcing_dimensions
+        type(initialization_t)     :: initialization
+        type(model_choices_t)      :: model_choices   ! numerical/discretization settings: scheme (ImpExp), model timesteps, dzmax, theta, ts_minimum, det2d_minimum
+        type(model_physics_t)      :: model_physics   ! physics-parameterisation choices: do_MO_fit, LWC_avail
         type(output_dimensions_t)  :: output_dimensions
 
     end type Settings
@@ -95,12 +116,11 @@ module model_settings
 
     ! set in run.tmol
     public :: project_name, domain, forcing, restart_type
-    public :: model_version
     public :: code_dir, data_dir
 
-    ! currently read in from toml, will be set using netcdf
-    public :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
-    
+    ! single metadata struct: years/timesteps read from netCDF, model_version from run.toml
+    public :: metadata
+
     ! created in model_settings
     public :: reference_dir
     public :: input_dir, input_averages_dir, input_timeseries_dir
@@ -113,6 +133,9 @@ module model_settings
     public :: ind_z_surf
     public :: config, const
 
+    ! netCDF helpers (moved here from openNetCDF so dimensions can be read while building settings)
+    public :: Handle_Error, read_forcing_metadata, read_averages_metadata, Set_Forcing_Dimensions
+
     ! Declare the module variables
     ! note
     !   Variables read directly from TOML via get_value → character(len=:), allocatable
@@ -124,11 +147,7 @@ module model_settings
     
     ! read in from toml files
     character(len=:), allocatable :: project_name, domain, forcing, restart_type
-    character(len=:), allocatable :: model_version
     character(len=:), allocatable :: code_dir, data_dir
-
-    ! currently read in from toml, will be set using netcdf
-    character(len=:), allocatable :: start_ts_year, end_ts_year, start_ave_year, end_ave_year, model_first_timestep, model_last_timestep
 
     ! created in here in model_settings
     character(len=512) :: reference_dir
@@ -144,8 +163,149 @@ module model_settings
     ! structures
     type(Settings), allocatable :: config
     type(Constants), allocatable :: const
+    type(metadata_t) :: metadata
 
 contains
+
+subroutine Handle_Error(stat, msg)
+    !*** error stop for netCDF ***!
+
+    integer, intent(in) :: stat
+    character(len=*), intent(in) :: msg
+
+    if (stat /= nf90_noerr) then
+        write(log_unit, *) 'netCDF error (', msg, '): ', nf90_strerror(stat)
+        stop
+    endif
+
+end subroutine Handle_Error
+
+
+subroutine read_forcing_metadata(netcdf_file)
+    !*** Read time metadata + forcing dimensions from a timeseries netCDF file.   ***!
+    !*** Fills metadata% start_ts_year, end_ts_year, model_first/last_timestep    ***!
+    !***   and config%forcing_dimensions% Nt_forcing, Nlon_timeseries, dtobs,     ***!
+    !***   nyears_forcing.                                                         ***!
+
+    character(len=*), intent(in) :: netcdf_file
+
+    integer :: ncid, bnds_varid, dim_id, idim
+    integer :: counts(2), bound_dimids(2)
+    integer, allocatable :: bounds(:, :)
+    integer :: n_lon_ts, dtobs
+    integer :: start_date, end_date, start_year, end_year
+    character(len=nf90_max_name) :: dim_name
+
+    call Handle_Error(nf90_open(trim(netcdf_file), 0, ncid), "open timeseries metadata file")
+
+    ! --- Time range: first/last verifying date from date_bnds (yyyymmdd) ---
+    call Handle_Error(nf90_inq_varid(ncid, "date_bnds", bnds_varid), "inq date_bnds")
+    call Handle_Error(nf90_inquire_variable(ncid, bnds_varid, dimids=bound_dimids), "date_bnds dimids")
+    do idim = 1, 2
+        call Handle_Error(nf90_inquire_dimension(ncid, bound_dimids(idim), len=counts(idim)), "date_bnds counts")
+    end do
+    allocate(bounds(counts(1), counts(2)))
+    call Handle_Error(nf90_get_var(ncid, bnds_varid, bounds), "get date_bnds")
+
+    start_date = bounds(1, 1)
+    end_date   = bounds(1, counts(2))
+    start_year = start_date / 10000
+    end_year   = end_date / 10000
+    write(metadata%start_ts_year, "(i4)") start_year
+    write(metadata%end_ts_year, "(i4)") end_year
+    write(metadata%model_first_timestep, "(i4,'-',i2.2,'-',i2.2,'T00:00:00')") &
+        start_year, mod(start_date/100, 100), mod(start_date, 100)
+    write(metadata%model_last_timestep, "(i4,'-',i2.2,'-',i2.2,'T21:00:00')") &
+        end_year, mod(end_date/100, 100), mod(end_date, 100)
+
+    ! Nt_forcing = number of timesteps = length of the time (non-bnds) dimension
+    config%forcing_dimensions%Nt_forcing = counts(2)
+    ! nyears_forcing = inclusive span of forcing years
+    config%forcing_dimensions%nyears_forcing = (end_year - start_year) + 1
+
+    ! --- Nlon_timeseries: rlon dimension of this parts file ---
+    call Handle_Error(nf90_inq_dimid(ncid, "rlon", dim_id), "inq rlon (timeseries)")
+    call Handle_Error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lon_ts), "get rlon len")
+    config%forcing_dimensions%Nlon_timeseries = n_lon_ts
+
+    ! --- dtobs: forcing timestep [s], stamped as a global attr by preprocessing ---
+    call Handle_Error(nf90_get_att(ncid, nf90_global, "dtobs", dtobs), "get dtobs attr")
+    config%forcing_dimensions%dtobs = dtobs
+
+    call Handle_Error(nf90_close(ncid), "close timeseries metadata file")
+
+end subroutine read_forcing_metadata
+
+
+subroutine read_averages_metadata(netcdf_file)
+    !*** Read grid dimensions (rlon->Nlon, rlat->Nlat) and the spin-up averaging  ***!
+    !*** period (start_ave_year/end_ave_year global attrs) from an averages file.  ***!
+
+    character(len=*), intent(in) :: netcdf_file
+
+    integer :: ncid, dim_id
+    integer :: n_lon, n_lat, start_ave, end_ave
+    character(len=nf90_max_name) :: dim_name
+
+    call Handle_Error(nf90_open(trim(netcdf_file), 0, ncid), "open averages metadata file")
+
+    call Handle_Error(nf90_inq_dimid(ncid, "rlat", dim_id), "inq rlat")
+    call Handle_Error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lat), "get rlat len")
+    call Handle_Error(nf90_inq_dimid(ncid, "rlon", dim_id), "inq rlon (averages)")
+    call Handle_Error(nf90_inquire_dimension(ncid, dim_id, dim_name, n_lon), "get rlon len")
+    config%forcing_dimensions%Nlon = n_lon
+    config%forcing_dimensions%Nlat = n_lat
+
+    ! spin-up averaging period: global attrs stamped by preprocessing
+    call Handle_Error(nf90_get_att(ncid, nf90_global, "start_ave_year", start_ave), "get start_ave_year attr")
+    call Handle_Error(nf90_get_att(ncid, nf90_global, "end_ave_year", end_ave), "get end_ave_year attr")
+    write(metadata%start_ave_year, "(i4)") start_ave
+    write(metadata%end_ave_year, "(i4)") end_ave
+
+    call Handle_Error(nf90_close(ncid), "close averages metadata file")
+
+end subroutine read_averages_metadata
+
+
+subroutine Set_Forcing_Dimensions()
+    !*** Populate config%forcing_dimensions + metadata from the forcing netCDF files. ***!
+    !*** Replaces the hardcoded forcing dimensions/years in model.toml + run.toml.     ***!
+    !*** Must be called after Define_Filenames() (needs the forcing filename parts).    ***!
+
+    character(len=512) :: ts_file, avg_file
+
+    ! Representative timeseries file to read metadata from. For real runs this is
+    ! tskin part 1, which exists for every domain (unlike higher part numbers --
+    ! e.g. ANT27 has only 17 lon-bands); the example run has a single point file
+    ! with no part number.
+    if (trim(project_name) == "example") then
+        ts_file = trim(input_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//trim(suffix_forcing_timeseries)
+    else
+        ts_file = trim(input_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//"1"//trim(suffix_forcing_timeseries)
+    end if
+    avg_file = trim(input_averages_dir)//"tskin"//trim(suffix_forcing_averages)
+
+    call read_forcing_metadata(trim(ts_file))
+    call read_averages_metadata(trim(avg_file))
+
+    ! Restart-from-previous-run file is named with the last forcing year, which is
+    ! only known once the timeseries metadata has been read.
+    fname_restart_from_previous_run = trim(prefix_fname_run)//trim(metadata%end_ts_year)//trim(suffix_fname_run)
+
+    write(log_unit, *) "Forcing metadata read from:"
+    write(log_unit, *) "  ", trim(ts_file)
+    write(log_unit, *) "  ", trim(avg_file)
+    write(log_unit, *) "  Nlon, Nlat       = ", config%forcing_dimensions%Nlon, config%forcing_dimensions%Nlat
+    write(log_unit, *) "  Nt_forcing       = ", config%forcing_dimensions%Nt_forcing
+    write(log_unit, *) "  Nlon_timeseries  = ", config%forcing_dimensions%Nlon_timeseries
+    write(log_unit, *) "  dtobs            = ", config%forcing_dimensions%dtobs
+    write(log_unit, *) "  nyears_forcing   = ", config%forcing_dimensions%nyears_forcing
+    write(log_unit, *) "  ts years         = ", trim(metadata%start_ts_year), " - ", trim(metadata%end_ts_year)
+    write(log_unit, *) "  ave years        = ", trim(metadata%start_ave_year), " - ", trim(metadata%end_ave_year)
+    write(log_unit, *) " "
+
+end subroutine Set_Forcing_Dimensions
+
 
 !TKTKTK: why have this be separate from subroutine Load_Model_Settings()
 subroutine Read_Settings(table, settings_out)
@@ -164,26 +324,23 @@ subroutine Read_Settings(table, settings_out)
         call get_value(child, 'do_mo_fit', settings_out%model_physics%do_MO_fit)
         call get_value(child, 'LWC_avail', settings_out%model_physics%LWC_avail)
 
-        ! warns if an option gets passed that doesn't match the options in water_physics    
+        ! stops if an option gets passed that doesn't match the options in water_physics
         if (settings_out%model_physics%LWC_avail /= "Coleou1998_corr" .and. &
             settings_out%model_physics%LWC_avail /= "Coleou1998_1p2") then
-            call Handle_Error(0, 'invalid LWC_avail: '// &
-                trim(settings_out%model_physics%LWC_avail)//' . Set valid LWC_avail option in model.toml.')
+            write(stderr, *) "Invalid LWC_avail: '"//trim(settings_out%model_physics%LWC_avail)// &
+                "'. Set a valid LWC_avail option (Coleou1998_corr | Coleou1998_1p2) in model.toml."
+            stop
         endif
     
     end if
 
-    ! Forcing settings --> TKTKTK: to be read in using netcdf
+    ! Forcing settings: only nyears_spinup comes from TOML. The rest
+    ! (nyears_forcing, dtobs, Nlon_timeseries, Nt_forcing, Nlon, Nlat) and the date
+    ! metadata are read from the forcing netCDF files in Set_Forcing_Dimensions().
     nullify(child)
     call get_value(table, 'forcing_dimensions', child, requested=.false.)
     if (associated(child)) then
         call get_value(child, 'nyears_spinup', settings_out%forcing_dimensions%nyears_spinup)
-        call get_value(child, 'nyears_forcing', settings_out%forcing_dimensions%nyears_forcing)
-        call get_value(child, 'dtobs', settings_out%forcing_dimensions%dtobs)
-        call get_value(child, 'Nlon', settings_out%forcing_dimensions%Nlon)
-        call get_value(child, 'Nlat', settings_out%forcing_dimensions%Nlat)
-        call get_value(child, 'Nlon_timeseries', settings_out%forcing_dimensions%Nlon_timeseries)
-        call get_value(child, 'Nt_forcing', settings_out%forcing_dimensions%Nt_forcing)
     else
         write(stderr, *) "Cannot find section >forcing_dimensions< in model.toml file."
         stop
@@ -288,13 +445,13 @@ subroutine Read_Job()
 
     call get_value(table, 'metadata', child, requested=.false.)
     if (associated(child)) then
-        call get_value(child, 'model_version', model_version)
-        call get_value(child, 'start_ts_year', start_ts_year)
-        call get_value(child, 'end_ts_year', end_ts_year)
-        call get_value(child, 'start_ave_year', start_ave_year)
-        call get_value(child, 'end_ave_year', end_ave_year)
-        call get_value(child, 'model_first_timestep', model_first_timestep)
-        call get_value(child, 'model_last_timestep', model_last_timestep)
+        block
+            character(len=:), allocatable :: version_str
+            call get_value(child, 'model_version', version_str)
+            metadata%model_version = version_str
+        end block
+        ! start/end_ts_year + model_first/last_timestep come from the timeseries netCDF,
+        ! start/end_ave_year from the averages netCDF (both in Set_Forcing_Dimensions).
     else
         write(stderr, *) "Cannot find section >metadata< in run.toml file."
         stop
@@ -408,29 +565,31 @@ end subroutine Load_Constants
 
 
 subroutine Define_Filenames()
-    !*** Build all output, restart, and input filenames ***!
+    !*** Build all output, restart, and input filenames.                          ***!
+    !*** Forcing filenames are date-free; the forcing's dates live in the netCDF   ***!
+    !*** metadata (read in Set_Forcing_Dimensions), not in the filename.           ***!
 
     character(len=512) :: domain_forcing
 
     domain_forcing = trim(domain)//"_"//trim(forcing)
 
     fname_mask                = trim(domain)//"_Masks.nc"
-    prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
+    prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_p"
     suffix_forcing_timeseries = ".nc"
-    suffix_forcing_averages   = "_"//trim(domain_forcing)//"-"//trim(start_ts_year)//"_"// &
-                                trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
+    suffix_forcing_averages   = "_"//trim(domain_forcing)//"_ave.nc"
 
     fname_out_1d    = trim(domain_forcing)//"_1D_"//trim(point_numb)//".nc"
     fname_out_2d    = trim(domain_forcing)//"_2D_"//trim(point_numb)//".nc"
     fname_out_2ddet = trim(domain_forcing)//"_2Ddetail_"//trim(point_numb)//".nc"
 
-    fname_restart_from_spinup       = trim(domain_forcing)//"_restart_from_spinup_"//trim(point_numb)//".nc"
-    prefix_fname_run                = trim(domain_forcing)//"_initialize_from_"
-    suffix_fname_run                = "_run_"//trim(point_numb)//".nc"
-    fname_restart_from_previous_run = trim(prefix_fname_run)//trim(end_ts_year)//trim(suffix_fname_run)
+    fname_restart_from_spinup = trim(domain_forcing)//"_restart_from_spinup_"//trim(point_numb)//".nc"
+    prefix_fname_run          = trim(domain_forcing)//"_initialize_from_"
+    suffix_fname_run          = "_run_"//trim(point_numb)//".nc"
+    ! fname_restart_from_previous_run is built in Set_Forcing_Dimensions: it needs
+    ! the last forcing year (metadata%end_ts_year), read from the timeseries netCDF.
 
     if (trim(project_name) == "example") then
-        prefix_forcing_timeseries = "_"//trim(domain_forcing)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
+        prefix_forcing_timeseries = "_"//trim(domain_forcing)
         suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
     end if
 

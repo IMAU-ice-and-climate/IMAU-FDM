@@ -12,12 +12,11 @@ module initialise_variables
     
 contains
 
-subroutine Init_TimeStep_Var(dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
+subroutine Init_TimeStep_Var(dtmodel, Nt_model_interpol, Nt_model_tot, Nt_model_spinup)
 
     !*** Initialise time step variables ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing
     integer, intent(out) :: Nt_model_interpol, Nt_model_tot, Nt_model_spinup
     integer, intent(inout) :: dtmodel
 
@@ -30,7 +29,7 @@ subroutine Init_TimeStep_Var(dtmodel, Nt_forcing, Nt_model_interpol, Nt_model_to
     ! Number of IMAU-FDM time steps per forcing time step
     Nt_model_interpol = config%forcing_dimensions%dtobs/dtmodel
     ! Total number of IMAU-FDM time steps
-    Nt_model_tot = Nt_forcing*Nt_model_interpol
+    Nt_model_tot = config%forcing_dimensions%Nt_forcing*Nt_model_interpol
     ! Total number of time steps per spin-up period
     Nt_model_spinup = INT( (REAL(config%forcing_dimensions%nyears_spinup)*const%seconds_per_year)/(REAL(dtmodel)) )
     if (Nt_model_spinup > Nt_model_tot) Nt_model_spinup = Nt_model_tot
@@ -45,13 +44,13 @@ end subroutine Init_TimeStep_Var
 
 ! *******************************************************
 
-subroutine Calc_Output_Freq(dtmodel, Nt_forcing, numOutputProf, &
+subroutine Calc_Output_Freq(dtmodel, numOutputProf, &
     numOutputSpeed, numOutputDetail, outputProf, outputSpeed, outputDetail)
     !*** Calculate the output frequency ***!
     ! TKTKTK: add these to the output_dimensions config?
 
     ! declare arguments
-    integer, intent(in) :: dtmodel, Nt_forcing
+    integer, intent(in) :: dtmodel
     integer, intent(out) :: numOutputProf, numOutputSpeed, numOutputDetail
     integer, intent(out) :: outputProf, outputSpeed, outputDetail
 
@@ -62,7 +61,7 @@ subroutine Calc_Output_Freq(dtmodel, Nt_forcing, numOutputProf, &
     ! Convert inputs to 64-bit 
     ! if integers are larger than 2147483647 (32-bit integer), 64-bit integers are needed which can go up to 9223372036854775807
     ! Nt_forcing * dtobs > 2147483647, so 64-bit conversion
-    Nt_forcing_64 = int(Nt_forcing, kind=8)
+    Nt_forcing_64 = int(config%forcing_dimensions%Nt_forcing, kind=8)
     dtobs_64 = int(config%forcing_dimensions%dtobs, kind=8)
     writeinspeed_64 = int(config%output_dimensions%writeinspeed, kind=8)
     writeinprof_64 = int(config%output_dimensions%writeinprof, kind=8)
@@ -172,11 +171,11 @@ end subroutine Init_Output_Var
 
 subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m, AveTsurf, LSM, ISM, &
     Latitude, Longitude, AveAcc, AveWind, AveMelt, TempFM, PsolFM, PliqFM, SublFM, MeltFM, DrifFM, Rho0FM, &
-    Nt_forcing, Nt_model_tot)
+    Nt_model_tot)
     !*** Allocate memory to forcing variables ***!
 
     ! declare arguments
-    integer, intent(in) :: Nt_forcing, Nt_model_tot
+    integer, intent(in) :: Nt_model_tot
     double precision, dimension(:), allocatable, intent(out) :: SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf, SnowDrif, FF10m
     double precision, dimension(:), allocatable, intent(out) :: MeltFM, PsolFM, PliqFM, SublFM, TempFM, DrifFM, Rho0FM
     double precision, dimension(:,:), allocatable, intent(out) :: AveTsurf, LSM, ISM, Latitude, Longitude, AveAcc, AveWind, AveMelt
@@ -184,15 +183,29 @@ subroutine Alloc_Forcing_Var(SnowMelt, PreTot, PreSol, PreLiq, Sublim, TempSurf,
     ! Adjust matrices to correct dimensions of the netCDF files
 
     ! Forcing time series variables
-    allocate(SnowMelt(Nt_forcing))
-    allocate(PreTot(Nt_forcing))
-    allocate(PreSol(Nt_forcing))
-    allocate(PreLiq(Nt_forcing))
-    allocate(Sublim(Nt_forcing))
-    allocate(TempSurf(Nt_forcing))
-    allocate(SnowDrif(Nt_forcing))
-    allocate(FF10m(Nt_forcing))
-    
+    allocate(SnowMelt(config%forcing_dimensions%Nt_forcing))
+    allocate(PreTot(config%forcing_dimensions%Nt_forcing))
+    allocate(PreSol(config%forcing_dimensions%Nt_forcing))
+    allocate(PreLiq(config%forcing_dimensions%Nt_forcing))
+    allocate(Sublim(config%forcing_dimensions%Nt_forcing))
+    allocate(TempSurf(config%forcing_dimensions%Nt_forcing))
+    allocate(SnowDrif(config%forcing_dimensions%Nt_forcing))
+    allocate(FF10m(config%forcing_dimensions%Nt_forcing))
+
+    ! Zero-initialise the forcing series (as the prognostic arrays above are). PreLiq is
+    ! derived (never read from a file) and is only assigned on warm steps, so it must
+    ! start at 0 rather than rely on the allocated memory being zero -- which is not
+    ! guaranteed once other routines have allocated/freed heap (e.g. the date_bnds buffer
+    ! in read_forcing_metadata), and is the cause of the NaN seen with the new metadata reader.
+    SnowMelt(:) = 0.
+    PreTot(:)   = 0.
+    PreSol(:)   = 0.
+    PreLiq(:)   = 0.
+    Sublim(:)   = 0.
+    TempSurf(:) = 0.
+    SnowDrif(:) = 0.
+    FF10m(:)    = 0.
+
     ! Averaged variables
     allocate(AveTsurf(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
     allocate(LSM(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat))
