@@ -51,6 +51,9 @@ module model_settings
         character(30) :: model_first_timestep
         character(30) :: model_last_timestep
         character(30) :: model_version
+        integer :: num_time_steps
+        integer :: num_full_years
+        integer :: seconds_per_timestep
     end type metadata_t
 
     type, public :: initialization_t
@@ -189,28 +192,51 @@ subroutine read_forcing_metadata(netcdf_file)
 
     character(len=*), intent(in) :: netcdf_file
 
-    integer :: ncid, bnds_varid, dim_id, idim
+    integer :: ncid, bnds_varid, dim_id, idim, dtg_varid
     integer :: counts(2), bound_dimids(2)
-    integer, allocatable :: bounds(:, :)
+    integer, allocatable :: bounds(:, :), dtg(:)
     integer :: n_lon_ts, dtobs
     integer :: start_date, end_date, start_year, end_year
     character(len=nf90_max_name) :: dim_name
+    integer :: diff_days, diff_hours, num_years
 
     call Handle_Error(nf90_open(trim(netcdf_file), 0, ncid), "open timeseries metadata file")
 
     ! --- Time range: first/last verifying date from date_bnds (yyyymmdd) ---
     call Handle_Error(nf90_inq_varid(ncid, "date_bnds", bnds_varid), "inq date_bnds")
+    call Handle_Error(nf90_inq_varid(ncid, "dtg", dtg_varid), "Reading var id of dtg")
+
     call Handle_Error(nf90_inquire_variable(ncid, bnds_varid, dimids=bound_dimids), "date_bnds dimids")
     do idim = 1, 2
         call Handle_Error(nf90_inquire_dimension(ncid, bound_dimids(idim), len=counts(idim)), "date_bnds counts")
     end do
     allocate(bounds(counts(1), counts(2)))
-    call Handle_Error(nf90_get_var(ncid, bnds_varid, bounds), "get date_bnds")
+    allocate(dtg(counts(2)))
 
+    call Handle_Error(nf90_get_var(ncid, bnds_varid, bounds), "get date_bnds")
+    call Handle_Error(nf90_get_var(ncid, dtg_varid, dtg), "Reading starting dates")
+
+    if (.not. dtg(2)/10000 == dtg(1)/10000) then
+        print*, "Error getting seconds per year: timesteps of more than one month are unsupported."
+        stop
+    end if
+    diff_days = dtg(2)/100 - dtg(1)/100
+    diff_hours = mod(dtg(2), 100) - mod(dtg(1), 100)
+    metadata%seconds_per_timestep = 3600*diff_hours + 24*3600*diff_days
+ 
+    metadata%num_time_steps = counts(2)
     start_date = bounds(1, 1)
     end_date   = bounds(1, counts(2))
     start_year = start_date / 10000
     end_year   = end_date / 10000
+
+    num_years = bounds(2, counts(2)) / 10000 - bounds(1, 1) / 10000 - 1
+    if (mod(bounds(1, 1), 10000) == 101) then
+        num_years = num_years + 1
+    end if
+
+    metadata%num_full_years = num_years
+
     write(metadata%start_ts_year, "(i4)") start_year
     write(metadata%end_ts_year, "(i4)") end_year
     write(metadata%model_first_timestep, "(i4,'-',i2.2,'-',i2.2,'T00:00:00')") &
