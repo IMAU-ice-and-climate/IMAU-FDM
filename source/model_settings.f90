@@ -116,14 +116,14 @@ module model_settings
 
     ! set in run.tmol
     public :: project_name, domain, forcing, restart_type
-    public :: code_dir, data_dir
+    public :: code_dir, forcing_root, output_root
 
     ! single metadata struct: years/timesteps read from netCDF, model_version from run.toml
     public :: metadata
 
     ! created in model_settings
     public :: reference_dir
-    public :: input_dir, input_averages_dir, input_timeseries_dir
+    public :: forcing_dir, forcing_averages_dir, forcing_timeseries_dir
     public :: project_dir, restart_in_dir, restart_out_dir, output_dir
     public :: fname_mask
     public :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
@@ -147,11 +147,11 @@ module model_settings
     
     ! read in from toml files
     character(len=:), allocatable :: project_name, domain, forcing, restart_type
-    character(len=:), allocatable :: code_dir, data_dir
+    character(len=:), allocatable :: code_dir, forcing_root, output_root
 
     ! created in here in model_settings
     character(len=512) :: reference_dir
-    character(len=512) :: input_dir, input_averages_dir, input_timeseries_dir
+    character(len=512) :: forcing_dir, forcing_averages_dir, forcing_timeseries_dir
     character(len=512) :: project_dir, output_dir, restart_in_dir, restart_out_dir
     character(len=512) :: fname_mask
     character(len=512) :: prefix_forcing_timeseries, suffix_forcing_timeseries, suffix_forcing_averages
@@ -279,11 +279,11 @@ subroutine Set_Forcing_Dimensions()
     ! e.g. ANT27 has only 17 lon-bands); the example run has a single point file
     ! with no part number.
     if (trim(project_name) == "example") then
-        ts_file = trim(input_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//trim(suffix_forcing_timeseries)
+        ts_file = trim(forcing_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//trim(suffix_forcing_timeseries)
     else
-        ts_file = trim(input_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//"1"//trim(suffix_forcing_timeseries)
+        ts_file = trim(forcing_timeseries_dir)//"tskin"//trim(prefix_forcing_timeseries)//"1"//trim(suffix_forcing_timeseries)
     end if
-    avg_file = trim(input_averages_dir)//"tskin"//trim(suffix_forcing_averages)
+    avg_file = trim(forcing_averages_dir)//"tskin"//trim(suffix_forcing_averages)
 
     call read_forcing_metadata(trim(ts_file))
     call read_averages_metadata(trim(avg_file))
@@ -461,15 +461,17 @@ subroutine Read_Job()
 
     if (associated(child)) then
         call get_value(child, 'code_dir', code_dir)
-        call get_value(child, 'data_dir', data_dir)
+        call get_value(child, 'forcing_root', forcing_root)    ! base for forcing input data
+        call get_value(child, 'output_root', output_root)      ! base for model output
     else
         write(stderr, *) "Cannot find section >directories< in run.toml file."
         stop
     end if
 
-    code_dir      = trim(adjustl(code_dir))
-    data_dir      = trim(adjustl(data_dir))
-    project_dir   = trim(data_dir)//trim(project_name)//"/"
+    code_dir        = trim(adjustl(code_dir))
+    forcing_root  = trim(adjustl(forcing_root))
+    output_root = trim(adjustl(output_root))
+    project_dir   = trim(output_root)//trim(project_name)//"/"
     output_dir    = trim(project_dir)//"output/"
     ! restart_out_dir: where THIS run WRITES its restart files (always its own project).
     ! restart_in_dir : where restart files are READ at startup (may point at another
@@ -477,10 +479,10 @@ subroutine Read_Job()
     restart_out_dir = trim(project_dir)//"restart/"
     restart_in_dir  = trim(project_dir)//"restart/"
     reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"
-    input_dir     = trim(data_dir)//trim(domain)//"_"//trim(forcing)//"/input/"
+    forcing_dir     = trim(forcing_root)//trim(domain)//"_"//trim(forcing)//"/input/"
 
     if (trim(project_name) == "example") then
-        input_dir       = trim(data_dir)//"input/"
+        forcing_dir       = trim(forcing_root)//"input/"
         restart_out_dir = trim(code_dir)//"example/restart/"
         restart_in_dir  = trim(code_dir)//"example/restart/"
     end if
@@ -494,18 +496,18 @@ subroutine Read_Job()
         if (associated(child)) then
             call get_value(child, 'restart_project', restart_project, default="")
             if (allocated(restart_project) .and. len_trim(restart_project) > 0) then
-                restart_in_dir = trim(data_dir)//trim(restart_project)//"/restart/"
+                restart_in_dir = trim(output_root)//trim(restart_project)//"/restart/"
                 write(log_unit, *) "Reading restart files from project: ", trim(restart_project)
             end if
         end if
     end block
 
-    input_averages_dir   = trim(input_dir)//"averages/"
-    input_timeseries_dir = trim(input_dir)//"timeseries/"
+    forcing_averages_dir   = trim(forcing_dir)//"averages/"
+    forcing_timeseries_dir = trim(forcing_dir)//"timeseries/"
 
     write(log_unit, *) "Path to IMAU-FDM: ", code_dir
     write(log_unit, *) "Path to project directory: ", output_dir
-    write(log_unit, *) "Path to input directory: ", input_dir
+    write(log_unit, *) "Path to input directory: ", forcing_dir
     write(log_unit, *) "Restart read dir:  ", restart_in_dir
     write(log_unit, *) "Restart write dir: ", restart_out_dir
 

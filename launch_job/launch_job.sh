@@ -46,8 +46,8 @@ FDM_EXECECUTABLE_PATH="${FDM_BASE}bin/${FDM_EXECUTABLE}"
 
 # WORKING DIRECTORY PATHS
 
-DATA_DIR=$(toml_get "${SETTINGS_DIR}run.toml" directories data_dir)
-WORK_DIR="${DATA_DIR}${PROJECT_NAME}/"
+OUTPUT_ROOT=$(toml_get "${SETTINGS_DIR}run.toml" directories output_root)
+WORK_DIR="${OUTPUT_ROOT}${PROJECT_NAME}/"
 POINT_LOG_DIR="${WORK_DIR}logfiles/model_logfiles/"
 DISTRIBUTOR_LOG_DIR="${WORK_DIR}logfiles/distributor_logfiles/"
 WORKEXE_DIR="${WORK_DIR}localcode/"

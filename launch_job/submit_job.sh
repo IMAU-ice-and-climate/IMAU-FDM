@@ -24,9 +24,9 @@ FORCING=$(toml_get "${SETTINGS_DIR}run.toml" job forcing)
 RUN_TYPE=$(toml_get "${SETTINGS_DIR}run.toml" job run_type)
 RELAUNCH=$(toml_get "${SETTINGS_DIR}run.toml" job relaunch)
 FDM_EXECUTABLE=$(toml_get "${SETTINGS_DIR}run.toml" code-subdirectories fdm_executable)
-DATA_DIR=$(toml_get "${SETTINGS_DIR}run.toml" directories data_dir)
+OUTPUT_ROOT=$(toml_get "${SETTINGS_DIR}run.toml" directories output_root)
 
-WORK_DIR="${DATA_DIR}${PROJECT_NAME}/"
+WORK_DIR="${OUTPUT_ROOT}${PROJECT_NAME}/"
 WORKEXE_DIR="${WORK_DIR}localcode/"
 RUN_SETTINGS_DIR="${WORKEXE_DIR}settings/$(basename "${SETTINGS_DIR%/}")/" # sets run dir to 
 OUTPUT_DIR="${WORK_DIR}output/"

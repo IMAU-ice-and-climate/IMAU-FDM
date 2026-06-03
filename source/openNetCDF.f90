@@ -71,20 +71,20 @@ subroutine Load_Ave_Forcing(AveTsurf, AveAcc, AveWind, AveMelt)
     double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat) :: AveTsurf,AveAcc,AveWind,AveSubl, &
         AveSnowDrif,AveMelt
 
-    write(log_unit, *) "Path to averages: ", trim(input_averages_dir)//"VAR"//trim(suffix_forcing_averages)
+    write(log_unit, *) "Path to averages: ", trim(forcing_averages_dir)//"VAR"//trim(suffix_forcing_averages)
     write(log_unit, *) " "
 
-    status = nf90_open(trim(input_averages_dir)//"snowmelt"//trim(suffix_forcing_averages),0,ncid(1))
+    status = nf90_open(trim(forcing_averages_dir)//"snowmelt"//trim(suffix_forcing_averages),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open1')
-    status = nf90_open(trim(input_averages_dir)//"precip"//trim(suffix_forcing_averages),0,ncid(2))
+    status = nf90_open(trim(forcing_averages_dir)//"precip"//trim(suffix_forcing_averages),0,ncid(2))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open2')
-    status = nf90_open(trim(input_averages_dir)//"ff10m"//trim(suffix_forcing_averages),0,ncid(3))
+    status = nf90_open(trim(forcing_averages_dir)//"ff10m"//trim(suffix_forcing_averages),0,ncid(3))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open3')
-    status = nf90_open(trim(input_averages_dir)//"tskin"//trim(suffix_forcing_averages),0,ncid(4))
+    status = nf90_open(trim(forcing_averages_dir)//"tskin"//trim(suffix_forcing_averages),0,ncid(4))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open4')
-    status = nf90_open(trim(input_averages_dir)//"evap"//trim(suffix_forcing_averages),0,ncid(5))
+    status = nf90_open(trim(forcing_averages_dir)//"evap"//trim(suffix_forcing_averages),0,ncid(5))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open5')
-    status = nf90_open(trim(input_averages_dir)//"sndiv"//trim(suffix_forcing_averages),0,ncid(6))
+    status = nf90_open(trim(forcing_averages_dir)//"sndiv"//trim(suffix_forcing_averages),0,ncid(6))
     if(status /= nf90_noerr) call Handle_Error(status,'ave_var_open7')
 
     status = nf90_inq_varid(ncid(1),"snowmelt",ID(1))
@@ -184,22 +184,22 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     
 
     write(log_unit, *) "Looking for timeseries at: "
-    write(log_unit, *) trim(input_timeseries_dir)//"VAR"//trim(add)
+    write(log_unit, *) trim(forcing_timeseries_dir)//"VAR"//trim(add)
     
     ! Open the snowmelt netCDF file
-    status = nf90_open(trim(input_timeseries_dir)//"snowmelt"//trim(add),0,ncid(1))
+    status = nf90_open(trim(forcing_timeseries_dir)//"snowmelt"//trim(add),0,ncid(1))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open1')
-    status = nf90_open(trim(input_timeseries_dir)//"precip"//trim(add),0,ncid(2))
+    status = nf90_open(trim(forcing_timeseries_dir)//"precip"//trim(add),0,ncid(2))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open2')
-    status = nf90_open(trim(input_timeseries_dir)//"snowfall"//trim(add),0,ncid(3))
+    status = nf90_open(trim(forcing_timeseries_dir)//"snowfall"//trim(add),0,ncid(3))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open3')
-    status = nf90_open(trim(input_timeseries_dir)//"evap"//trim(add),0,ncid(4))
+    status = nf90_open(trim(forcing_timeseries_dir)//"evap"//trim(add),0,ncid(4))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open4')
-    status = nf90_open(trim(input_timeseries_dir)//"tskin"//trim(add),0,ncid(5))
+    status = nf90_open(trim(forcing_timeseries_dir)//"tskin"//trim(add),0,ncid(5))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open5')
-    status = nf90_open(trim(input_timeseries_dir)//"sndiv"//trim(add),0,ncid(6))
+    status = nf90_open(trim(forcing_timeseries_dir)//"sndiv"//trim(add),0,ncid(6))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open6')
-    status = nf90_open(trim(input_timeseries_dir)//"ff10m"//trim(add),0,ncid(7))
+    status = nf90_open(trim(forcing_timeseries_dir)//"ff10m"//trim(add),0,ncid(7))
     if(status /= nf90_noerr) call Handle_Error(status,'nf_ts_open7')
     
     !Get ID of the variables in the NetCDF files
