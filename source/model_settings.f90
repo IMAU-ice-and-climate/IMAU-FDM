@@ -184,7 +184,7 @@ end subroutine Handle_Error
 subroutine read_forcing_metadata(netcdf_file)
     !*** Read time metadata + forcing dimensions from a timeseries netCDF file.   ***!
     !*** Fills metadata% start_ts_year, end_ts_year, model_first/last_timestep    ***!
-    !***   and config%forcing_dimensions% Nt_forcing, Nlon_timeseries, dtobs,     ***!
+    !***   and config%forcing_dimensions% Nft_forcing, Nlon_timeseries, dtobs,     ***!
     !***   nyears_forcing.                                                         ***!
 
     character(len=*), intent(in) :: netcdf_file
@@ -262,6 +262,12 @@ subroutine read_averages_metadata(netcdf_file)
     write(metadata%start_ave_year, "(i4)") start_ave
     write(metadata%end_ave_year, "(i4)") end_ave
 
+    ! Spin-up length is definitional: the climatology is averaged over the INCLUSIVE
+    ! window [start_ave_year, end_ave_year] (see pre-process-RACMO/make_fdm_averages.py,
+    ! which loops range(start, end+1)), so nyears_spinup = end_ave_year - start_ave_year + 1.
+    ! e.g. 1940..1969 -> 30 years. No longer read from model.toml.
+    config%forcing_dimensions%nyears_spinup = end_ave - start_ave + 1
+
     call Handle_Error(nf90_close(ncid), "close averages metadata file")
 
 end subroutine read_averages_metadata
@@ -334,17 +340,9 @@ subroutine Read_Settings(table, settings_out)
     
     end if
 
-    ! Forcing settings: only nyears_spinup comes from TOML. The rest
-    ! (nyears_forcing, dtobs, Nlon_timeseries, Nt_forcing, Nlon, Nlat) and the date
-    ! metadata are read from the forcing netCDF files in Set_Forcing_Dimensions().
-    nullify(child)
-    call get_value(table, 'forcing_dimensions', child, requested=.false.)
-    if (associated(child)) then
-        call get_value(child, 'nyears_spinup', settings_out%forcing_dimensions%nyears_spinup)
-    else
-        write(stderr, *) "Cannot find section >forcing_dimensions< in model.toml file."
-        stop
-    end if
+    ! All forcing dimensions + nyears_spinup are read from the forcing netCDF files in
+    ! Set_Forcing_Dimensions() (nyears_spinup = end_ave_year - start_ave_year), so
+    ! nothing forcing-related is read from model.toml anymore.
 
     ! Initialization
     nullify(child)

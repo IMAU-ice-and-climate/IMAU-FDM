@@ -4,11 +4,9 @@
 do_mo_fit = false #if true, sets MO values to 1 so that MO-factors can be refit
 LWC_avail = "Coleou1998_1p2"       # Coleou1998_corr | Coleou1998_1p2; use corrected or uncorrected scheme to calculate LWC storage availability in water_physics
 
-[forcing_dimensions]
-nyears_spinup = 30 # TKTKTK: could also be read from netCDF once preprocessing writes it
-# All other forcing dimensions/dates (nyears_forcing, dtobs, Nlon, Nlat,
-# Nlon_timeseries, Nt_forcing) are read from the forcing netCDF files in
-# Set_Forcing_Dimensions(), not from TOML.
+# [forcing_dimensions] removed: all forcing dimensions AND nyears_spinup are now read
+# from the forcing netCDF files (Set_Forcing_Dimensions). nyears_spinup is derived as
+# end_ave_year - start_ave_year from the averages file's global attributes.
 
 [initialization]
 startasice = 1        # initial density profile: 1=linear, 2=ice
