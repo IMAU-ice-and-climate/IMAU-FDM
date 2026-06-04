@@ -23,7 +23,7 @@ module model_settings
         double precision :: Eg  ! activation energy for grain growth [J mole-1]
         double precision :: Lh  ! latent heat of fusion [J kg-1]
         double precision :: days_per_year  ! days per year TKTKTK: remove once timestamps incorprated
-        double precision :: NaN_value  ! missing value for doubles as used in the NCL scripts
+        real(kind=4) :: NaN_value  ! float32 fill/missing value, matching the nf90_real output vars (single so the missing_value attr type matches the variable; was double -> netCDF "cannot safely cast" warning)
         double precision :: pi
         double precision :: seconds_per_year
     end type Constants
@@ -220,6 +220,8 @@ subroutine read_forcing_metadata(netcdf_file)
         print*, "Error getting seconds per year: timesteps of more than one month are unsupported."
         stop
     end if
+
+    ! dtobs can be calculated in fortran 
     diff_days = dtg(2)/100 - dtg(1)/100
     diff_hours = mod(dtg(2), 100) - mod(dtg(1), 100)
     metadata%seconds_per_timestep = 3600*diff_hours + 24*3600*diff_days
@@ -236,6 +238,9 @@ subroutine read_forcing_metadata(netcdf_file)
     end if
 
     metadata%num_full_years = num_years
+
+     write(metadata%num_full_years, "(i2)") num_years
+     write(metadata%num_full_years, "(i2)") num_years
 
     write(metadata%start_ts_year, "(i4)") start_year
     write(metadata%end_ts_year, "(i4)") end_year
