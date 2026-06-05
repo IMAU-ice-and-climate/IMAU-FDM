@@ -1,8 +1,9 @@
 ### LAUNCH FDM MODEL RUN ###
 ############################
 #
-# To run: update SETTINGS_FOLDER with your settings folder name
-# Then ./launch_job.sh in the terminal.
+# To run: 
+#    1. update toml settings files & SETTINGS_FOLDER with your settings folder name
+#    2. then ./launch_job.sh in the terminal.
 #
 # Created by: Elizabeth Case, May 2026
 ############################
@@ -27,16 +28,15 @@ print(d['$section']['$key'])
 }
 
 
-LAUNCH_DIR="$(pwd)/"
-FDM_BASE="$(dirname "$(pwd)")/"
-SETTINGS_DIR="${FDM_BASE}/settings/${SETTINGS_FOLDER}/"
+LAUNCH_DIR="$(pwd)/" #IMAU-FDM/launch_job
+FDM_BASE="$(dirname "$(pwd)")/" #IMAU-FDM base folder
+SETTINGS_DIR="${FDM_BASE}/settings/${SETTINGS_FOLDER}/" # where to find the settings
 
 PROJECT_NAME=$(toml_get "${SETTINGS_DIR}run.toml" job project_name)
 POINTLIST_NAME=$(toml_get "${SETTINGS_DIR}run.toml" job pointlist_name)
 DOMAIN=$(toml_get "${SETTINGS_DIR}run.toml" job domain)
 RUN_TYPE=$(toml_get "${SETTINGS_DIR}run.toml" job run_type)
 
-#TKTKTK figure out how to get job to resubmit
 SUBMISSION_ITERATION=$(toml_get "${SETTINGS_DIR}run.toml" job submission_iteration) #needed for restarting if job doesn't finish
 
 FDM_EXECUTABLE=$(toml_get "${SETTINGS_DIR}run.toml" code-subdirectories fdm_executable)
@@ -67,7 +67,7 @@ if [ "$RECOMPILE" == "True" ]; then
   if [ ${RUN_TYPE} == "ECMWF" ]; then
       bash "${FDM_BASE}/compile_hpc.sh" || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
   elif [ ${RUN_TYPE} == "offline" ]; then
-      fpm run || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
+      fpm install || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
   else
       echo "ERROR: Run type -- ${RUN_TYPE} -- not recognized"
       exit 1
@@ -98,18 +98,28 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
   mkdir -p $DISTRIBUTOR_LOG_DIR
   mkdir -p $POINT_LOG_DIR
 
-  if [[ ! -r $POINTLIST_PATH ]]; then
-    echo "The pointlist is missing!"
-    exit 1
-  fi  
-  
-  cp ${POINTLIST_PATH} ${WORK_POINTLIST_PATH}
-  #cp ${POINTLIST_PATH} ${WORK_DIR}pointlist.txt # do we want to keep an active pointlist as pointlist.txt?
+  if [ "$SUBMISSION_ITERATION" -eq 1 ]; then
+    # fresh launch: stage the original pointlist + snapshot the code into localcode
+    if [[ ! -r $POINTLIST_PATH ]]; then
+      echo "The pointlist is missing!"
+      exit 1
+    fi
 
-  cp "${FDM_EXECECUTABLE_PATH}" "${WORKEXE_DIR}${FDM_EXECUTABLE}" #copies the model executable
-  cp -r "${FDM_BASE}source" "$WORKEXE_DIR"       # copies the model sourcecode
-  cp -r "${FDM_BASE}settings" "$WORKEXE_DIR"     # copies the settings files
-  cp -r "${FDM_BASE}launch_job" "$WORKEXE_DIR"   # copies submission scripts for resubmission
+    cp ${POINTLIST_PATH} ${WORK_POINTLIST_PATH}
+    #cp ${POINTLIST_PATH} ${WORK_DIR}pointlist.txt # do we want to keep an active pointlist as pointlist.txt?
+
+    cp "${FDM_EXECECUTABLE_PATH}" "${WORKEXE_DIR}${FDM_EXECUTABLE}" #copies the model executable
+    cp -r "${FDM_BASE}source" "$WORKEXE_DIR"       # copies the model sourcecode
+    cp -r "${FDM_BASE}settings" "$WORKEXE_DIR"     # copies the settings files
+    cp -r "${FDM_BASE}launch_job" "$WORKEXE_DIR"   # copies submission scripts for resubmission
+  else
+    # resume: reuse the remaining-points list from the previous iteration; keep the frozen localcode snapshot
+    if [[ ! -r $WORK_POINTLIST_PATH ]]; then
+      echo "Resuming at iteration ${SUBMISSION_ITERATION} but ${WORK_POINTLIST_PATH} is missing!"
+      exit 1
+    fi
+    echo "Resuming from existing ${WORK_POINTLIST_PATH} (localcode snapshot preserved)."
+  fi
 
   echo "Starting the model."
   bash "${FDM_BASE}launch_job/submit_job.sh" "$SETTINGS_DIR" "$SUBMISSION_ITERATION" "$WORK_POINTLIST_PATH"

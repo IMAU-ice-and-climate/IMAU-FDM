@@ -1,30 +1,29 @@
 # Run configuration — edit this for each new run
 
 [job]
-project_name       = "test-branch-merge-7"  # unique name; output goes to output_root/project_name
-pointlist_name     = "pointlist_1"       # goes in launch_job/pointlists/
+project_name         = "DEFAULT_PROJECT_NAME"  # unique name; output goes to output_root/project_name
+pointlist_name       = "pointlist_1"       # goes in launch_job/pointlists/
 
-domain             = "FGRN055"           # FGRN055 | ANT27
-forcing            = "era5"              
+domain               = "FGRN055"           # FGRN055 | ANT27
+forcing              = "era5"              
 
-recompile          = true                # true | false - recompile with each new launch_job run?
-run_type           = "ECMWF"               # ECMWF | offline - changes compilation, whether ecmwf job settings are called
-restart_type       = "spinup"              # none | spinup | run - restart from spinup files or last timestep with new data?
-restart_project  = "run_FGRN055-era055_1939-2023"  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same output_root)
-submission_iteration = 1                
-relaunch        = "yes"       # with "no", no new iteration will be launched if job does not finish
+recompile            = true                # true | false - recompile with each new launch_job run?
+run_type             = "ECMWF"               # ECMWF | offline - changes compilation, whether ecmwf job settings are called
+restart_type         = "none"              # none | spinup | run - restart from spinup files or last timestep with new data?
+restart_project      = ""  # optional: empty string - looks for restart file in same directory; string - use restart files from a different project (same output_root)
+relaunch             = "yes"       # with "no", no new iteration will be launched if job does not finish
+submission_iteration = 1                 # 1 for a fresh launch; set to N to resume a run from its existing pointlist_N.txt (remaining points)
 
 [metadata]
 model_version = "1.4" # IMAU-FDM model version
-# Forcing start/end years, spin-up averaging years, and model first/last timesteps
-# are now read from the forcing netCDF metadata (Set_Forcing_Dimensions), not here.
+
 
 [directories]
 # Base directories for the source code, the forcing INPUT, and the model OUTPUT.
 # forcing_root and output_root can point to different filesystems.
-code_dir     = "/perm/nld4814/code/IMAU-FDM/" # where the codebase is
-forcing_root = "/home/nld4814/scratch/"       # forcing input base: <forcing_root>/<domain>_<forcing>/input/
-output_root  = "/home/nld4814/scratch/"       # model output base:  <output_root>/<project_name>/
+code_dir     = "/perm/nld4814/code/IMAU-FDM/" # directory of codebase
+forcing_root = "/home/nld4814/scratch/"       # expected directory for input: <forcing_root>/<domain>_<forcing>/input/averages & <forcing_root>/<domain>_<forcing>/input/timeseries
+output_root  = "/home/nld4814/scratch/"       # model output base (created when job is submitted, see launch_job.sh):  <output_root>/<project_name>/
 
 [code-subdirectories]
 # Relative to code_dir

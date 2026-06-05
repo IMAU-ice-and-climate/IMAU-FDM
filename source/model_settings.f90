@@ -502,9 +502,8 @@ subroutine Read_Job()
     output_root = trim(adjustl(output_root))
     project_dir   = trim(output_root)//trim(project_name)//"/"
     output_dir    = trim(project_dir)//"output/"
-    ! restart_out_dir: where THIS run WRITES its restart files (always its own project).
-    ! restart_in_dir : where restart files are READ at startup (may point at another
-    ! project via restart_project below).
+    ! restart_out_dir: run always writes its restart files in its own project
+    ! restart_in_dir : directory where restart files are read at startup (may point to another project)
     restart_out_dir = trim(project_dir)//"restart/"
     restart_in_dir  = trim(project_dir)//"restart/"
     reference_dir = trim(code_dir)//"reference/"//trim(domain)//"/"

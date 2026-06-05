@@ -4,17 +4,12 @@
 do_mo_fit = false #if true, sets MO values to 1 so that MO-factors can be refit
 LWC_avail = "Coleou1998_1p2"       # Coleou1998_corr | Coleou1998_1p2; use corrected or uncorrected scheme to calculate LWC storage availability in water_physics
 
-# [forcing_dimensions] removed: all forcing dimensions AND nyears_spinup are now read
-# from the forcing netCDF files (Set_Forcing_Dimensions). nyears_spinup is derived as
-# end_ave_year - start_ave_year from the averages file's global attributes.
-
 [initialization]
 startasice = 1        # initial density profile: 1=linear, 2=ice
 beginT     = 3        # initial temperature profile: 1=winter, 2=summer, other=isothermal (T=tsav)
 initdepth  = 1.0      # initial firn profile depth [m]
 
 [model_choices]
-#ind_z_max  = 20000    # maximum number of vertical layers - set in model_settings.f90 as a compile time parameter
 ImpExp     = 1        # 1=implicit (fast), 2=explicit (slow)
 dtmodelImp = 900      # implicit timestep [s]
 dtmodelExp = 180      # explicit timestep [s]
