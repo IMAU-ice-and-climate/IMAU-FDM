@@ -5,6 +5,7 @@
 *.pyc
 *.pyo
 *.pyd
+*.swp
 
 # don't track changes to netcdf files
 *.nc
@@ -40,35 +41,23 @@ cores/data/*
 *.a
 *.lib
 
-# Executables
+#no executables
+*.x
+bin/*
 *.exe
 *.out
 *.app
 
-# IMAU specific files
-
-#no executables
-*.x
-bin/
-
-#these files change often - need to update if there are big changes to launch_new_job
-rundir/CancelMyJob.sc
-rundir/launch_new_job.sc
-rundir/ecs*
-rundir/newpointlist/*.txt
 
 # mac specific
 *.DS_STORE
 
 # Ignore pointlists
-rundir/pointlists/
 launch_job/pointlists/
 
-# Ignore rundir/launch_new_job.sc
-rundir/launch_new_job.sc
-
 # Ignore reference files -- too big
-reference/
+reference/FGRN055/*
+reference/ANT27/*
 
 # Ignore temp files, acts as scratch
 temp/
@@ -76,6 +65,12 @@ temp/
 # Ignore modules and objects
 modules/
 objects/
+
+# Ignore build artifacts (Jupyter Book / docs)
+_build/
+
+# Ignore log directories (slurm .err/.out, run logs)
+logs/
 
 # Ignore large MO-fit data -- see MO_fit/README.md for download/access instructions
 MO_fit/data/sumup/source/*
@@ -85,4 +80,4 @@ MO_fit/data/PKM/raw/*
 .nfs*
 
 #No claude files
-*.claude.md*launch_job/pointlists/*.txt
+*.claude.md*
