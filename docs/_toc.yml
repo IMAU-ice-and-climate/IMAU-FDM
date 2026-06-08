@@ -30,3 +30,4 @@ parts:
     chapters:
       - file: development/overview
       - file: development/distributor
+      - file: development/building_docs
