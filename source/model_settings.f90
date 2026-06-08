@@ -344,7 +344,6 @@ subroutine Set_Forcing_Dimensions()
 end subroutine Set_Forcing_Dimensions
 
 
-!TKTKTK: why have this be separate from subroutine Load_Model_Settings()
 subroutine Read_Settings(table, settings_out)
     !*** Define model settings and physics from model.toml ***!
 
@@ -577,7 +576,6 @@ end subroutine Read_Constants
 
 subroutine Load_Constants()
     !*** Load constants from constnats.toml ***!
-    ! TKTKTK: is this needed?
 
     character(len=512)            :: settings_path_constants
     integer :: fu, rc

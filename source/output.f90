@@ -471,7 +471,7 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
     character*255 :: pad, writeinprof_str
     character*24 :: current_datetime
 
-    outputProf = size(out_2D_dens, 1) !TKTKTK outputProf should already be set, check
+    outputProf = size(out_2D_dens, 1)   ! time-axis length, recovered from the array extent
 
     pad = trim(output_dir)//trim(fname_out_2d)
     
@@ -571,7 +571,7 @@ subroutine Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, o
     character*24 :: current_datetime
     double precision, dimension(config%output_dimensions%detlayers) :: DetDepth, DetDZ
 
-    outputDetail = size(out_2D_det_dens, 1) !TKTKTK outputDetail should already be defined - check
+    outputDetail = size(out_2D_det_dens, 1)   ! time-axis length, recovered from the array extent
 
     pad = trim(output_dir)//trim(fname_out_2ddet)
 

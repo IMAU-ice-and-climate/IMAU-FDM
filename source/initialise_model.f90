@@ -4,53 +4,9 @@ module initialise_model
     implicit none
     private
 
-    public :: Find_Grid, Interpol_Forcing, Index_Ave_Forcing, Init_Density_Prof, Init_Temp_Prof
+    public :: Interpol_Forcing, Index_Ave_Forcing, Init_Density_Prof, Init_Temp_Prof
     
 contains
-
-
-! *******************************************************
-
-
-subroutine Find_Grid(ind_lon, ind_lat, lon_current, lat_current, Latitude, Longitude, LSM)
-    ! TKTKTK: should be removed since lat/lon already found in distributor.f90
-
-    !*** Determine the indices of the current run point on the forcing grid ***!
-    
-    ! declare arguments
-
-    integer, intent(out) :: ind_lon, ind_lat
-    double precision, intent(in) :: lon_current, lat_current
-    double precision, dimension(config%forcing_dimensions%Nlon,config%forcing_dimensions%Nlat), intent(in) :: Latitude, Longitude, LSM
-
-    ! declare local variables
-    integer :: i, j
-    double precision :: dmax, dist, lon_grid, lat_grid
-
-    dmax = 999.
-    do i = 1, config%forcing_dimensions%Nlon
-        do j = 1, config%forcing_dimensions%Nlat
-            dist = sqrt(((lon_current-Longitude(i,j))*cos(((lat_current+Latitude(i,j))/2.)/360.* &
-                asin(1.)*4.))**2. + (lat_current-Latitude(i,j))**2.)
-            if ((dist < dmax) .and. (LSM(i,j) > 0.5)) then
-                dmax = dist
-                ind_lon = i
-                ind_lat = j
-                lon_grid = Longitude(i,j)
-                lat_grid = Latitude(i,j)    
-            endif
-        enddo
-    enddo
-
-    write(log_unit, *) " "
-    write(log_unit, *) " Input Lon, Lat: ", lon_current, ", ", lat_current
-    write(log_unit, *) "------------------------------------"
-    write(log_unit, *) " Closest gridpoint: ", ind_lon, ", ", ind_lat
-    write(log_unit, *) "     with Lon, Lat: ", lon_grid, ", ", lat_grid
-    write(log_unit, *) "-----------------------------------------------------------------"
-    write(log_unit, *) " "
-
-end subroutine Find_Grid
 
 
 ! *******************************************************
