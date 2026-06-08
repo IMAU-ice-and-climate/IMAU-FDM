@@ -18,7 +18,7 @@
 #   sbatch submit_make_1d_files.sh                    # Process all variables
 #   sbatch submit_make_1d_files.sh h_surf FirnAir  # Process specific variables
 #
-# Output location: /home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process/
+# Output location: /home/nld4814/scratch/run_FGRN055-era5_1939-2023/post-process/
 # =============================================================================
 
 # Exit on error
@@ -115,7 +115,7 @@ echo "Exit code: ${EXIT_CODE}"
 echo "=================================================="
 
 # List output files
-OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process"
+OUTPUT_DIR="/home/nld4814/scratch/run_FGRN055-era5_1939-2023/post-process"
 if [ -d "${OUTPUT_DIR}" ]; then
     echo ""
     echo "Output files in ${OUTPUT_DIR}:"

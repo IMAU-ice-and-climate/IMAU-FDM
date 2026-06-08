@@ -14,7 +14,7 @@ SCRATCH_DIR = Path('/home/nld4814/scratch')
 BASE_DIR    = Path('/home/nld4814/perm/code/IMAU-FDM')
 
 DOMAIN  = 'FGRN055'
-FORCING = 'era055'
+FORCING = 'era5'
 
 # =============================================================================
 # INPUT PATHS
@@ -24,11 +24,11 @@ FORCING = 'era055'
 EXT_INPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output/output/points'
 
 # Filename patterns for merged per-column files
-EXT_2D_FILENAME_PATTERN       = 'FGRN055_era055_2D_{point_id}.nc'
-EXT_2DDETAIL_FILENAME_PATTERN = 'FGRN055_era055_2Ddetail_{point_id}.nc'
+EXT_2D_FILENAME_PATTERN       = 'FGRN055_era5_2D_{point_id}.nc'
+EXT_2DDETAIL_FILENAME_PATTERN = 'FGRN055_era5_2Ddetail_{point_id}.nc'
 
 # Existing 1939-2023 gridded post-process files
-ORIG_OUTPUT_DIR = SCRATCH_DIR / 'run_FGRN055-era055_1939-2023/post-process'
+ORIG_OUTPUT_DIR = SCRATCH_DIR / 'run_FGRN055-era5_1939-2023/post-process'
 
 # Static reference files (same as create_1D_2D_2Ddetail_files/config.py)
 POINTLIST_FILE = BASE_DIR / 'reference' / DOMAIN / f'IN_ll_{DOMAIN}.txt'
@@ -39,7 +39,7 @@ GRID_FILE      = BASE_DIR / 'reference' / DOMAIN / f'{DOMAIN}_grid.nc'
 # OUTPUT PATH
 # =============================================================================
 
-EXT_OUTPUT_DIR = SCRATCH_DIR / 'run_FGRN055-era055_1939-2025/post-process'
+EXT_OUTPUT_DIR = SCRATCH_DIR / 'run_FGRN055-era5_1939-2025/post-process'
 
 # =============================================================================
 # TIME SETTINGS

@@ -19,10 +19,10 @@ import numpy as np
 point = "1"
 fnumb = "24"
 
-ts_data_dir = "/ec/res4/scratch/nld4814/FGRN055_era055/input/timeseries/"
+ts_data_dir = "/ec/res4/scratch/nld4814/FGRN055_era5/input/timeseries/"
 ts_save_dir = "/home/nld4814/perm/code/IMAU-FDM/example/input/timeseries/"
-ts_data_suffix = f"_FGRN055_era055_1939-2023_p{fnumb}.nc"
-ts_save_suffix = f"_FGRN055_era055_1939-2023_point_{point}.nc"
+ts_data_suffix = f"_FGRN055_era5_1939-2023_p{fnumb}.nc"
+ts_save_suffix = f"_FGRN055_era5_1939-2023_point_{point}.nc"
 
 #all these values are 1 less than those reported in the logfiles because of 0 vs 1 indexing
 rlat_i = 54

@@ -13,7 +13,7 @@ def main():
     parser.add_argument('--output-dir',      required=True, help='Path to output/ directory')
     parser.add_argument('--pointlist',       required=True, help='Current pointlist file')
     parser.add_argument('--next-pointlist',  required=True, help='Path to write remaining points')
-    parser.add_argument('--prefix',          required=True, help='Output file prefix, e.g. FGRN055_era055')
+    parser.add_argument('--prefix',          required=True, help='Output file prefix, e.g. FGRN055_era5')
     args = parser.parse_args()
 
     with open(args.pointlist) as f:

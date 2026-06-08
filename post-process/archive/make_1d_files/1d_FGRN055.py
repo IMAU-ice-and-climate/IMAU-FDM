@@ -15,8 +15,8 @@ dt = 0  #1 (0=no detrending, 1=detrending)
 atzero = 1  #0 (0=start at zero,1=do not start at zero)  
 nyears = 20 #spinup time or total runtime?
 
-dir_ref = "/ec/res4/scratch/nld4814/FGRN055_era055/"
-dir_mask = "/ec/res4/scratch/nld4814/FGRN055_era055/mask/"
+dir_ref = "/ec/res4/scratch/nld4814/FGRN055_era5/"
+dir_mask = "/ec/res4/scratch/nld4814/FGRN055_era5/mask/"
 
 dir3 = "/ec/res4/scratch/rusv/backup_HPC/output/ant27_exp_MO_2023/"
 dir5 = "/scratch/rusv/data/output/NCL/ANT27/ERA5/"

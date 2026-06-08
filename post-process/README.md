@@ -79,7 +79,7 @@ Edit before running. Key settings:
 BASE_DIR     = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR  = Path('/home/nld4814/scratch')
 DOMAIN       = 'FGRN055'
-PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
+PROJECT_NAME = 'run_FGRN055-era5_1939-2023'
 MODEL_START  = datetime(1939, 9, 1)
 MODEL_END    = datetime(2023, 12, 31)
 ```
@@ -291,7 +291,7 @@ Key settings in `extend_pointfiles_config.py`:
 
 | Setting | Value |
 |---------|-------|
-| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era055_1939-2023/output` |
+| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era5_1939-2023/output` |
 | `EXT_OUTPUT_DIRS` | extension run output directories (checked in order) |
 | `OUTPUT_DIR` | `scratch/FDM_FGRN055_output/output/points` |
 
@@ -338,8 +338,8 @@ Key settings in `extend_variable_config.py`:
 | Setting | Value |
 |---------|-------|
 | `EXT_INPUT_DIR` | `scratch/FDM_FGRN055_output/output/points` |
-| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era055_1939-2023/post-process` |
-| `EXT_OUTPUT_DIR` | `scratch/run_FGRN055-era055_1939-2025/post-process` |
+| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era5_1939-2023/post-process` |
+| `EXT_OUTPUT_DIR` | `scratch/run_FGRN055-era5_1939-2025/post-process` |
 | `ORIG_MODEL_END` | 2023-12-31 |
 | `EXT_MODEL_END` | 2025-12-31 |
 
@@ -414,5 +414,5 @@ sbatch submit_extend_variable_2ddetail.sh
 ```
 
 Output directories:
-- `scratch/run_FGRN055-era055_1939-2023/post-process/`  — base run
-- `scratch/FGRN055-era055_1939-2025/post-process/`  — extended run
+- `scratch/run_FGRN055-era5_1939-2023/post-process/`  — base run
+- `scratch/FGRN055-era5_1939-2025/post-process/`  — extended run

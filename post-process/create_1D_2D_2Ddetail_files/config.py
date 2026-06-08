@@ -51,7 +51,7 @@ GRID_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'FGRN055_grid.nc'
 OUTPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output/output/variables'
 
 # File naming pattern for input 1D files
-INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
+INPUT_FILENAME_PATTERN = 'FGRN055_era5_1D_{point_id}.nc'
 
 # =============================================================================
 # MODEL METADATA
