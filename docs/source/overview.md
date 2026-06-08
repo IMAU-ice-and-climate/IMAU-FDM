@@ -17,7 +17,8 @@ interfaces in `modules/`.
 | `time_loop` |  Spinup and model run |
 | `output` |  Writes 1D, 2D, 2Ddetail output NetCDF files |
 | `openNetCDF` | NetCDF read/write wrappers |
-| `main` | `main.f90` | Main program |
+| `model_main` | Per-point single-column driver (formerly `main.f90`) |
+| `distributor` | MPI main program — hands points out to worker ranks |
 
 ## Compile
 (see [compiling](compiling.md) for more details)
@@ -55,4 +56,4 @@ highest index.
 
 1. Declare the variable in `initialise_variables.f90` and across any other modules.
 2. Compute it inside `time_loop.f90` (or the relevant physics module).
-3. Register it for output in `output.f90` and add it to `settings/model_variables.toml`.
+3. Register it for output in `output.f90`.

@@ -53,7 +53,7 @@ Key settings in `config.py`:
 | Setting | Description |
 |---------|-------------|
 | `DOMAIN` | Domain name (e.g. `FGRN055`) |
-| `FORCING` | Forcing name (e.g. `era055`) |
+| `FORCING` | Forcing name (e.g. `era5`) |
 | `INPUT_DIR` | Raw RACMO/ERA5 files |
 | `OUTPUT_DIR` | Pre-processed output |
 | `SPINUP_START` / `SPINUP_END` | Years used for spinup averages |

@@ -1,76 +1,79 @@
 # Running the Model
 
-Always re-compile the model first. See [compiling](../source/compiling).
+Runs are launched from `launch_job/`. A single script, `launch_job.sh`, reads
+`settings/<DOMAIN>/run.toml`, optionally recompiles, builds the working
+directory, and submits the job via the MPI
+[distributor](../development/distributor).
 
-Source: `rundir/`
-
-## Quick start on ECMWF
-
-```bash
-
-cd rundir/
-
-# Edit settings first (see `running/settings` page)
-# Then submit:
-sbatch launch_new_job.sc
-```
-
-## Quick start on offline
+## Quick start
 
 ```bash
-
-cd rundir/
-
-# Edit offline.sh
-# Then submit:
-./offline.sh
+cd launch_job/
+# 1. edit settings/<DOMAIN>/run.toml          (see Settings)
+# 2. set SETTINGS_FOLDER at the top of launch_job.sh to your domain folder
+# 3. put your point list in launch_job/pointlists/
+./launch_job.sh
 ```
+
+`launch_job.sh` will:
+
+1. recompile if `recompile = true` (`compile_hpc.sh` for ECMWF, `fpm` offline);
+2. create `output_root/<project_name>/` and its subdirectories;
+3. copy the source, settings, executable, and launch scripts into `localcode/`
+   — a frozen snapshot for reproducibility;
+4. hand the point list and settings to `submit_job.sh`, which submits the job.
 
 ## Run types
 
-Set `restart_type` in `settings/model_settings.toml`:
+Set `run_type` in `run.toml`:
 
-| Value | Behaviour |
-|-------|-----------|
-| `none` | Start from scratch (spinup) |
-| `spinup` | Restart from end of spinup (begin main run) |
-| `run` | Continue from end of last main run - ensure restart directory is set correctly|
+| Value | Launch | Parallelism |
+|-------|--------|-------------|
+| `ECMWF` | `sbatch` an MPI job | `[ecmwf]` settings; workers = min(points, nodes × 128) |
+| `offline` | `mpirun` locally | `[offline] n_procs` |
+
+`restart_type` controls spin-up vs. continuation — see [Settings](settings).
 
 ## Point lists
 
-The model runs one column/point/cell at a time. Reference point lists live in `reference/{DOMAIN}/`. A customized pointlist (list of indices) specifies which grid points to run. These live in `rundir/pointlists/`.
+The model runs one grid cell ("point") at a time. Reference lists live in
+`reference/{DOMAIN}/`; the run-specific list (point indices) lives in
+`launch_job/pointlists/` and is named by `pointlist_name` in `run.toml`.
 
-## SLURM scripts
+## Output directory structure
 
-| Script | Purpose |
-|--------|---------|
-| `launch_new_job.sc` | Main script; launch a fresh run |
-| `submit_job.sc` | Starts job |
-| `npnf_outer_script.sc` | Outer SLURM array wrapper |
-| `npnf_inner_script.sc` | Inner per-point launcher |
-| `CancelMyJob.sc` | Cancel all running jobs - updated when new job is launched|
+```
+<project_name>/
+├── output/                    # per-point output (1D, 2D, 2Ddetail)
+├── post-process/              # gridded output (created during post-processing)
+├── restart/
+│   ├── spinup/                # restart after spin-up
+│   └── run/                   # restart from the end of this run
+├── logfiles/
+│   ├── model_logfiles/        # per-point logs
+│   └── distributor_logfiles/  # distributor logs
+├── localcode/                 # frozen snapshot: source/, settings/, executable, launch scripts
+└── pointlist_<N>.txt          # point list for submission iteration N
+```
+
+## Resuming an unfinished run
+
+If a job doesn't complete, the distributor writes the remaining points to
+`pointlist_<N+1>.txt`. With `relaunch = "yes"` it resubmits automatically. To
+resume manually, set `submission_iteration = N` in `run.toml` and re-run
+`launch_job.sh` — it reuses the existing `pointlist_N.txt` and keeps the
+original `localcode` snapshot.
 
 ## Monitoring a run
 
 ```bash
-# Check SLURM queue
-chk
-#or 
-squeue -u $USER
+squeue -u $USER                                 # SLURM queue
 
-# see info about ongoing run or whether it actually succeeded
 cd QAQC/
-
-#Inspect FDM log output
-jupyter notebook plot_ongoing_run.ipynb
-
-# Check completion
-jupyter notebook check_run_is_completed.ipynb
+jupyter notebook plot_ongoing_run.ipynb         # inspect FDM log output
+jupyter notebook check_run_is_completed.ipynb   # check completion
 ```
 
-You can also look at logs in the output directory. There are multiple types of logs:
-
-1. `output/logfiles` - individual logfiles for each point; check remove_ values are resasonable (~<100), filepaths are correct, spinup converges, etc
-2. `nplogs/*_np.log` - log about the SLURM job itself
-3. `nplogs/*_runlog.log` - log about the distributor
-4. `nplogs/Threads_iter_#` - log about each core
+Per-point logs are in `logfiles/model_logfiles/`; the distributor log is in
+`logfiles/distributor_logfiles/`. Check that `remove_*` counts are reasonable,
+file paths are correct, and the spin-up converges.

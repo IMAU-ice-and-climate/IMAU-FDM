@@ -13,6 +13,7 @@ parts:
       - file: running/overview
       - file: running/settings
       - file: running/hpc
+      - file: running/offline
   - caption: Post-Processing
     chapters:
       - file: postprocessing/overview
@@ -24,6 +25,8 @@ parts:
   - caption: Source Code
     chapters:
       - file: source/overview
-  - caption: Development
+      - file: source/compiling
+  - caption: Design Notes
     chapters:
+      - file: development/overview
       - file: development/distributor

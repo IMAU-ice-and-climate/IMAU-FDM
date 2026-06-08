@@ -1,20 +1,18 @@
 # HPC Setup (ECMWF)
 
-## Environment
+The model normally runs on ECMWF's HPC (Atos/Bologna); see [offline](offline) to
+run on your own machine.
 
-The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it [offline](offline.md).Key environment variables:
+## Environment
 
 | Variable | Path |
 |----------|------|
 | `$PERM` | `/home/$USER/perm` — persistent storage (code, reference files) |
-| `$SCRATCH` | `/home/$USER/scratch` — fast scratch (model output) |
+| `$SCRATCH` | `/home/$USER/scratch` — fast scratch (forcing input, model output) |
 
-Load required modules before compiling or running:
-
-```bash
-module load netcdf4-fortran
-module load fpm              # if not installed locally 
-```
+`compile_hpc.sh` loads the required modules itself (`prgenv/gnu`,
+`hpcx-openmpi`, `netcdf4`, `nco`, `cdo`, `python3`, …), so you normally don't
+need to load anything by hand before compiling.
 
 ## Compiling
 
@@ -24,39 +22,45 @@ cd /perm/nld4814/code/IMAU-FDM/
 ./compile_hpc.sh debug       # debug build
 ```
 
-This runs `fpm install` and places the binary at `~/.local/bin/imau-fdm`.
-The `rundir/` scripts expect `imau-fdm.x` in the repo root — the compile
-script copies it there.
+This runs `fpm install --prefix <repo>` and places the `imau-fdm` executable in
+the repo's `bin/`. With `recompile = true` in `run.toml`, `launch_job.sh` runs
+this for you on each launch.
 
 ## Submitting a run
 
 ```bash
-cd rundir/
-sbatch submit_job.sc
+cd launch_job/
+./launch_job.sh
 ```
 
-`submit_job.sc` reads `settings/paths.toml` and `settings/model_settings.toml`,
-constructs the point-list range, and submits an array job via `npnf_outer_script.sc`.
+`launch_job.sh` reads `run.toml`, sets up the working directory, and calls
+`submit_job.sh`, which `sbatch`es an MPI job. The job runs the
+[distributor](../development/distributor): one rank hands out points, the rest
+run the model.
 
-## Typical resource requirements
+### SLURM sizing (`[ecmwf]` in `run.toml`)
 
-| Job | Nodes | CPUs | RAM | Wall time |
-|-----|-------|------|-----|-----------|
-| Full FGRN055 run | ~10 | 128/node | 256 GB | 48 h |
-| Pre-processing | 1 | 8 | 32 GB | 6 h |
-| Post-processing 1D | 1 | 16 | 64 GB | 48 h |
-| Post-processing 2D | 1 | 8 | 32 GB | 24 h |
+| Key | Meaning |
+|-----|---------|
+| `max_nodes` | Node budget; workers = `min(n_points, max_nodes × 128)` |
+| `walltime` | Job wall-clock limit |
+| `account_no` | Charge account |
+| `memory_per_task` | `--mem-per-cpu` for each rank |
+
+The number of nodes is derived automatically from the worker count (128
+cores/node, +1 rank for the distributor).
 
 ## Checking job status
 
 ```bash
-squeue -u $USER               # all running jobs
+squeue -u $USER
 sacct -j <JOBID> --format=JobID,State,ExitCode,Elapsed
 ```
 
-Log files are written to `rundir/logs/ecsbatch.log.*`.
+The distributor's SLURM log is `<project>/launch_<project>_<iteration>.log`;
+per-point and distributor logs are under `<project>/logfiles/`.
 
 ## Tape archive
 
-Raw RACMO/ERA5 forcing data is on ECMWF tape (MARS).
-See `misc/copy_files_from_tape_FGRN055.sc` for the retrieval script.
+Raw RACMO/ERA5 forcing is on ECMWF tape (MARS). See
+`misc/copy_files_from_tape_FGRN055.sc` for the retrieval script.

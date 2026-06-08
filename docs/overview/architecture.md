@@ -4,8 +4,10 @@
 
 ```
 IMAU-FDM/
-├── source/             # Fortran source code (compiled to imau-fdm.x)
-├── rundir/             # SLURM submission scripts and run setup
+├── source/             # Fortran source (compiled to imau-fdm via fpm)
+├── launch_job/         # launch_job.sh + submit_job.sh + MPI distributor launch
+│   └── pointlists/     # point lists (which grid cells to run)
+├── settings/           # per-domain TOML configuration (settings/<DOMAIN>/)
 ├── pre-process-RACMO/  # Convert RACMO/ERA5 NetCDF → model input
 ├── post-process/       # Convert per-column output → gridded NetCDF
 ├── MO_fit/             # Calibrate densification coefficients
@@ -18,27 +20,33 @@ IMAU-FDM/
 ## End-to-end data flow
 
 ```
-RACMO: raw decadal NetCDF files of 7 variables (10m wind speed, precipitation, snowfall, snowmelt, snowdrift, evaporation, skin temperature)
+RACMO/ERA5: raw decadal NetCDF of 7 variables
+        (10 m wind, precip, snowfall, snowmelt, snowdrift, evaporation, skin temperature)
         │
         ▼  pre-process-RACMO/
-Yearly files → lon-band timeseries → spinup averages
+Lon-band timeseries files + spin-up averages (date-free names; dims & dates in NetCDF metadata)
         │
-        ▼  rundir/ + source/
-Model output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface) for each cell
+        ▼  launch_job/ + source/
+Per-column model output: 1D (daily), 2D (monthly profiles), 2Ddetail (10-day near-surface)
         │
         ▼  post-process/
-Gridded NetCDF maps: specified variables across whole domain/timeseries (e.g., firn air content, integrated liquid water content, etc)
+Gridded NetCDF maps of selected variables across the whole domain/timeseries
 ```
 
 ## Key configuration files
 
+All run configuration lives in `settings/<DOMAIN>/` as TOML (read at startup —
+no recompilation needed to change a value). See [Settings](../running/settings).
+
 | File | Contents |
 |------|---------|
-|`rundir/launch_new_job.sc`| Set project_name, domain, pointlist, restart_type, SLURM options|
-|`rundir/start_model_ccab.sc`| Sets various model parameters, including timestep & dimensions of input and output|
-|`source/model_settings.sc`| Constants, model metadata, and paths are set in this file|
+| `settings/<DOMAIN>/run.toml` | Per-run: project name, domain/forcing, restart type, directories, SLURM/offline options |
+| `settings/<DOMAIN>/model.toml` | Physics, numerics, and output dimensions (shared across runs with the same setup) |
+| `settings/<DOMAIN>/constants.toml` | Physical constants |
+| `launch_job/launch_job.sh` | Entry point — reads `run.toml`, builds the working directory, compiles, and submits |
 
-_Note that once the new [distributor](development/distributor) comes online, this structure will change*
+Forcing dimensions, start/end years, and spin-up averaging years are **not** set
+here — they are read from the forcing NetCDF metadata at runtime.
 
 ## Reference files (per domain)
 

@@ -24,7 +24,7 @@ Configure paths in `extend_pointfiles_config.py`:
 
 | Setting | Value |
 |---------|-------|
-| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era055_1939-2023/output` |
+| `ORIG_OUTPUT_DIR` | `scratch/run_FGRN055-era5_1939-2023/output` |
 | `EXT_OUTPUT_DIRS` | Extension run output directories (checked in order) |
 | `OUTPUT_DIR` | `scratch/FDM_FGRN055_output/output/points` |
 
