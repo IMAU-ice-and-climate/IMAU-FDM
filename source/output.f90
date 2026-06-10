@@ -127,6 +127,27 @@ end subroutine To_out_1D
 ! *******************************************************
 
 
+subroutine Put_Var_Atts(ncid, varid, long_name, units)
+    !*** Attach CF-style long_name + units (and the missing_value fill) to an output variable ***!
+    integer, intent(in) :: ncid, varid
+    character(len=*), intent(in) :: long_name, units
+    integer :: status
+
+    status = nf90_put_att(ncid, varid, "missing_value", const%NaN_value)
+    if(status /= nf90_noerr) call Handle_Error(status, "Put_Var_Atts missing_value")
+    status = nf90_put_att(ncid, varid, "long_name", trim(long_name))
+    if(status /= nf90_noerr) call Handle_Error(status, "Put_Var_Atts long_name")
+    if (len_trim(units) > 0) then
+        status = nf90_put_att(ncid, varid, "units", trim(units))
+        if(status /= nf90_noerr) call Handle_Error(status, "Put_Var_Atts units")
+    end if
+
+end subroutine Put_Var_Atts
+
+
+! *******************************************************
+
+
 subroutine To_out_2D(ind_t, dtmodel, numOutputProf, outputProf, Rho, &
         T, Mlwc, Depth, DenRho, Year, out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2D_dRho, &
         out_2D_year)
@@ -151,7 +172,8 @@ subroutine To_out_2D(ind_t, dtmodel, numOutputProf, outputProf, Rho, &
         ind_z_surf_out = config%output_dimensions%proflayers
     endif
     
-    ! Convert to [kg m-3 year-1]
+    ! DenRho accumulates per-layer thickness change (-(oldDZ-DZ), m); convert to a
+    ! per-layer firn-compaction rate in [m year-1] (output variable 'dRho')
     factor = (const%seconds_per_year) / dtmodel / numOutputProf
     DenRho(:) = DenRho(:) * factor
     
@@ -327,57 +349,25 @@ subroutine Save_out_1D(outputSpeed, out_1D)
     if(status /= nf90_noerr) call Handle_Error(status,'1D_def_var18')
     
 
-    ! DEFINE ATTRIBUTES (unit could also be defined here)
-
-    status = nf90_put_att(ncid(32),varID(32,1),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1a')
-    status = nf90_put_att(ncid(32),varID(32,1),"name","Surface height")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_1b')
-    
-    status = nf90_put_att(ncid(32),varID(32,2),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2a')
-    status = nf90_put_att(ncid(32),varID(32,2),"name","Ice velocity at the model base")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_2b')
-    
-    status = nf90_put_att(ncid(32),varID(32,3),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_3a')
-    
-    status = nf90_put_att(ncid(32),varID(32,4),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(32),varID(32,5),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(32),varID(32,6),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_6')
-    status = nf90_put_att(ncid(32),varID(32,7),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_7')
-    status = nf90_put_att(ncid(32),varID(32,8),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_8')
-    status = nf90_put_att(ncid(32),varID(32,9),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_9')
-    status = nf90_put_att(ncid(32),varID(32,10),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_10')
-    
-    status = nf90_put_att(ncid(32),varID(32,11),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11a')
-    status = nf90_put_att(ncid(32),varID(32,11),"name","Firn Air Content")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11b')
-    status = nf90_put_att(ncid(32),varID(32,11),"units","m")
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_11c')
-    
-    status = nf90_put_att(ncid(32),varID(32,12),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_12')
-    status = nf90_put_att(ncid(32),varID(32,13),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_13')
-    status = nf90_put_att(ncid(32),varID(32,14),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_14')
-    status = nf90_put_att(ncid(32),varID(32,15),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_15')
-    status = nf90_put_att(ncid(32),varID(32,16),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_16')
-    status = nf90_put_att(ncid(32),varID(32,17),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_17')    
-    status = nf90_put_att(ncid(32),varID(32,18),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'1D_def_att_miss_val_18')
+    ! DEFINE ATTRIBUTES (long_name + units + missing_value, via Put_Var_Atts)
+    call Put_Var_Atts(ncid(32), varID(32,1),  "Surface height change", "m")
+    call Put_Var_Atts(ncid(32), varID(32,2),  "Basal ice velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,3),  "Accumulation velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,4),  "Firn compaction velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,5),  "Melt velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,6),  "Buoyancy velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,7),  "Sublimation velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,8),  "Snowdrift velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,9),  "Total surface velocity", "m yr-1")
+    call Put_Var_Atts(ncid(32), varID(32,10), "Runoff (accumulated over output interval)", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,11), "Firn air content", "m")
+    call Put_Var_Atts(ncid(32), varID(32,12), "Total column liquid water content", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,13), "Refreezing (accumulated over output interval)", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,14), "Rainfall (accumulated over output interval)", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,15), "Surface melt (accumulated over output interval)", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,16), "Solid precipitation input (snowfall, accumulated over output interval)", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,17), "Ice mass", "kg m-2")
+    call Put_Var_Atts(ncid(32), varID(32,18), "Surface snow density (output-interval mean)", "kg m-3")
 
     ! DEFINE GLOBAL ATTRIBUTES
     call Write_Global_Atts(ncid(32), "IMAU-FDM 1D output file")
@@ -508,19 +498,15 @@ subroutine Save_out_2D(out_2D_dens, out_2D_temp, out_2D_lwc, out_2D_depth, out_2
         varID(31,6))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var6')
 
-    ! DEFINE ATTRIBUTES (unit could also be defined here)
-    status = nf90_put_att(ncid(31),varID(31,1),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
-    status = nf90_put_att(ncid(31),varID(31,2),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
-    status = nf90_put_att(ncid(31),varID(31,3),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
-    status = nf90_put_att(ncid(31),varID(31,4),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(31),varID(31,5),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(31),varID(31,6),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
+    ! DEFINE ATTRIBUTES (long_name + units + missing_value, via Put_Var_Atts)
+    call Put_Var_Atts(ncid(31), varID(31,1), "Density", "kg m-3")
+    call Put_Var_Atts(ncid(31), varID(31,2), "Temperature", "K")
+    call Put_Var_Atts(ncid(31), varID(31,3), "Year of deposition", "year")
+    status = nf90_put_att(ncid(31),varID(31,3),"comment","Negative values indicate layers formed during the spin-up")
+    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_year_comment')
+    call Put_Var_Atts(ncid(31), varID(31,4), "Liquid water content", "kg m-2")
+    call Put_Var_Atts(ncid(31), varID(31,5), "Depth", "m")
+    call Put_Var_Atts(ncid(31), varID(31,6), "Firn compaction rate (per-layer thickness change)", "m yr-1")
 
     ! DEFINE GLOBAL ATTRIBUTES
     call Write_Global_Atts(ncid(31), "IMAU-FDM 2D profile output file")
@@ -613,31 +599,13 @@ subroutine Save_out_2Ddetail(out_2D_det_dens, out_2D_det_temp, out_2D_det_lwc, o
         varID(33,6))
     if(status /= nf90_noerr) call Handle_Error(status,'2D_def_var1')
     
-    ! DEFINE ATTRIBUTES
-    status = nf90_put_att(ncid(33),varID(33,1),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_1')
-    status = nf90_put_att(ncid(33),varID(33,1),"units","kg m-3")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_1')
-    status = nf90_put_att(ncid(33),varID(33,2),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_2')
-    status = nf90_put_att(ncid(33),varID(33,2),"units","K")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_2')
-    status = nf90_put_att(ncid(33),varID(33,3),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_3')
-    status = nf90_put_att(ncid(33),varID(33,3),"units","")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_3')
-    status = nf90_put_att(ncid(33),varID(33,4),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_4')
-    status = nf90_put_att(ncid(33),varID(33,4),"units","m")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_4')
-    status = nf90_put_att(ncid(33),varID(33,5),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_5')
-    status = nf90_put_att(ncid(33),varID(33,5),"units","m")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_5')
-    status = nf90_put_att(ncid(33),varID(33,6),"missing_value",const%NaN_value)
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_miss_val_6')
-    status = nf90_put_att(ncid(33),varID(33,6),"units","")
-    if(status /= nf90_noerr) call Handle_Error(status,'2D_def_att_units_var_6')
+    ! DEFINE ATTRIBUTES (long_name + units + missing_value, via Put_Var_Atts)
+    call Put_Var_Atts(ncid(33), varID(33,1), "Density", "kg m-3")
+    call Put_Var_Atts(ncid(33), varID(33,2), "Temperature", "K")
+    call Put_Var_Atts(ncid(33), varID(33,3), "Liquid water content", "kg m-2")
+    call Put_Var_Atts(ncid(33), varID(33,4), "Depth", "m")
+    call Put_Var_Atts(ncid(33), varID(33,5), "Layer thickness", "m")
+    call Put_Var_Atts(ncid(33), varID(33,6), "Refreezing (per layer)", "kg m-2")
 
     ! DEFINE GLOBAL ATTRIBUTES
     call Write_Global_Atts(ncid(33), "IMAU-FDM 2Ddetail output file")
