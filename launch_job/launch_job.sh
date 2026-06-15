@@ -67,7 +67,15 @@ if [ "$RECOMPILE" == "True" ]; then
   if [ ${RUN_TYPE} == "ECMWF" ]; then
       bash "${FDM_BASE}/compile_hpc.sh" || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
   elif [ ${RUN_TYPE} == "offline" ]; then
-      fpm install || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
+      NETCDF_LIBDIR=$(nc-config --libdir)
+      cd "${FDM_BASE}"
+      fpm install --profile release \
+          --flag -ffree-line-length-512 \
+          --link-flag "-L${NETCDF_LIBDIR}" \
+          --link-flag "-lnetcdf" \
+          --link-flag "-Wl,-rpath,${NETCDF_LIBDIR}" \
+          --prefix "${FDM_BASE}" || { echo "ERROR: Compilation failed. Exiting."; exit 1; }
+      cd "${LAUNCH_DIR}"
   else
       echo "ERROR: Run type -- ${RUN_TYPE} -- not recognized"
       exit 1

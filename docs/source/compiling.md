@@ -41,3 +41,12 @@ You can run `fpm build` or `fpm install`. `fpm` will automatically download cert
 1. `conda env create -f environment.yml`
 2. `conda activate imau-fdm` (this will also install `fpm` automatically)
 3. `fpm build`
+
+### Forcing a full recompile
+
+`fpm` caches build artifacts and skips recompilation when no source files have changed. If you change build flags (e.g. linker flags) without changing any source, `fpm` will reuse the cached binary. To force a clean rebuild:
+
+```bash
+fpm clean --all
+fpm install
+```
