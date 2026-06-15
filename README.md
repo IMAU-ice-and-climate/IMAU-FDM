@@ -1,83 +1,78 @@
-####This repo is under construction####
-
 # IMAU-FDM
-Working repository for the IMAU-FDM code. The main branch will always have a working version. 
 
-# Code structure
-- main: was @mbrils' cleanup-code-working; now main
-- v1.2.0: archived old code structure; also perserved as release 1.2.0G
-- ehc: elizabeth case current working branch
-- grain-size: based on main, currently being tested
-- documentation: documentation being developed on this branch
- 
-## Main branch (2024-07-24)
+**IMAU Firn Densification Model** — a one-dimensional firn compaction and
+melt–refreeze model for ice sheets and glaciers. `main` always holds a working
+version; day-to-day development happens on the `development` branch.
 
-![rundir](https://github.com/user-attachments/assets/7733a84f-9a20-484d-8332-ab31489426bb)
+📖 **Documentation:** <https://imau-ice-and-climate.github.io/IMAU-FDM/> (or build
+the [`docs/`](./docs) Jupyter Book locally). The end-to-end workflow is
+pre-processing → running → post-processing.
 
-![sourcedir](https://github.com/user-attachments/assets/4c4e2eb3-fdf9-4282-9565-c88cebc1050d)
+## Repository layout
 
+| Directory | Contents |
+|-----------|----------|
+| `source/` | Fortran model source (built to `bin/imau-fdm`) |
+| `launch_job/` | Run launcher + SLURM/MPI submission scripts |
+| `settings/` | Per-domain run config: `<domain>/{run,model,constants}.toml` |
+| `pre-process-RACMO/` | Build model forcing from RACMO/ERA5 input |
+| `post-process/` | Gridded NetCDF output from per-column files |
+| `MO_fit/` | Calibrate densification coefficients against firn cores |
+| `QAQC/` | Run monitoring and log inspection |
+| `reference/` | Static grid files and point lists (per domain) |
+| `docs/` | Documentation (Jupyter Book) |
 
-# Development
+## How a run works
 
-`mpifort` and `gfortran` are used for compilation.
+A model run is an **MPI job**: one rank is the **distributor**
+(`source/distributor.f90`), which hands grid points out to the remaining **worker**
+ranks; each worker runs the one-dimensional column model
+(`source/model_main.f90`) point by point. Everything about a run is configured
+through TOML files in `settings/<domain>/`.
+
+## Compiling
+
+Built with [`fpm`](https://fpm.fortran-lang.org/); the executable is installed to
+`bin/imau-fdm`.
+
+```bash
+./compile_hpc.sh            # release build (ECMWF: loads modules, installs fpm via conda if needed)
+./compile_hpc.sh debug      # debug build
+```
+
+`launch_job.sh` recompiles for you on launch when `recompile = true` in `run.toml`.
+
+## Running
+
+Runs are configured entirely through TOML and launched from `launch_job/`:
+
+1. **Edit the settings** for your domain in `settings/<DOMAIN>/`:
+   - `run.toml` — project name, point list, `domain`/`forcing`, `run_type`
+     (`ecmwf` or `offline`), `restart_type`, and the `code_dir` / `forcing_root` /
+     `output_root` directories.
+   - `model.toml` — numerical & physics options. `constants.toml` — physical constants.
+2. **Set `SETTINGS_FOLDER`** in `launch_job/launch_job.sh` to your domain folder.
+3. **Launch:**
+   ```bash
+   cd launch_job/
+   ./launch_job.sh
+   ```
+   It reads `run.toml`, (re)compiles if requested, and submits the run — an MPI
+   `sbatch` job on ECMWF, or a local MPI run using `[offline] n_procs` when
+   `run_type = "offline"`.
 
 ## Prerequisites
 
-- [`mpifort`](https://www.mpich.org/downloads/) must be available on your path
-- `gfortran` must be available on your path
-- `netcdf4-fortran` must be installed
-  - `libnetcdf` is a dependency, install it first
-  -  to check if `netcdf` is installed properly, try: `nf-config --all`
-  - `netcdf4-fortran` can then be built from source
+- `gfortran` and an MPI library (`hpcx-openmpi` on ECMWF; `mpifort` locally)
+- `netcdf4-fortran` (install `libnetcdf` first; verify with `nf-config --all`)
+- `fpm` — installed automatically by `compile_hpc.sh`, or via the conda
+  [`environment.yml`](./environment.yml)
 
-See the example [Containerfile](./Containerfile) for how to install `libnetcdf` and `netcdf4-fortran` on Ubuntu.
+## Supported domains
 
-## Compilation
+| Domain | Grid | Forcing |
+|--------|------|---------|
+| FGRN055 | Greenland 5.5 km | ERA5 / RACMO2.3p2 |
+| ANT27 | Antarctica 27 km | ERA5 / RACMO2.3p2 |
 
-### Using `fpm`
-
-The easiest way to compile this project is using [fpm](https://github.com/fortran-lang/fpm):
-
-1. Make sure `fpm` is installed and on your path
-2. From this repository's root directory, run: `fpm install`
-3. This will compile and move the `imau-fdm` binary to `~/.local/bin/`
-4. To run, execute `~/.local/bin/imau-fdm` (alternatively, add `~/.local/bin/` to your `PATH` and just run `imau-fdm`)
-
-See the [fpm documentation](https://fpm.fortran-lang.org/) for more info, e.g. on cleaning the build.
-
-#### On HPC
-
-For running on ECMWF, a convenience script `compile_hpc.sh` is provided. Simply run it with `./compile_hpc.sh`. This will:
-
-1. Install `fpm` from `conda`, if it's not already found in `~/.local/bin/`
-2. Activate the right modules required for compilation.
-3. Clean all existing build artifacts.
-4. Set some extra flags (e.g. where to find `netcdf4`).
-5. Run `fpm install`
-
-By default, `compile_hpc.sh` will build the project using `fpm`'s `--profile release` option, which optimizes for production. Run `./compile_hpc.sh debug` to use the debug profile instead.
-
-#### Locally
-
-You can run `fpm build` or `fpm install`. `fpm` will automatically download certain dependencies, and attempt to find certain others (e.g. `netcdf`). To ensure that you have all required dependencies, you can use the provided `conda` `environment.yml`:
-
-1. `conda env create -f environment.yml`
-2. `conda activate imau-fdm` (this will also install `fpm` automatically)
-3. `fpm build`
-
-### Manual
-
-The project can be compiled using the [`Makefile`](./Makefile). We need to set at least two environment variables:
-
-- `NETCDF4_LIB`: `netcdf4-fortran` library path
-- `NETCDF4_INCLUDE`: `netcdf4-fortran` include path
-
-There is also an optional variable :
-
-- `DEBUG`: if set to `true`, will configure the compiler to enable debugging options (backtrace etc.) while optimizing for compilation speed. This is recommended for the edit-compile-debug cycle during development. *For production, do net set this flag---that will ensure the compiler optimizes for performance.*
-
-These paths can be obtained using the `nc-config` tool. So to compile, the following command suffices:
-
-- `NETCDF4_LIB=$(nc-config --flibs) NETCDF4_INCLUDE=$(nc-config --fflags) make`
-
-After compilation succeeds, you can run `./imau-fdm.x`.
+Each domain has its own `settings/<domain>/` folder (currently provided: `FGRN055`).

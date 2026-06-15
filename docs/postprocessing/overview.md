@@ -38,7 +38,9 @@ sub-period (e.g. model covers 1939–2025, output only 1958–2023). Set either 
 ## Loading gridded files
 
 ```python
-from post-process.visualization.visualization import load_gridded_data
+# Run from post-process/visualization/ (the package dir name contains a
+# hyphen, so it is not importable as a module):
+from visualization import load_gridded_data
 
 ds = load_gridded_data('Runoff', timestep='10day')
 ds = load_gridded_data('h_surf', timestep='10day', detrended=True)

@@ -14,7 +14,8 @@ independently through:
 
 ## Firn compaction
 
-Compaction follows a two-stage Herron-Langway-type scheme. The densification
+Compaction follows the two-stage Arthern (2010) / Ligtenberg (2011)
+semi-empirical scheme (with the domain-specific MO tuning). The densification
 rate for a layer is:
 
 ```
@@ -24,8 +25,8 @@ dρ/dt = c · MO_fit · A · g · exp(−Ec / (R T) + Eg/(R T_base)) · (ρ_ice 
 where:
 - `c` — empirical coefficient (0.07 for Stage 1 (ρ < 550 kg m⁻³), and 0.03 for Stage 2 (ρ > 550 kg m⁻³))
 - `MO_fit` - scaling factor based on average accumulation ([MO Fitting](../mo_fitting/overview))
-- `A` — average accumulation rate (m w.e. yr⁻¹)
-- `g` - gravitational constant
+- `A` — average accumulation rate (mm w.e. yr⁻¹)
+- `g` - gravitational acceleration (9.81 m s⁻²)
 - `Ec` — creep activation energy
 - `Eg` - grain growth activation energy
 - `R` — gas constant
@@ -50,7 +51,7 @@ coordinates are provided as auxiliary `lat`/`lon` variables. The physical
 x/y coordinates are in **EPSG:3413** (WGS 84 / NSIDC Sea Ice Polar
 Stereographic North, lon₀ = −45°, lat_ts = 70°).
 
-## Key variables
+## Some example variables
 
 | Variable | Description | Units |
 |----------|-------------|-------|

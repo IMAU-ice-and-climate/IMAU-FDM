@@ -7,8 +7,8 @@ run on your own machine.
 
 | Variable | Path |
 |----------|------|
-| `$PERM` | `/home/$USER/perm` — persistent storage (code, reference files) |
-| `$SCRATCH` | `/home/$USER/scratch` — fast scratch (forcing input, model output) |
+| `$PERM` | `/perm/$USER` — persistent storage (code, reference files) |
+| `$SCRATCH` | `/ec/res4/scratch/$USER` — fast scratch (forcing input, model output) |
 
 `compile_hpc.sh` loads the required modules itself (`prgenv/gnu`,
 `hpcx-openmpi`, `netcdf4`, `nco`, `cdo`, `python3`, …), so you normally don't
