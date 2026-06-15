@@ -38,6 +38,10 @@ cd launch_job/
 
 With `run_type = "offline"`, `launch_job.sh` recompiles with `fpm` (when
 `recompile = true`) and `submit_job.sh` runs the job directly with
-`mpirun -n <n_procs>` instead of `sbatch`. Everything else — the working
-directory layout, the [distributor](../development/distributor), restart
-handling, and resubmission — behaves exactly as on the HPC.
+`mpirun -n <n_procs>` instead of `sbatch`. Everything else behaves exactly as on the HPC.
+
+## Troubleshooting
+
+Depending on your installation, you may need to run the following (or add to your .zshrc file) before launching the model:
+
+`export SDKROOT=$(xcrun --show-sdk-path)`
