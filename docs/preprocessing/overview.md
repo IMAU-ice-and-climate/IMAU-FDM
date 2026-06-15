@@ -26,17 +26,20 @@ SLURM `afterok` dependencies so they run in order without manual intervention.
 ## Running the pipeline
 
 ```bash
-cd pre-process-RACMO/
+# Run from inside the domain dir (which holds config.py). Domain, forcing, and
+# the year range are set in config.py — not on the command line.
+cd pre-process-RACMO/FGRN055_era5
 
-# Submit all three steps for Greenland ERA5
-python submit_jobs.py --domain FGRN055_era5 --start-year 1939 --end-year 2023
+# Submit all three steps (years -> timeseries -> averages)
+python3 ../submit_jobs.py all
 
-# Extend an existing run (step 1 and 2 only, for adding new years if new data becomes available)
-python submit_jobs.py --domain FGRN055_era5 --start-year 2024 --end-year 2025 \
-    --skip-averages
+# Extend an existing run with new years (years + timeseries only, append mode)
+python3 ../submit_jobs.py years timeseries \
+    --extend-start 2024 --extend-end 2025 --extend-mode append
 ```
 
-See `pre-process-RACMO/README.md` for full argument reference.
+Run `python3 ../submit_jobs.py --help` (or see the `submit_jobs.py` docstring)
+for the full argument reference.
 
 ## Domain configuration
 
@@ -53,7 +56,7 @@ Key settings in `config.py`:
 | Setting | Description |
 |---------|-------------|
 | `DOMAIN` | Domain name (e.g. `FGRN055`) |
-| `FORCING` | Forcing name (e.g. `era055`) |
+| `FORCING` | Forcing name (e.g. `era5`) |
 | `INPUT_DIR` | Raw RACMO/ERA5 files |
 | `OUTPUT_DIR` | Pre-processed output |
 | `SPINUP_START` / `SPINUP_END` | Years used for spinup averages |

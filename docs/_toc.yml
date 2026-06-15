@@ -1,5 +1,5 @@
 format: jb-book
-root: intro
+root: index
 parts:
   - caption: Overview
     chapters:
@@ -24,6 +24,4 @@ parts:
   - caption: Source Code
     chapters:
       - file: source/overview
-  - caption: Development
-    chapters:
-      - file: development/distributor
+      - file: source/compiling

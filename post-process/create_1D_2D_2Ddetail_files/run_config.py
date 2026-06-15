@@ -360,7 +360,7 @@ class RunConfig:
             # Detect the actual pattern from existing files
             sample = self._find_sample_file('1D')
             if sample:
-                # Extract pattern: e.g., "FGRN055_era055_1D_{}.nc"
+                # Extract pattern: e.g., "FGRN055_era5_1D_{}.nc"
                 name = sample.name
                 # Replace the point number with {}
                 pattern = re.sub(r'_1D_\d+\.nc$', '_1D_{}.nc', name)
@@ -585,7 +585,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         output_dir = sys.argv[1]
     else:
-        output_dir = '/home/nld4814/scratch/run_FGRN055-era055_1939-2023/output/'
+        output_dir = '/home/nld4814/scratch/run_FGRN055-era5_1939-2023/output/'
 
     config = RunConfig(output_dir=output_dir)
     print(config.summary())

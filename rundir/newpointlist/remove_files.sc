@@ -1,6 +1,6 @@
 #!/bin/bash
 
-outdir="$SCRATCH/data/output/era055/newrun/"
+outdir="$SCRATCH/data/output/era5/newrun/"
 requestdir="/scratch/ms/nl/rumb/FDMtests/FGRN055/FGRN055_imp_run/requests/"
 readydir="/scratch/ms/nl/rumb/FDMtests/FGRN055/FGRN055_imp_run/readydir/"
 workexe="/scratch/ms/nl/rumb/FDMtests/FGRN055/FGRN055_imp_run/LocalCode/"

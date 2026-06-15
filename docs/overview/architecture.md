@@ -11,7 +11,6 @@ IMAU-FDM/
 ├── MO_fit/             # Calibrate densification coefficients
 ├── QAQC/               # Run monitoring and log inspection
 ├── reference/          # Static grid files and point lists (per domain)
-├── example/            # Minimal worked example
 └── docs/               # This documentation (Jupyter Book)
 ```
 
@@ -36,9 +35,7 @@ Gridded NetCDF maps: specified variables across whole domain/timeseries (e.g., f
 |------|---------|
 |`rundir/launch_new_job.sc`| Set project_name, domain, pointlist, restart_type, SLURM options|
 |`rundir/start_model_ccab.sc`| Sets various model parameters, including timestep & dimensions of input and output|
-|`source/model_settings.sc`| Constants, model metadata, and paths are set in this file|
-
-_Note that once the new [distributor](development/distributor) comes online, this structure will change*
+|`source/model_settings.f90`| Constants, model metadata, and paths are set in this file|
 
 ## Reference files (per domain)
 

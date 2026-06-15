@@ -132,7 +132,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
 
     if (numSnow == 1) then
         ! Use current temperature and wind speed for snow parameterisations
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era5") then
             do step = 1, Nt_model_tot
                 Rho0FM(step) = 362.1 + 2.78*(TempFM(step) - Tmelt) ! from Fausto et al. 2018 
             end do
@@ -144,7 +144,7 @@ subroutine Interpol_Forcing(TempSurf, PreSol, PreLiq, Sublim, SnowMelt, SnowDrif
         end if
     else
         ! Use mean temperature and wind speed, averaged over numSnow time steps
-        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era055") then
+        if (trim(domain) == "FGRN11" .or. trim(domain) == "FGRN055" .or. trim(domain) == "FGRN055_era5") then
             ! Greenland
             TempSnow = sum( TempFM(1:numSnow) )/numSnow
             do step = 1, numSnow

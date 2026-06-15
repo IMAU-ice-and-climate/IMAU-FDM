@@ -14,30 +14,30 @@ This documentation covers the complete workflow:
 | [Post-Processing](postprocessing/overview) | Gridded NetCDF output from per-column files |
 | [MO Fitting](mo_fitting/overview) | Calibrating densification rate coefficients |
 | [Source Code](source/overview) | Fortran module descriptions |
-| [Development](development/distributor) | New distributor architecture |
 
 ## Quick start on the ECMWF
 
 ```bash
 # 1. Pre-process forcing (Greenland, ERA5)
-cd pre-process-RACMO/
-python submit_jobs.py --domain FGRN055 --forcing era5 \
-    --start-year 1939 --end-year 2025
+#    Edit FGRN055_era5/config.py first, then run from inside the domain dir:
+cd pre-process-RACMO/FGRN055_era5
+python3 ../submit_jobs.py all
 
 # 2. Compile the model
-cd ../
+cd ../..
 ./compile_hpc.sh
 
-# 3 Update model settings in rundir/launch_new_job, rundir/start_model_ccab, and source/model_settings
+# 3. Edit run settings in rundir/launch_new_job.sc, rundir/start_model_ccab.sc,
+#    and source/model_settings.f90  (see "Running the Model")
 
-# 4. Launch model run
-cd ../rundir/
-sbatch submit_job.sc
+# 4. Launch the run (interactive: echoes all paths and prompts before submitting)
+cd rundir
+./launch_new_job.sc
 
-# 5. Update post-processing config files
+# 5. Edit post-processing config (create_1D_2D_2Ddetail_files/config.py)
 
-# 6. Post-process output 
-cd ../post-process/create_1D_2D_2Ddetail_files/
+# 6. Post-process output into gridded NetCDF
+cd ../post-process/create_1D_2D_2Ddetail_files
 sbatch submit_make_1d_files.sh
 sbatch submit_make_2d_files.sh
 sbatch submit_make_2ddetail_files.sh

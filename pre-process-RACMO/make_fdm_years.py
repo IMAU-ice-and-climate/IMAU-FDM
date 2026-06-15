@@ -5,7 +5,7 @@ Replaces makeFDMyears_FGRN055.sc
 
 Run from within the domain subdirectory (which contains config.py):
 
-    cd FGRN055_era055
+    cd FGRN055_era5
     python3 ../make_fdm_years.py <varname>
 """
 

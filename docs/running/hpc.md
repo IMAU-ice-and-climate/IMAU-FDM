@@ -2,24 +2,21 @@
 
 ## Environment
 
-The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it [offline](offline.md).Key environment variables:
+The model normally runs on ECMWF's HPC (Atos/Bologna), though you can also run it offline. Key environment variables:
 
 | Variable | Path |
 |----------|------|
-| `$PERM` | `/home/$USER/perm` — persistent storage (code, reference files) |
-| `$SCRATCH` | `/home/$USER/scratch` — fast scratch (model output) |
+| `$PERM` | `/perm/$USER` — persistent storage (code, reference files) |
+| `$SCRATCH` | `/ec/res4/scratch/$USER` — fast scratch (model output) |
 
-Load required modules before compiling or running:
-
-```bash
-module load netcdf4-fortran
-module load fpm              # if not installed locally 
-```
+You don't normally need to load modules by hand — `compile_hpc.sh` loads what
+it needs (`prgenv/gnu`, `hpcx-openmpi`, `netcdf4`, `nco`, `cdo`, …) and installs
+`fpm` from conda if it isn't already on your path.
 
 ## Compiling
 
 ```bash
-cd /perm/nld4814/code/IMAU-FDM/
+cd $PERM/code/IMAU-FDM/
 ./compile_hpc.sh             # release build (optimised)
 ./compile_hpc.sh debug       # debug build
 ```
@@ -32,17 +29,20 @@ script copies it there.
 
 ```bash
 cd rundir/
-sbatch submit_job.sc
+./launch_new_job.sc
 ```
 
-`submit_job.sc` reads `settings/paths.toml` and `settings/model_settings.toml`,
-constructs the point-list range, and submits an array job via `npnf_outer_script.sc`.
+`launch_new_job.sc` is where you set the run parameters (project name, domain,
+forcing, restart type, point list, SLURM options). It is interactive: it echoes
+all resolved paths and prompts for confirmation, then calls `submit_job.sc`,
+which constructs the point-list range and submits an array job via
+`npnf_outer_script.sc`.
 
 ## Typical resource requirements
 
 | Job | Nodes | CPUs | RAM | Wall time |
 |-----|-------|------|-----|-----------|
-| Full FGRN055 run | ~10 | 128/node | 256 GB | 48 h |
+| Full FGRN055 run | 8 | 128/node | — | 48 h |
 | Pre-processing | 1 | 8 | 32 GB | 6 h |
 | Post-processing 1D | 1 | 16 | 64 GB | 48 h |
 | Post-processing 2D | 1 | 8 | 32 GB | 24 h |
@@ -54,7 +54,9 @@ squeue -u $USER               # all running jobs
 sacct -j <JOBID> --format=JobID,State,ExitCode,Elapsed
 ```
 
-Log files are written to `rundir/logs/ecsbatch.log.*`.
+Run logs are written under the run's scratch directory:
+`$SCRATCH/<project_name>/nplogs/` (SLURM/distributor logs) and
+`$SCRATCH/<project_name>/logfiles/` (per-point model logs).
 
 ## Tape archive
 

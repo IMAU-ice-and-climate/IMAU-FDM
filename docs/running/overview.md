@@ -7,28 +7,17 @@ Source: `rundir/`
 ## Quick start on ECMWF
 
 ```bash
-
 cd rundir/
 
-# Edit settings first (see `running/settings` page)
-# Then submit:
-sbatch launch_new_job.sc
-```
-
-## Quick start on offline
-
-```bash
-
-cd rundir/
-
-# Edit offline.sh
-# Then submit:
-./offline.sh
+# Edit settings first (see the Settings Files page)
+# Then launch. launch_new_job.sc is interactive: it echoes all paths and
+# prompts for confirmation, then calls submit_job.sc to submit the array job.
+./launch_new_job.sc
 ```
 
 ## Run types
 
-Set `restart_type` in `settings/model_settings.toml`:
+Set `restart_type` in `rundir/launch_new_job.sc`:
 
 | Value | Behaviour |
 |-------|-----------|

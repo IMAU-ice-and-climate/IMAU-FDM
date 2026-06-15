@@ -1,6 +1,6 @@
 #!/bin/bash
 
-project_name="FGRN055-era055_1939-2023"
+project_name="FGRN055-era5_1939-2023"
 outdir="$SCRATCH/${project_name}/output/"
 restartdir="$SCRATCH/restart/${project_name}/"
 

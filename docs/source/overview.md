@@ -1,8 +1,8 @@
 # Source Code
 
 The model is written in Fortran 90 and compiled with `gfortran` / `mpifort`.
-Source files live in `source/`; compiled objects in `objects/` and module
-interfaces in `modules/`.
+Source files live in `source/`; `fpm` writes all build artifacts (objects,
+module interfaces, and the `imau-fdm` executable) under `build/`.
 
 ## Module overview
 
@@ -17,7 +17,7 @@ interfaces in `modules/`.
 | `time_loop` |  Spinup and model run |
 | `output` |  Writes 1D, 2D, 2Ddetail output NetCDF files |
 | `openNetCDF` | NetCDF read/write wrappers |
-| `main` | `main.f90` | Main program |
+| `main.f90` | Main program |
 
 ## Compile
 (see [compiling](compiling.md) for more details)
@@ -55,4 +55,6 @@ highest index.
 
 1. Declare the variable in `initialise_variables.f90` and across any other modules.
 2. Compute it inside `time_loop.f90` (or the relevant physics module).
-3. Register it for output in `output.f90` and add it to `settings/model_variables.toml`.
+3. Register it for output in `output.f90` (declare the variable, add it to the
+   relevant NetCDF write routine, and update the output dimensions in
+   `rundir/start_model_ccab.sc` if needed).

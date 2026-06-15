@@ -18,7 +18,7 @@ import numpy as np
 import xarray as xr
 
 GRID_FILE = '/home/nld4814/perm/code/IMAU-FDM/reference/FGRN055/FGRN055_grid.nc'
-POST_DIR  = '/home/nld4814/scratch/run_FGRN055-era055_1939-2023/post-process'
+POST_DIR  = '/home/nld4814/scratch/run_FGRN055-era5_1939-2023/post-process'
 
 
 def update_file(src_path, grid_ds):

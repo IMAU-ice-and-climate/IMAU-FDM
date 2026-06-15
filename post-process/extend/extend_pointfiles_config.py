@@ -13,7 +13,7 @@ from pathlib import Path
 # =============================================================================
 
 DOMAIN = 'FGRN055'
-FORCING = 'era055'
+FORCING = 'era5'
 
 # =============================================================================
 # PATHS
@@ -22,14 +22,14 @@ FORCING = 'era055'
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 
 # Original run — provides data up to end of its simulation period
-ORIG_RUN_NAME = 'run_FGRN055-era055_1939-2023'
+ORIG_RUN_NAME = 'run_FGRN055-era5_1939-2023'
 ORIG_OUTPUT_DIR = SCRATCH_DIR / ORIG_RUN_NAME / 'output'
 
 # Extended run output directories, checked in order — first directory containing
 # a file for a given point wins. Put the preferred (most recent/fixed) run first.
 EXT_OUTPUT_DIRS = [
-    SCRATCH_DIR / 'extend-FGRN055-era055_1939-2023_to_2025-2' / 'output',
-    SCRATCH_DIR / 'extend-FGRN055-era055_1939-2023_to_2025' / 'output',
+    SCRATCH_DIR / 'extend-FGRN055-era5_1939-2023_to_2025-2' / 'output',
+    SCRATCH_DIR / 'extend-FGRN055-era5_1939-2023_to_2025' / 'output',
 ]
 
 # Combined output directory (input to extend_variable_2d.py / extend_variable_2ddetail.py)

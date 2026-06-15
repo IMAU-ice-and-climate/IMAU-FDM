@@ -39,7 +39,7 @@ BASE_DIR = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 
 # Input files
-PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
+PROJECT_NAME = 'run_FGRN055-era5_1939-2023'
 INPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'output'
 INPUT_DIR = SCRATCH_DIR / 'FDM_FGRN055_output' / 'output' / 'variables'
 POINTLIST_FILE = BASE_DIR / 'reference' / 'FGRN055' / 'IN_ll_FGRN055.txt'
@@ -50,7 +50,7 @@ OUTPUT_DIR = SCRATCH_DIR / PROJECT_NAME / 'post-process'
 OUTPUT_DIR  = INPUT_DIR
 
 # File naming pattern for input 1D files
-INPUT_FILENAME_PATTERN = 'FGRN055_era055_1D_{point_id}.nc'
+INPUT_FILENAME_PATTERN = 'FGRN055_era5_1D_{point_id}.nc'
 
 # =============================================================================
 # MODEL METADATA

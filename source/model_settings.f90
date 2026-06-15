@@ -78,16 +78,9 @@ subroutine Get_All_Command_Line_Arg()
     call get_command_argument(5, project_name)
     call get_command_argument(6, restart_type)
 
-    if (trim(project_name) == "example") then
+    print *, "Running user defined point"
+    ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
 
-        print *, "Running example point 1 from sample data"
-
-    else
-        print *, "Running user defined point"
-        ! Reads in current point number, restart type, and username, domain, prefix, and project_name for path setting
-    
-    end if
-    
 end subroutine Get_All_Command_Line_Arg
 
 
@@ -101,7 +94,7 @@ subroutine Define_Paths()
     ! define local variables
     character*255 :: forcing, code_dir, output_dir, input_dir, start_ts_year, end_ts_year, start_ave_year, end_ave_year
 
-    forcing = "era055"
+    forcing = "era5"
     start_ts_year = "1939"
     end_ts_year = "2023"
     start_ave_year = "1940"
@@ -110,27 +103,14 @@ subroutine Define_Paths()
     model_first_timestep = "1939-09-01T00:00:00"
     model_last_timestep = "2023-12-31T21:00:00"
 
-    if (trim(project_name) == "example") then 
+    code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
+    output_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/"
+    input_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain)//"_"//trim(forcing)//"/input/"
+    path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
 
-        code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
-        output_dir = trim(code_dir)//"example/"
-        input_dir =  trim(code_dir)//"example/input/"
-        path_restart =  trim(code_dir)//"example/restart/"
-
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)
-        suffix_forcing_timeseries = "_point_"//trim(point_numb)//".nc"
-
-    else
-
-        code_dir = "/perm/"//trim(username)//"/code/IMAU-FDM/"
-        output_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(project_name)//"/"
-        input_dir = "/ec/res4/scratch/"//trim(username)//"/"//trim(domain)//"_"//trim(forcing)//"/input/"
-        path_restart = "/ec/res4/scratch/"//trim(username)//"/restart/"//trim(project_name)//"/"
-
-        prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
-        suffix_forcing_timeseries = ".nc"
-
-    end if
+    !prefix_forcing_timeseries = "_"//trim(prefix_output)//"_"//trim(start_ts_year)//"-"//trim(end_ts_year)//"_p"
+    prefix_forcing_timeseries = "_"//trim(prefix_output)//"_p"
+    suffix_forcing_timeseries = ".nc"
 
     print *, "Path to IMAU-FDM: ", code_dir
     print *, "Path to output directory: ", output_dir
@@ -150,7 +130,8 @@ subroutine Define_Paths()
     fname_settings = "model_settings_"//trim(domain)//"_"//trim(point_numb)//".txt"
     fname_forcing_dims = "input_settings_"//trim(domain)//".txt"
     fname_mask = trim(domain)//"_Masks.nc"
-    suffix_forcing_averages = "_"//trim(prefix_output)//"-"//trim(start_ts_year)//"_"//trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
+    !suffix_forcing_averages = "_"//trim(prefix_output)//"-"//trim(start_ts_year)//"_"//trim(start_ave_year)//"-"//trim(end_ave_year)//"_ave.nc"
+    suffix_forcing_averages = "_"//trim(prefix_output)//"_ave.nc"
     fname_restart_from_spinup = trim(prefix_output)//"_restart_from_spinup_"//trim(point_numb)//".nc"
     prefix_fname_ini = trim(prefix_output)//"_initialize_from_"
     suffix_fname_ini = "_run_"//trim(point_numb)//".nc"

@@ -7,7 +7,7 @@ Requires that make_fdm_years.py has been run first so that yearly files exist.
 
 Run from within the domain subdirectory (which contains config.py):
 
-    cd FGRN055_era055
+    cd FGRN055_era5
     python3 ../make_fdm_averages.py <varname>
 """
 

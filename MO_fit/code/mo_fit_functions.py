@@ -43,7 +43,7 @@ def prep_2D_dataset(ds):
 
 def load_2d_file(project_dir, file_path, clean_2D=False):
 
-    path_len = len(f"{project_dir}/output/FGRN055_era055_2D")
+    path_len = len(f"{project_dir}/output/FGRN055_era5_2D")
 
     df = xr.open_dataset(file_path)
 
@@ -67,7 +67,7 @@ def load_2d_file(project_dir, file_path, clean_2D=False):
 
 def load_1d_file(project_dir, file_name, clean_1D=False):
 
-    path_len = len(f"{project_dir}/output/FGRN055_era055_1D")
+    path_len = len(f"{project_dir}/output/FGRN055_era5_1D")
 
     df = xr.open_dataset(file_name)
 
@@ -399,13 +399,13 @@ def find_FDM_depths(merged_df, file_list, project_dir, target_densities, clean_2
 
     return merged_df
 
-def add_vars_to_merged_df(merged_df, forcing_dir="/home/nld4814/scratch/FGRN055_era055/input/averages/"):
+def add_vars_to_merged_df(merged_df, forcing_dir="/home/nld4814/scratch/FGRN055_era5/input/averages/"):
     
     mask = xr.open_dataset("../../reference/FGRN055/FGRN055_Masks.nc")
 
     for var in ["precip", "ff10m", "tskin", "snowfall"]:
 
-        df = xr.open_dataset(f"{forcing_dir}{var}_FGRN055_era055-1939_1940-1970_ave.nc")
+        df = xr.open_dataset(f"{forcing_dir}{var}_FGRN055_era5-1939_1940-1970_ave.nc")
         df = df.squeeze()
         df = df.drop_vars(['assigned','block1', 'block2', 'height','time'])
         df["rlat"] = mask["rlat"]
@@ -655,7 +655,7 @@ def do_MO_fit(df_clean, var="snowfall"):
     
     Parameters:
     df_clean (pandas.DataFrame): DataFrame containing core and modeled depths to 550 and 830.
-    df_type (str): which model run to use ("interim", "era055", "MO").
+    df_type (str): which model run to use ("interim", "era5", "MO").
     Returns:
     Dictionary of fit results for both density regimes.
     """

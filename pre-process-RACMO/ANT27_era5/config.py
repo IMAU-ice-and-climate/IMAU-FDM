@@ -35,7 +35,7 @@ Check what would be submitted without actually submitting:
 
     The old timeseries files are renamed to .bak before being replaced.
     The new files are named with the updated end year, e.g.:
-      precip_FGRN055_era055_1939-2025_p1.nc
+      precip_FGRN055_era5_1939-2025_p1.nc
 
 Notes:
   - Steps 1 and 2 skip files that already exist, so it is safe to rerun.
@@ -47,7 +47,7 @@ import os
 from pathlib import Path
 
 DOMAIN = "ANT27"
-FORCING = "ERA5"
+FORCING = "era5"
 PROJECT_NAME = f"{DOMAIN}_{FORCING}"
 
 VARS = ["evap", "ff10m", "precip", "sndiv", "snowfall", "snowmelt", "tskin"]

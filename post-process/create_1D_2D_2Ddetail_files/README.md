@@ -51,7 +51,7 @@ Edit `config.py` before running. The key settings are:
 BASE_DIR    = Path('/home/nld4814/perm/code/IMAU-FDM')
 SCRATCH_DIR = Path('/home/nld4814/scratch')
 DOMAIN      = 'FGRN055'
-PROJECT_NAME = 'run_FGRN055-era055_1939-2023'
+PROJECT_NAME = 'run_FGRN055-era5_1939-2023'
 MODEL_START = datetime(1939, 9, 1)
 MODEL_END   = datetime(2023, 12, 31)
 ```
@@ -73,13 +73,13 @@ python3 make_1d_files.py --var Runoff --max-points 100 --workers 4
 
 # 2D: z830 for one year only
 python3 make_2d_files.py \
-  -o /home/nld4814/scratch/run_FGRN055-era055_1939-2023/output \
+  -o /home/nld4814/scratch/run_FGRN055-era5_1939-2023/output \
   -v dens --threshold 830 --output-var z830 \
   --start-year 2020 --end-year 2020
 
 # 2Ddetail: surface snow density for one year
 python3 make_2Ddetail_files.py \
-  -o /home/nld4814/scratch/run_FGRN055-era055_1939-2023/output \
+  -o /home/nld4814/scratch/run_FGRN055-era5_1939-2023/output \
   -v dens --depth-begin 0 --depth-end 0.5 --output-var SSN \
   --start-year 2020 --end-year 2020
 ```

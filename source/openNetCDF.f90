@@ -158,28 +158,15 @@ subroutine Load_TimeSeries_Forcing(SnowMelt, PreTot, PreSol,PreLiq, Sublim, Snow
     integer :: latfile, lonfile, fnumb_i
     character*255 :: add, fnumb
 
-    if ( trim(project_name) == "example" ) then
+    latfile = ind_lat
+    lonfile = mod(ind_lon,Nlon_timeseries)
 
-        latfile = 1
-        lonfile = 1
-        fnumb = ""
-        
-        add = trim(prefix_forcing_timeseries)//trim(suffix_forcing_timeseries)
-        
-    else !running point
+    if (lonfile==0) lonfile = Nlon_timeseries
+    fnumb_i = floor((real(ind_lon)-0.001)/real(Nlon_timeseries))+1
+    if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
+    if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
 
-        latfile = ind_lat
-        lonfile = mod(ind_lon,Nlon_timeseries)
-
-        if (lonfile==0) lonfile = Nlon_timeseries
-        fnumb_i = floor((real(ind_lon)-0.001)/real(Nlon_timeseries))+1
-        if (fnumb_i<=9) write(fnumb,'(I1)') fnumb_i
-        if (fnumb_i>=10) write(fnumb,'(I2)') fnumb_i
-
-        add = trim(prefix_forcing_timeseries)//trim(fnumb)//trim(suffix_forcing_timeseries)
-     
-
-    end if
+    add = trim(prefix_forcing_timeseries)//trim(fnumb)//trim(suffix_forcing_timeseries)
     
 
     print *, "Looking for timeseries at: "

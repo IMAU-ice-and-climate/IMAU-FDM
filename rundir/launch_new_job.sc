@@ -6,7 +6,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### project_name = unique name for run; must match pointlist
 ##### run_location = paths set to defautl for ECMWF, otherwise need to specify
 ##### domain = FGRN055 for greenland, ANT27 for antarcitca, or custom
-##### forcing = era055 for greenalnd, era027 for antarctica, or custom
+##### forcing = era5 for greenland, era5 for antarctica, or custom
 ##### restart_type = none, spinup, run
 ##### 
 ##### nnodes = 1 if only running a few points; 8 if doing a continent-sized run
@@ -15,7 +15,7 @@ shopt -s expand_aliases  # Enables alias expansion.
 ##### all other vars/paths assume run is on ECMWF & IMAU-FDM is structured as on github
 
 
-export project_name="FGRN055-era055_1939-2023" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
+export project_name="DEFAULT-NAME" # set unique project_name; pointlist must have matching name e.g. pointlist_PROJECT_NAME.txt
 
 if [[ -z "$project_name" ]]; then
   echo "project_name is empty; set before continuing"
@@ -26,9 +26,9 @@ fi
 export domain="FGRN055" #or ANT27
 
 if [[ "${domain}" == "FGRN055" ]]; then
-  forcing="era055"
+  forcing="era5"
 elif [[ "${domain}" == "ANT27" ]]; then
-  forcing="era027"
+  forcing="era5"
 else
   echo "must specify forcing for unrecognized domain"
   exit 1
@@ -39,20 +39,18 @@ export restart_type="none" # none - do spinup; spinup - restart from spinup; (te
 export outputname="${domain}_${forcing}"
 export runname="${domain}_${project_name}"
 
-export p2exe="${PERM}/code/IMAU-FDM"
-export workdir="${SCRATCH}/${project_name}"
-export restartdir="${SCRATCH}/restart/${project_name}" #"$SCRATCH/IMAU-FDM_RACMO23p2/RESTART/"
-export outputdir="${workdir}/output" #"$SCRATCH/data/output/$expname/" 
+export p2exe="${PERM}/code/IMAU-FDM" # the main code directory, where the job is launched from
+export workdir="${SCRATCH}/${project_name}" #the output directory
+export restartdir="${SCRATCH}/restart/${project_name}" # where the restart files are located
+export outputdir="${workdir}/output" #where the model output files will be saved
 
 export p2input="$p2exe/reference/${domain}/IN_ll_${domain}.txt"
 export FDM_executable="imau-fdm.x"
 export homedir=`pwd`
-#gridpointlist="$p2exe/rundir/pointlists/pointlist_${project_name}.txt"
-#gridpointlist="$p2exe/rundir/pointlists/pointlist_run_1939-2023_FGRN055-era055.txt"
-gridpointlist="$p2exe/rundir/pointlists/pointlist_FGRN055-era055_1939-2023.txt"
+gridpointlist="$p2exe/rundir/pointlists/pointlist_1.txt"
 
-export p2ms="${workdir}/ms_files" #"$SCRATCH/data/ms_files/" # hardcoded in IMAU-FDM
-export p2logs="${workdir}/logfiles" #"$SCRATCH/data/logfile/$expname/$runname"
+export p2ms="${workdir}/ms_files" 
+export p2logs="${workdir}/logfiles"
 export filename_part1="${outputname}"
 # 
 export walltime="48:00:00"   # (hms) walltime of the job 
@@ -64,7 +62,7 @@ export relaunch="yes"        # with "no", no new iteration will be launched
 export usern=$USER
 
 # SBATCH options
-export nnodes_max=16 #update to 8 if doing full run, otherwise use 1 for smaller runs
+export nnodes_max=1 #update to 8 if doing full run, otherwise use 1 for smaller runs
 export account_no="spnlberg"
 export jobname_base="FDM_${project_name}_i"
 export FDMs_per_node=128 #128 # play around for the optimal performance 

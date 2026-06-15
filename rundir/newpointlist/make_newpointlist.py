@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 username="nld4814"
-project_name="FGRN055-era055_1939-2023"
+project_name="FGRN055-era5_1939-2023"
 #%% MAKE LIST OF COMPLETED POINTS
 
 submission_number="1"
@@ -11,7 +11,7 @@ reference_path = project_path+"pointlist_"+submission_number+".txt"
 output_path = project_path+"output/"
 points_path = "/perm/nld4814/code/IMAU-FDM/rundir/newpointlist/"
 
-output_name = "FGRN055_era055_"
+output_name = "FGRN055_era5_"
 
 loc_list = pd.read_csv(reference_path,header=None, names=['string'])
 loc_1d_done = pd.read_csv(points_path+'points_1D_done.txt', header=None, names=['string'])
